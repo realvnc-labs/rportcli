@@ -37,5 +37,5 @@ GitBranch  %s
 GitCommit  %s
 GoArch     %s
 GoOS       %s
-`, Version, BuildTime, runtime.Version(), GitRef,  GitCommit, runtime.GOARCH,  runtime.GOOS)
+`, Version, BuildTime, runtime.Version(), GitRef, GitCommit, runtime.GOARCH, runtime.GOOS)
 }
