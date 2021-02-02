@@ -1,5 +1,7 @@
 name: Release artefacts
-on: [push]
+on:
+  release:
+    types: [created]
 
 jobs:
   releases-matrix:
