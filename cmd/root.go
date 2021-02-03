@@ -10,7 +10,7 @@ var (
 	rootCmd = &cobra.Command{
 		Use:     "rportcli",
 		Short:   "Rport cli",
-		RunE:    exeCmd.RunE,
+		RunE:    initCmd.RunE,
 		Version: version(),
 	}
 )

@@ -52,23 +52,27 @@ Unpack and install the rportcli binary on your host machine
 
 For Windows
 
-Extract file contents:
-![C:\Downloads](docs/Extract.png?raw=true "Extract")
+- Extract file contents
 
-Create a `RportCLI` folder in `C:\Program Files`
+- Create a `RportCLI` folder in `C:\Program Files`
 
-![C:\Program Files](docs/ProgramFiles.png?raw=true "ProgramFiles")
+- Copy the rportcli.exe binary to `C:\Program Files\RportCLI`
 
-Copy the rportcli.exe binary to `C:\Program Files\RportCLI`
-![C:\Program Files\Tacoscript\tacoscript.exe](docs/ProgramFilesWithTacoscript.png?raw=true "ProgramFilesWithTacoscript")
-
-Double click on the rportcli.exe and allow it's execution:
-
-![C:\Program Files\Tacoscript\tacoscript.exe](docs/AllowRun.png?raw=true "AllowRun")
+- Double click on the rportcli.exe and allow it's execution
 
 ## Install as a go binary:
 
     go get github.com/cloudradar-monitoring/rportcli
 
-## Program execution
+## Config
+
+Rportcli looks for a config file at $HOME/.config/rportcli/config.json (for Linux and MacOS) or C:\Users\<CurrentUserName>\.config\rportcli\config.json (for Windows).
+If current user has no home folder, RportCli will look for a config file next to the current binary location.
+
+You can override config path by providing env variable CONFIG_PATH, e.g.
+
+    CONFIG_PATH=/tmp/config.json rporcli init
+    
+  
+    
 
