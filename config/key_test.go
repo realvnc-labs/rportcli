@@ -1,16 +1,17 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRequiredValidate(t *testing.T) {
-	testCases := []struct{
-		inputValue interface{}
-		fieldName string
+	testCases := []struct {
+		inputValue    interface{}
+		fieldName     string
 		expectedError string
-	} {
+	}{
 		{
 			inputValue:    nil,
 			fieldName:     "someVal",
@@ -22,8 +23,8 @@ func TestRequiredValidate(t *testing.T) {
 			expectedError: "value 'someVal' is required and cannot be empty",
 		},
 		{
-			inputValue:    "a",
-			fieldName:     "someVal",
+			inputValue: "a",
+			fieldName:  "someVal",
 		},
 	}
 
