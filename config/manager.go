@@ -17,26 +17,6 @@ const (
 	defaultPath = ".config/rportcli/config.json"
 )
 
-func getConfigLocation() (configPath string) {
-	configPathFromEnv := env.ReadEnv("CONFIG_PATH", "")
-	if configPathFromEnv != "" {
-		configPath = configPathFromEnv
-		return
-	}
-
-	usr, err := user.Current()
-	if err != nil {
-		logrus.Warnf("failed to read current user data: %v", err)
-		configPath = "config.yaml"
-		return
-	}
-
-	pathParts := []string{usr.HomeDir}
-	pathParts = append(pathParts, strings.Split(defaultPath, "/")...)
-	configPath = filepath.Join(pathParts...)
-	return
-}
-
 // GetConfig reads config data from location
 func GetConfig() (params *options.ParameterBag, err error) {
 	configLocation := getConfigLocation()
@@ -88,12 +68,14 @@ func WriteConfig(params *options.ParameterBag) (err error) {
 	configLocation := getConfigLocation()
 
 	configDir := filepath.Dir(configLocation)
-	err = os.MkdirAll(configDir, 0600)
-	if err != nil {
-		return err
+	if _, e := os.Stat(configDir); os.IsNotExist(e) {
+		err = os.MkdirAll(configDir, 0755)
+		if err != nil {
+			return err
+		}
 	}
 
-	fileToWrite, err := os.OpenFile(configLocation, os.O_CREATE|os.O_WRONLY, 0600)
+	fileToWrite, err := os.OpenFile(configLocation, os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil {
 		return err
 	}
@@ -103,5 +85,27 @@ func WriteConfig(params *options.ParameterBag) (err error) {
 		return err
 	}
 
+	logrus.Infof("created config at %s", configLocation)
+
+	return
+}
+
+func getConfigLocation() (configPath string) {
+	configPathFromEnv := env.ReadEnv("CONFIG_PATH", "")
+	if configPathFromEnv != "" {
+		configPath = configPathFromEnv
+		return
+	}
+
+	usr, err := user.Current()
+	if err != nil {
+		logrus.Warnf("failed to read current user data: %v", err)
+		configPath = "config.yaml"
+		return
+	}
+
+	pathParts := []string{usr.HomeDir}
+	pathParts = append(pathParts, strings.Split(defaultPath, "/")...)
+	configPath = filepath.Join(pathParts...)
 	return
 }

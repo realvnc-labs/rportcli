@@ -38,3 +38,43 @@ func TestRequiredValidate(t *testing.T) {
 		assert.EqualError(t, actualErr, testCase.expectedError)
 	}
 }
+
+func TestCheckRequirementsAllMatched(t *testing.T) {
+	requirementsToCheck := []ParameterRequirement{
+		{
+			Field:    "one",
+			Validate: RequiredValidate,
+		},
+		{
+			Field:    "two",
+			Validate: RequiredValidate,
+		},
+		{
+			Field:   "three",
+			Default: "3",
+		},
+	}
+
+	params := FromValues(map[string]string{
+		"one": "1",
+		"two": "2",
+	})
+
+	missedRequirements := CheckRequirements(params, requirementsToCheck)
+	assert.Len(t, missedRequirements, 0)
+}
+
+func TestCheckRequirementsMissed(t *testing.T) {
+	requirementsToCheck := []ParameterRequirement{
+		{
+			Field:    "one",
+			Validate: RequiredValidate,
+		},
+	}
+
+	params := FromValues(map[string]string{})
+
+	missedRequirements := CheckRequirements(params, requirementsToCheck)
+	assert.Len(t, missedRequirements, 1)
+	assert.Equal(t, "one", missedRequirements[0].Field)
+}

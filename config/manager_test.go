@@ -77,10 +77,67 @@ func TestReadConfig(t *testing.T) {
 }
 
 func TestReadConfigError(t *testing.T) {
-	_, err := GetConfig()
+	err := os.Setenv("CONFIG_PATH", "configNotExisting.json")
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	defer func() {
+		e := os.Unsetenv("CONFIG_PATH")
+		if e != nil {
+			logrus.Error(e)
+		}
+	}()
+
+	_, err = GetConfig()
 	assert.Error(t, err)
 	if err == nil {
 		return
 	}
-	assert.Contains(t, err.Error(), "config.json doesn't exist")
+	assert.Contains(t, err.Error(), "configNotExisting.json doesn't exist")
+}
+
+func TestGetDefaultConfig(t *testing.T) {
+	config := GetDefaultConfig()
+	assert.Equal(t, DefaultServerURL, config.ReadString(ServerURL, ""))
+	assert.Equal(t, "", config.ReadString(Login, ""))
+	assert.Equal(t, "", config.ReadString(Password, ""))
+}
+
+func TestFromValues(t *testing.T) {
+	config := FromValues(map[string]string{"one": "1", "two": "2"})
+	assert.Equal(t, "1", config.ReadString("one", ""))
+	assert.Equal(t, "2", config.ReadString("two", ""))
+}
+
+func TestWriteConfig(t *testing.T) {
+	config := GetDefaultConfig()
+
+	err := os.Setenv("CONFIG_PATH", "configToCheckAfter.json")
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	defer func() {
+		e := os.Unsetenv("CONFIG_PATH")
+		if e != nil {
+			logrus.Error(e)
+		}
+	}()
+
+	err = WriteConfig(config)
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	assert.FileExists(t, "configToCheckAfter.json")
+	fileContents, err := ioutil.ReadFile("configToCheckAfter.json")
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+	assert.Equal(t, `{"login":"","password":"","server_url":"http://localhost:3000"}`+"\n", string(fileContents))
 }

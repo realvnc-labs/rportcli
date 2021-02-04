@@ -1,6 +1,12 @@
 package cmd
 
 import (
+	"bufio"
+	"context"
+	"fmt"
+	"os"
+
+	"github.com/cloudradar-monitoring/rportcli/api"
 	"github.com/cloudradar-monitoring/rportcli/config"
 	"github.com/spf13/cobra"
 )
@@ -31,13 +37,29 @@ var initCmd = &cobra.Command{
 		}
 		config.Params = config.FromValues(paramsFromArguments)
 
-		missedRequirements := config.GetNotMatchedRequirements(config.Params)
+		missedRequirements := config.CheckRequirements(config.Params, config.GetParameterRequirements())
 		if len(missedRequirements) > 0 {
-			err := config.PromptRequiredValues(missedRequirements, paramsFromArguments)
+			reader := bufio.NewReader(os.Stdin)
+			err := config.PromptRequiredValues(missedRequirements, paramsFromArguments, reader)
 			if err != nil {
 				return err
 			}
 			config.Params = config.FromValues(paramsFromArguments)
+		}
+
+		apiAuth := &api.BasicAuth{
+			Login: config.Params.ReadString(config.Login, ""),
+			Pass:  config.Params.ReadString(config.Password, ""),
+		}
+		cl := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
+		_, err := cl.Status(context.Background())
+		if err != nil {
+			return fmt.Errorf("config verification failed against the rport API: %v", err)
+		}
+
+		err = config.WriteConfig(config.Params)
+		if err != nil {
+			return err
 		}
 
 		return nil

@@ -59,10 +59,10 @@ func GetParameterRequirements() []ParameterRequirement {
 	}
 }
 
-// GetNotMatchedRequirements reads parameters which are missing in the configuration or having a default value
-func GetNotMatchedRequirements(params *options.ParameterBag) []ParameterRequirement {
+// CheckRequirements reads parameters which are missing in the configuration or having a default value
+func CheckRequirements(params *options.ParameterBag, requirementsToCheck []ParameterRequirement) []ParameterRequirement {
 	missedRequirements := make([]ParameterRequirement, 0)
-	for _, req := range GetParameterRequirements() {
+	for _, req := range requirementsToCheck {
 		paramInConfig, _ := params.Read(req.Field, nil)
 		if req.Default != "" && paramInConfig == req.Default {
 			missedRequirements = append(missedRequirements, req)

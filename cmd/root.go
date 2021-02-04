@@ -8,10 +8,12 @@ import (
 var (
 	Verbose = false
 	rootCmd = &cobra.Command{
-		Use:     "rportcli",
-		Short:   "Rport cli",
-		RunE:    initCmd.RunE,
-		Version: version(),
+		Use:           "rportcli",
+		Short:         "Rport cli",
+		RunE:          initCmd.RunE,
+		Version:       version(),
+		SilenceErrors: true,
+		SilenceUsage:  true,
 	}
 )
 

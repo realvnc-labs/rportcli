@@ -1,22 +1,27 @@
 package config
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/fatih/color"
 )
 
+type PromptReader interface {
+	ReadString(delim byte) (string, error)
+}
+
 // PromptRequiredValues will ask user for the list of required values
-func PromptRequiredValues(missedRequirements []ParameterRequirement, targetKV map[string]string) error {
-	reader := bufio.NewReader(os.Stdin)
+func PromptRequiredValues(
+	missedRequirements []ParameterRequirement,
+	targetKV map[string]string,
+	promptReader PromptReader,
+) error {
 	var err error
 	for _, missedReq := range missedRequirements {
 		readValue := ""
 		if missedReq.Default != "" && missedReq.Validate == nil {
-			readValue, err = promptValue(missedReq, reader)
+			readValue, err = promptValue(missedReq, promptReader)
 			if err != nil {
 				return err
 			}
@@ -32,7 +37,7 @@ func PromptRequiredValues(missedRequirements []ParameterRequirement, targetKV ma
 
 		err = missedReq.Validate(missedReq.Field, readValue)
 		for err != nil {
-			readValue, err = promptValue(missedReq, reader)
+			readValue, err = promptValue(missedReq, promptReader)
 			if err != nil {
 				return err
 			}
@@ -48,14 +53,14 @@ func PromptRequiredValues(missedRequirements []ParameterRequirement, targetKV ma
 	return nil
 }
 
-func promptValue(req ParameterRequirement, reader *bufio.Reader) (string, error) {
+func promptValue(req ParameterRequirement, promptReader PromptReader) (string, error) {
 	fmt.Println(req.Help)
 	if req.Default != "" {
 		fmt.Printf("Default value: %s\n", req.Default)
 	}
 
 	fmt.Print("-> ")
-	readValue, err := reader.ReadString('\n')
+	readValue, err := promptReader.ReadString('\n')
 	if err != nil {
 		return "", err
 	}
