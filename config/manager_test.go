@@ -133,6 +133,12 @@ func TestWriteConfig(t *testing.T) {
 		return
 	}
 
+	defer func() {
+		e := os.Remove("configToCheckAfter.json")
+		if e != nil {
+			logrus.Error(e)
+		}
+	}()
 	assert.FileExists(t, "configToCheckAfter.json")
 	fileContents, err := ioutil.ReadFile("configToCheckAfter.json")
 	assert.NoError(t, err)
