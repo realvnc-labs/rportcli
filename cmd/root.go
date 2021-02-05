@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/cloudradar-monitoring/rportcli/applog"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/applog"
 	"github.com/spf13/cobra"
 )
 
