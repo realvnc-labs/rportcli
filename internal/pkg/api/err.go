@@ -5,12 +5,14 @@ import (
 	"fmt"
 )
 
+type Error struct {
+	Code   string `json:"code"`
+	Title  string `json:"title"`
+	Detail string `json:"detail"`
+}
+
 type ErrorResp struct {
-	Errors []struct {
-		Code   string `json:"code"`
-		Title  string `json:"title"`
-		Detail string `json:"detail"`
-	} `json:"errors"`
+	Errors []Error `json:"errors"`
 }
 
 func (er ErrorResp) Error() string {

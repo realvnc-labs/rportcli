@@ -14,13 +14,15 @@ const (
 	StatusURL = "/api/v1/status"
 )
 
-type LoginInfo struct {
-	Data struct {
-		Token string `json:"token"`
-	} `json:"data"`
+type Token struct {
+	Token string `json:"token"`
 }
 
-func (rp *Rport) Login(ctx context.Context, login, pass string, tokenLifetime int) (li LoginInfo, err error) {
+type LoginResponse struct {
+	Data Token `json:"data"`
+}
+
+func (rp *Rport) Login(ctx context.Context, login, pass string, tokenLifetime int) (li LoginResponse, err error) {
 	ba := &BasicAuth{
 		Login: login,
 		Pass:  pass,
@@ -48,18 +50,24 @@ func (rp *Rport) Login(ctx context.Context, login, pass string, tokenLifetime in
 	return
 }
 
-type UserInfo struct {
-	Meta struct {
-	} `json:"meta"`
-	Data struct {
-		User   string   `json:"user"`
-		Groups []string `json:"groups"`
-	} `json:"data"`
+type User struct {
+	User   string   `json:"user"`
+	Groups []string `json:"groups"`
 }
 
-func (rp *Rport) Me() (user UserInfo, err error) {
+type MetaPart struct {
+	Meta struct{} `json:"meta"`
+}
+
+type UserResponse struct {
+	MetaPart
+	Data User `json:"data"`
+}
+
+func (rp *Rport) Me(ctx context.Context) (user UserResponse, err error) {
 	var req *http.Request
-	req, err = http.NewRequest(
+	req, err = http.NewRequestWithContext(
+		ctx,
 		http.MethodGet,
 		url.JoinURL(rp.BaseURL, MeURL),
 		nil,
@@ -76,17 +84,18 @@ func (rp *Rport) Me() (user UserInfo, err error) {
 }
 
 type Status struct {
-	Meta struct {
-	} `json:"meta"`
-	Data struct {
-		SessionsCount int    `json:"sessions_count"`
-		Version       string `json:"version"`
-		Fingerprint   string `json:"fingerprint"`
-		ConnectURL    string `json:"connect_url"`
-	} `json:"data"`
+	SessionsCount int    `json:"sessions_count"`
+	Version       string `json:"version"`
+	Fingerprint   string `json:"fingerprint"`
+	ConnectURL    string `json:"connect_url"`
 }
 
-func (rp *Rport) Status(ctx context.Context) (st Status, err error) {
+type StatusResponse struct {
+	MetaPart
+	Data Status `json:"data"`
+}
+
+func (rp *Rport) Status(ctx context.Context) (st StatusResponse, err error) {
 	var req *http.Request
 	req, err = http.NewRequestWithContext(
 		ctx,

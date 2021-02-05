@@ -89,7 +89,7 @@ func (c *Client) Call(req *http.Request, target interface{}) error {
 		if err != nil {
 			logrus.Warnf("cannot unmarshal error response %s: %v", string(respBody), err)
 		}
-		return fmt.Errorf("invalid response code: %d, response: %s", resp.StatusCode, string(respBody))
+		return errResp
 	}
 
 	err = json.Unmarshal(respBody, target)

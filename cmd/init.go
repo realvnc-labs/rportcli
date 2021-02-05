@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
-	"os"
 
 	"github.com/spf13/cobra"
 )
