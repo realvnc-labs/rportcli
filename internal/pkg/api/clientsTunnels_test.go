@@ -3,13 +3,16 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
+
+	"github.com/stretchr/testify/assert"
 )
 
-var clientsStub = []Client{
+var clientsStub = []*models.Client{
 	{
 		ID:       "123",
 		Name:     "Client 123",
@@ -23,7 +26,7 @@ var clientsStub = []Client{
 		Tags:     []string{"one"},
 		Version:  "1",
 		Address:  "12.2.2.3",
-		Tunnels: []Tunnel{
+		Tunnels: []*models.Tunnel{
 			{
 				ID:          "1",
 				Lhost:       "localhost",
@@ -49,7 +52,7 @@ var clientsStub = []Client{
 		Tags:     []string{"one", "two"},
 		Version:  "2",
 		Address:  "12.2.2.4",
-		Tunnels: []Tunnel{
+		Tunnels: []*models.Tunnel{
 			{
 				ID:          "1",
 				Lhost:       "localhost",
@@ -79,7 +82,7 @@ func TestClientsList(t *testing.T) {
 		authHeader := r.Header.Get("Authorization")
 		assert.Equal(t, "Basic bG9nMTpwYXNzMQ==", authHeader)
 
-		assert.Equal(t, ClientsUrl, r.URL.String())
+		assert.Equal(t, ClientsURL, r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
 		e := jsonEnc.Encode(ClientsResponse{Data: clientsStub})
 		assert.NoError(t, e)

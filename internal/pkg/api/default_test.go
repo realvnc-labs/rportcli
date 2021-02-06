@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +19,7 @@ func TestLogin(t *testing.T) {
 
 		assert.Equal(t, "/api/v1/login?token-lifetime=10", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(LoginResponse{Data: Token{
+		e := jsonEnc.Encode(LoginResponse{Data: models.Token{
 			Token: "token123",
 		}})
 		assert.NoError(t, e)
@@ -42,7 +44,7 @@ func TestMe(t *testing.T) {
 
 		assert.Equal(t, "/api/v1/me", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(UserResponse{Data: User{
+		e := jsonEnc.Encode(UserResponse{Data: models.User{
 			User:   "someUser",
 			Groups: []string{"group1", "group2"},
 		}})
@@ -72,7 +74,7 @@ func TestStatus(t *testing.T) {
 
 		assert.Equal(t, "/api/v1/status", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(StatusResponse{Data: Status{
+		e := jsonEnc.Encode(StatusResponse{Data: models.Status{
 			SessionsCount: 1,
 			Version:       "v123",
 			Fingerprint:   "fp123",

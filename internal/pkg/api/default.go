@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
+
 	"github.com/breathbath/go_utils/utils/url"
 )
 
@@ -14,12 +16,8 @@ const (
 	StatusURL = "/api/v1/status"
 )
 
-type Token struct {
-	Token string `json:"token"`
-}
-
 type LoginResponse struct {
-	Data Token `json:"data"`
+	Data models.Token `json:"data"`
 }
 
 func (rp *Rport) Login(ctx context.Context, login, pass string, tokenLifetime int) (li LoginResponse, err error) {
@@ -50,18 +48,13 @@ func (rp *Rport) Login(ctx context.Context, login, pass string, tokenLifetime in
 	return
 }
 
-type User struct {
-	User   string   `json:"user"`
-	Groups []string `json:"groups"`
-}
-
 type MetaPart struct {
 	Meta struct{} `json:"meta"`
 }
 
 type UserResponse struct {
 	MetaPart
-	Data User `json:"data"`
+	Data models.User `json:"data"`
 }
 
 func (rp *Rport) Me(ctx context.Context) (user UserResponse, err error) {
@@ -83,16 +76,9 @@ func (rp *Rport) Me(ctx context.Context) (user UserResponse, err error) {
 	return
 }
 
-type Status struct {
-	SessionsCount int    `json:"sessions_count"`
-	Version       string `json:"version"`
-	Fingerprint   string `json:"fingerprint"`
-	ConnectURL    string `json:"connect_url"`
-}
-
 type StatusResponse struct {
 	MetaPart
-	Data Status `json:"data"`
+	Data models.Status `json:"data"`
 }
 
 func (rp *Rport) Status(ctx context.Context) (st StatusResponse, err error) {
