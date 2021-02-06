@@ -26,16 +26,16 @@ func New(baseURL string, a Auth) *Rport {
 	return &Rport{BaseURL: baseURL, Auth: a}
 }
 
-// Client responsible for calling rport API
-type Client struct {
+// BaseClient responsible for calling rport API
+type BaseClient struct {
 	auth Auth
 }
 
-func (c *Client) WithAuth(a Auth) {
+func (c *BaseClient) WithAuth(a Auth) {
 	c.auth = a
 }
 
-func (c *Client) Call(req *http.Request, target interface{}) error {
+func (c *BaseClient) Call(req *http.Request, target interface{}) error {
 	connectionTimeout := 30 * time.Second
 	transport := &http.Transport{
 		DisableKeepAlives:     true,

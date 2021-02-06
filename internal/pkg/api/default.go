@@ -43,7 +43,7 @@ func (rp *Rport) Login(ctx context.Context, login, pass string, tokenLifetime in
 	q.Add("token-lifetime", strconv.Itoa(tokenLifetime))
 	req.URL.RawQuery = q.Encode()
 
-	cl := &Client{}
+	cl := &BaseClient{}
 	cl.WithAuth(ba)
 
 	err = cl.Call(req, &li)
@@ -76,7 +76,7 @@ func (rp *Rport) Me(ctx context.Context) (user UserResponse, err error) {
 		return
 	}
 
-	cl := &Client{}
+	cl := &BaseClient{}
 	cl.WithAuth(rp.Auth)
 
 	err = cl.Call(req, &user)
@@ -107,7 +107,7 @@ func (rp *Rport) Status(ctx context.Context) (st StatusResponse, err error) {
 		return
 	}
 
-	cl := &Client{}
+	cl := &BaseClient{}
 	cl.WithAuth(rp.Auth)
 
 	err = cl.Call(req, &st)
