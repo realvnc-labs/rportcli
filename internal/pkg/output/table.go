@@ -1,15 +1,16 @@
 package output
 
 import (
+	"io"
+
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
-	"io"
 )
 
 type tableWidthColumnsCountMapping struct {
 	minimalTableWidth int
-	columnsCount int
+	columnsCount      int
 }
 
 func buildTable(rw io.Writer) *tablewriter.Table {
@@ -37,13 +38,13 @@ func calcColumnsCount(widthMapping []tableWidthColumnsCountMapping) int {
 
 	actualTerminalWidth, _, err := terminal.GetSize(0)
 	if err != nil {
-		logrus.Error(err)
+		logrus.Warnf("cannot determine terminal width: %v", err)
 		return 0
 	}
 
 	logrus.Debugf("actual terminal width is %d", actualTerminalWidth)
 
-	for _, widthInfo := range widthMapping{
+	for _, widthInfo := range widthMapping {
 		if actualTerminalWidth <= widthInfo.minimalTableWidth {
 			logrus.Debugf("will show %d columns", widthInfo.columnsCount)
 			return widthInfo.columnsCount
@@ -52,4 +53,3 @@ func calcColumnsCount(widthMapping []tableWidthColumnsCountMapping) int {
 
 	return 0
 }
-

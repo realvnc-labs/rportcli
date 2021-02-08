@@ -6,7 +6,9 @@ import (
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 )
 
-func RenderClients(rw io.Writer, clients []*models.Client) error {
+type ClientRenderer struct{}
+
+func (cr *ClientRenderer) RenderClients(rw io.Writer, clients []*models.Client) error {
 	cl := &models.Client{}
 	table := buildTable(rw)
 

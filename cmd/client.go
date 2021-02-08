@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 	"os"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
@@ -40,8 +41,10 @@ var clientsListCmd = &cobra.Command{
 			Pass:  cfg.ReadString(config.Password, ""),
 		}
 		rportAPI := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
+		cr := &output.ClientRenderer{}
 		clientsController := &controllers.ClientController{
 			Rport: rportAPI,
+			Cr:    cr,
 		}
 
 		return clientsController.Clients(context.Background(), os.Stdout)
