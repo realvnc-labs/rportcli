@@ -36,7 +36,7 @@ func (c *Client) HeadersShort(count int) []string {
 		count = len(allHeaders)
 	}
 
-	return allHeaders[0 : count-1]
+	return allHeaders[0 : count]
 }
 
 func (c *Client) RowShort(count int) []string {
@@ -53,5 +53,5 @@ func (c *Client) RowShort(count int) []string {
 		count = len(allRowItems)
 	}
 
-	return allRowItems[0 : count-1]
+	return allRowItems[0 : count]
 }
