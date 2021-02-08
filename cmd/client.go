@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"context"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
+	"fmt"
 	"os"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
@@ -13,6 +15,7 @@ import (
 
 func init() {
 	clientsCmd.AddCommand(clientsListCmd)
+	clientsCmd.AddCommand(clientCmd)
 	rootCmd.AddCommand(clientsCmd)
 }
 
@@ -27,9 +30,33 @@ var clientsListCmd = &cobra.Command{
 	Short: "Client List API",
 	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		paramsFromArguments := make(map[string]string, len(paramsFromArgumentsP))
-		for k, valP := range paramsFromArgumentsP {
-			paramsFromArguments[k] = *valP
+		cfg, err := config.GetConfig()
+		if err != nil {
+			return err
+		}
+
+		apiAuth := &api.BasicAuth{
+			Login: cfg.ReadString(config.Login, ""),
+			Pass:  cfg.ReadString(config.Password, ""),
+		}
+		rportAPI := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
+		cr := &output.ClientRenderer{}
+		clientsController := &controllers.ClientController{
+			Rport:          rportAPI,
+			ClientRenderer: cr,
+		}
+
+		return clientsController.Clients(context.Background(), os.Stdout)
+	},
+}
+
+var clientCmd = &cobra.Command{
+	Use:   "get <ID>",
+	Short: "Client Read API",
+	Args:  cobra.MinimumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return fmt.Errorf("client id is not provided")
 		}
 		cfg, err := config.GetConfig()
 		if err != nil {
@@ -43,10 +70,10 @@ var clientsListCmd = &cobra.Command{
 		rportAPI := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
 		cr := &output.ClientRenderer{}
 		clientsController := &controllers.ClientController{
-			Rport: rportAPI,
-			Cr:    cr,
+			Rport:          rportAPI,
+			ClientRenderer: cr,
 		}
 
-		return clientsController.Clients(context.Background(), os.Stdout)
+		return clientsController.Client(context.Background(), args[0], os.Stdout)
 	},
 }

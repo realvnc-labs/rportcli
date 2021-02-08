@@ -2,6 +2,9 @@ package models
 
 import (
 	"strconv"
+	"strings"
+
+	"github.com/breathbath/go_utils/utils/testing"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 )
@@ -22,7 +25,7 @@ type Client struct {
 	Tunnels  []*Tunnel
 }
 
-func (c *Client) HeadersShort(count int) []string {
+func (c *Client) Headers(count int) []string {
 	allHeaders := []string{
 		"ID",
 		"NAME",
@@ -39,7 +42,7 @@ func (c *Client) HeadersShort(count int) []string {
 	return allHeaders[0:count]
 }
 
-func (c *Client) RowShort(count int) []string {
+func (c *Client) Row(count int) []string {
 	allRowItems := []string{
 		c.ID,
 		c.Name,
@@ -54,4 +57,57 @@ func (c *Client) RowShort(count int) []string {
 	}
 
 	return allRowItems[0:count]
+}
+
+func (c *Client) ToKv(sep string) []testing.KeyValueStr {
+	return []testing.KeyValueStr{
+		{
+			Key:   "ID",
+			Value: c.ID,
+		},
+		{
+			Key:   "Name",
+			Value: c.Name,
+		},
+		{
+			Key:   "Os",
+			Value: c.Os,
+		},
+		{
+			Key:   "OsArch",
+			Value: c.OsArch,
+		},
+		{
+			Key:   "OsFamily",
+			Value: c.OsFamily,
+		},
+		{
+			Key:   "OsKernel",
+			Value: c.OsKernel,
+		},
+		{
+			Key:   "Hostname",
+			Value: c.Hostname,
+		},
+		{
+			Key:   "Ipv4",
+			Value: strings.Join(c.Ipv4, sep),
+		},
+		{
+			Key:   "Ipv6",
+			Value: strings.Join(c.Ipv6, sep),
+		},
+		{
+			Key:   "Tags",
+			Value: strings.Join(c.Tags, sep),
+		},
+		{
+			Key:   "Version",
+			Value: c.Version,
+		},
+		{
+			Key:   "Address",
+			Value: c.Address,
+		},
+	}
 }
