@@ -101,6 +101,17 @@ You can skip the interactive wizard by providing parameters as cli options , e.g
 
      rportcli init -s http://localhost:3000 -l admin -p root
  
+ 
  Rportcli will check the provided options by calling the rport [status API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/cloudradar-monitoring/rport/master/api-doc.yml#/default/get_status).
  
  Rportcli will generate config file at the defined locations and use it all following report requests.
+
+## Cli
+
+Trigger this command to see all available commands and their options:
+
+    rportcli --help
+
+You can also display help for a certain command:
+
+    rportcli init --help
