@@ -7,8 +7,6 @@ import (
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/controllers"
 	"github.com/spf13/cobra"
 )
@@ -30,16 +28,10 @@ var clientsListCmd = &cobra.Command{
 	Short: "Client List API",
 	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.GetConfig()
+		rportAPI, err := buildRport()
 		if err != nil {
 			return err
 		}
-
-		apiAuth := &api.BasicAuth{
-			Login: cfg.ReadString(config.Login, ""),
-			Pass:  cfg.ReadString(config.Password, ""),
-		}
-		rportAPI := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
 		cr := &output.ClientRenderer{}
 		clientsController := &controllers.ClientController{
 			Rport:          rportAPI,
@@ -58,16 +50,12 @@ var clientCmd = &cobra.Command{
 		if len(args) == 0 {
 			return fmt.Errorf("client id is not provided")
 		}
-		cfg, err := config.GetConfig()
+
+		rportAPI, err := buildRport()
 		if err != nil {
 			return err
 		}
 
-		apiAuth := &api.BasicAuth{
-			Login: cfg.ReadString(config.Login, ""),
-			Pass:  cfg.ReadString(config.Password, ""),
-		}
-		rportAPI := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
 		cr := &output.ClientRenderer{}
 		clientsController := &controllers.ClientController{
 			Rport:          rportAPI,

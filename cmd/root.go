@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/applog"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/spf13/cobra"
 )
 
@@ -32,4 +34,19 @@ func Execute() error {
 	}
 
 	return nil
+}
+
+func buildRport() (*api.Rport, error) {
+	cfg, err := config.GetConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	apiAuth := &api.BasicAuth{
+		Login: cfg.ReadString(config.Login, ""),
+		Pass:  cfg.ReadString(config.Password, ""),
+	}
+	rportAPI := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
+
+	return rportAPI, nil
 }

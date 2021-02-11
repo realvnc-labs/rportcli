@@ -13,27 +13,21 @@ type Tunnel struct {
 	ACL         string `json:"acl"`
 }
 
-func (t *Tunnel) Headers(count int) []string {
-	allHeaders := []string{
+func (t *Tunnel) Headers() []string {
+	return []string{
 		"ID",
 		"LHOST",
 		"LPORT",
 		"RHOST",
 		"RPORT",
-		"LPORT_RAND",
+		"LPORTRAND",
 		"SCHEME",
 		"ACL",
 	}
-
-	if count > len(allHeaders) || count == 0 {
-		count = len(allHeaders)
-	}
-
-	return allHeaders[0:count]
 }
 
-func (t *Tunnel) Row(count int) []string {
-	allRowItems := []string{
+func (t *Tunnel) Row() []string {
+	return []string{
 		t.ID,
 		t.Lhost,
 		t.Lport,
@@ -43,10 +37,4 @@ func (t *Tunnel) Row(count int) []string {
 		t.Scheme,
 		t.ACL,
 	}
-
-	if count > len(allRowItems) || count == 0 {
-		count = len(allRowItems)
-	}
-
-	return allRowItems[0:count]
 }

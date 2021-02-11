@@ -25,8 +25,8 @@ type Client struct {
 	Tunnels  []*Tunnel
 }
 
-func (c *Client) Headers(count int) []string {
-	allHeaders := []string{
+func (c *Client) Headers() []string {
+	return []string{
 		"ID",
 		"NAME",
 		"NUM_TUNNELS",
@@ -34,16 +34,10 @@ func (c *Client) Headers(count int) []string {
 		"HOSTNAME",
 		"OS_KERNEL",
 	}
-
-	if count > len(allHeaders) || count == 0 {
-		count = len(allHeaders)
-	}
-
-	return allHeaders[0:count]
 }
 
-func (c *Client) Row(count int) []string {
-	allRowItems := []string{
+func (c *Client) Row() []string {
+	return []string{
 		c.ID,
 		c.Name,
 		strconv.Itoa(len(c.Tunnels)),
@@ -51,15 +45,10 @@ func (c *Client) Row(count int) []string {
 		c.Hostname,
 		c.OsKernel,
 	}
-
-	if count > len(allRowItems) || count == 0 {
-		count = len(allRowItems)
-	}
-
-	return allRowItems[0:count]
 }
 
-func (c *Client) ToKv(sep string) []testing.KeyValueStr {
+func (c *Client) KeyValues() []testing.KeyValueStr {
+	const sep = "\n"
 	return []testing.KeyValueStr{
 		{
 			Key:   "ID",
