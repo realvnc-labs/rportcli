@@ -8,6 +8,7 @@ import (
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 
 	"github.com/breathbath/go_utils/utils/url"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -44,7 +45,10 @@ func (rp *Rport) Login(ctx context.Context, login, pass string, tokenLifetime in
 	cl := &BaseClient{}
 	cl.WithAuth(ba)
 
-	err = cl.Call(req, &li)
+	resp, err := cl.Call(req, &li)
+
+	defer closeRespBody(resp)
+
 	return
 }
 
@@ -72,7 +76,17 @@ func (rp *Rport) Me(ctx context.Context) (user UserResponse, err error) {
 	cl := &BaseClient{}
 	cl.WithAuth(rp.Auth)
 
-	err = cl.Call(req, &user)
+	resp, err := cl.Call(req, &user)
+	if err != nil {
+		return user, err
+	}
+	defer func() {
+		closeErr := resp.Body.Close()
+		if closeErr != nil {
+			logrus.Error(closeErr)
+		}
+	}()
+
 	return
 }
 
@@ -96,6 +110,8 @@ func (rp *Rport) Status(ctx context.Context) (st StatusResponse, err error) {
 	cl := &BaseClient{}
 	cl.WithAuth(rp.Auth)
 
-	err = cl.Call(req, &st)
+	resp, err := cl.Call(req, &st)
+	defer closeRespBody(resp)
+
 	return
 }

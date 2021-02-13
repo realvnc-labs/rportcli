@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
@@ -12,6 +13,7 @@ import (
 
 func init() {
 	tunnelsCmd.AddCommand(tunnelListCmd)
+	tunnelsCmd.AddCommand(tunnelDeleteCmd)
 	rootCmd.AddCommand(tunnelsCmd)
 }
 
@@ -32,11 +34,37 @@ var tunnelListCmd = &cobra.Command{
 		}
 
 		tr := &output.TunnelRenderer{}
-		clientsController := &controllers.TunnelController{
+		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
 		}
 
-		return clientsController.Tunnels(context.Background(), os.Stdout)
+		return tunnelController.Tunnels(context.Background(), os.Stdout)
+	},
+}
+
+const minArgsCount = 2
+
+var tunnelDeleteCmd = &cobra.Command{
+	Use:   "delete <CLIENT_ID> <TUNNEL_ID>",
+	Short: "Terminates the specified tunnel of the specified client",
+	Args:  cobra.MinimumNArgs(minArgsCount),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) < minArgsCount {
+			return fmt.Errorf("either CLIENT_ID or TUNNEL_ID is not provided")
+		}
+
+		rportAPI, err := buildRport()
+		if err != nil {
+			return err
+		}
+
+		tr := &output.TunnelRenderer{}
+		tunnelController := &controllers.TunnelController{
+			Rport:          rportAPI,
+			TunnelRenderer: tr,
+		}
+
+		return tunnelController.Delete(context.Background(), os.Stdout, args[0], args[1])
 	},
 }

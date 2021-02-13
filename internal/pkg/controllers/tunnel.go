@@ -4,6 +4,8 @@ import (
 	"context"
 	"io"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
@@ -30,4 +32,18 @@ func (cc *TunnelController) Tunnels(ctx context.Context, rw io.Writer) error {
 	}
 
 	return cc.TunnelRenderer.RenderTunnels(rw, tunnels)
+}
+
+func (cc *TunnelController) Delete(ctx context.Context, rw io.Writer, clientID, tunnelID string) error {
+	err := cc.Rport.DeleteTunnel(ctx, clientID, tunnelID)
+	if err != nil {
+		return err
+	}
+
+	err = output.RenderHeader(rw, "OK")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
