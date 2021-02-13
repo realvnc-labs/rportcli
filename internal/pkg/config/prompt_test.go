@@ -3,6 +3,8 @@ package config
 import (
 	"testing"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,18 +35,18 @@ func TestPromptRequiredValues(t *testing.T) {
 		},
 	}
 
-	requirements := []ParameterRequirement{
+	requirements := []cli.ParameterRequirement{
 		{
 			Field:    "one",
-			Validate: RequiredValidate,
+			Validate: cli.RequiredValidate,
 		},
 		{
 			Field:    "two",
-			Validate: RequiredValidate,
+			Validate: cli.RequiredValidate,
 		},
 		{
 			Field:    "three",
-			Validate: RequiredValidate,
+			Validate: cli.RequiredValidate,
 		},
 		{
 			Field:   "four",

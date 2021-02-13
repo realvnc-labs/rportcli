@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
+
 	"github.com/fatih/color"
 )
 
@@ -13,47 +15,48 @@ type PromptReader interface {
 
 // PromptRequiredValues will ask user for the list of required values
 func PromptRequiredValues(
-	missedRequirements []ParameterRequirement,
+	missedRequirements []cli.ParameterRequirement,
 	targetKV map[string]string,
 	promptReader PromptReader,
 ) error {
 	var err error
-	for _, missedReq := range missedRequirements {
+	for i := range missedRequirements {
 		readValue := ""
-		if missedReq.Default != "" && missedReq.Validate == nil {
-			readValue, err = promptValue(missedReq, promptReader)
+		missedReqP := &missedRequirements[i]
+		if missedReqP.Default != "" && missedReqP.Validate == nil {
+			readValue, err = promptValue(missedReqP, promptReader)
 			if err != nil {
 				return err
 			}
 			if readValue != "" {
-				targetKV[missedReq.Field] = readValue
+				targetKV[missedReqP.Field] = readValue
 			}
 			continue
 		}
 
-		if missedReq.Validate == nil {
+		if missedReqP.Validate == nil {
 			continue
 		}
 
-		err = missedReq.Validate(missedReq.Field, readValue)
+		err = missedReqP.Validate(missedReqP.Field, readValue)
 		for err != nil {
-			readValue, err = promptValue(missedReq, promptReader)
+			readValue, err = promptValue(missedReqP, promptReader)
 			if err != nil {
 				return err
 			}
 
-			err = missedReq.Validate(missedReq.Field, readValue)
+			err = missedReqP.Validate(missedReqP.Field, readValue)
 			if err != nil {
 				color.Red(err.Error())
 			}
 		}
-		targetKV[missedReq.Field] = readValue
+		targetKV[missedReqP.Field] = readValue
 	}
 
 	return nil
 }
 
-func promptValue(req ParameterRequirement, promptReader PromptReader) (string, error) {
+func promptValue(req *cli.ParameterRequirement, promptReader PromptReader) (string, error) {
 	fmt.Println(req.Help)
 	if req.Default != "" {
 		fmt.Printf("Default value: %s\n", req.Default)

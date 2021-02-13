@@ -52,17 +52,6 @@ func GetDefaultConfig() (params *options.ParameterBag) {
 	return &options.ParameterBag{BaseValuesProvider: vp}
 }
 
-// FromValues creates a parameter bag from provided values
-func FromValues(inputParams map[string]string) (params *options.ParameterBag) {
-	inputParamsI := map[string]interface{}{}
-	for k, v := range inputParams {
-		inputParamsI[k] = v
-	}
-	vp := options.NewMapValuesProvider(inputParamsI)
-
-	return &options.ParameterBag{BaseValuesProvider: vp}
-}
-
 // WriteConfig will write config values to file system
 func WriteConfig(params *options.ParameterBag) (err error) {
 	configLocation := getConfigLocation()

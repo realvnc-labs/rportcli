@@ -1,17 +1,11 @@
-package config
+package cli
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 
 	options "github.com/breathbath/go_utils/utils/config"
-)
-
-// Configuration constants
-const (
-	ServerURL        = "server_url"
-	Login            = "login"
-	Password         = "password"
-	DefaultServerURL = "http://localhost:3000"
 )
 
 // Validate validation callback
@@ -29,34 +23,11 @@ var RequiredValidate = func(fieldName string, val interface{}) error {
 // ParameterRequirement contains information about a parameter requirement
 type ParameterRequirement struct {
 	Field       string
+	ShortName   string
 	Help        string
 	Validate    Validate
 	Default     string
 	Description string
-}
-
-// GetParameterRequirements returns required configuration options
-func GetParameterRequirements() []ParameterRequirement {
-	return []ParameterRequirement{
-		{
-			Field:       ServerURL,
-			Help:        "Enter Server Url",
-			Default:     DefaultServerURL,
-			Description: "Server address of rport to connect to",
-		},
-		{
-			Field:       Login,
-			Help:        "Enter a valid login value",
-			Validate:    RequiredValidate,
-			Description: "Login to the rport server",
-		},
-		{
-			Field:       Password,
-			Help:        "Enter a valid password value",
-			Validate:    RequiredValidate,
-			Description: "Password to the rport server",
-		},
-	}
 }
 
 // CheckRequirements reads parameters which are missing in the configuration or having a default value
@@ -79,4 +50,38 @@ func CheckRequirements(params *options.ParameterBag, requirementsToCheck []Param
 	}
 
 	return missedRequirements
+}
+
+func CheckRequirementsError(params *options.ParameterBag, requirementsToCheck []ParameterRequirement) error {
+	missedRequirements := make([]ParameterRequirement, 0, len(requirementsToCheck))
+	for _, req := range requirementsToCheck {
+		paramInConfig, _ := params.Read(req.Field, nil)
+		if req.Validate == nil {
+			continue
+		}
+		err := req.Validate(req.Field, paramInConfig)
+		if err != nil {
+			missedRequirements = append(missedRequirements, req)
+		}
+	}
+	if len(missedRequirements) == 0 {
+		return nil
+	}
+	errorStrs := make([]string, 0, len(missedRequirements))
+	for _, missedRequirement := range missedRequirements {
+		errorStrs = append(errorStrs, fmt.Sprintf("missing value for %s: %s", missedRequirement.Field, missedRequirement.Description))
+	}
+
+	return errors.New(strings.Join(errorStrs, "\n"))
+}
+
+// FromValues creates a parameter bag from provided values
+func FromValues(inputParams map[string]string) (params *options.ParameterBag) {
+	inputParamsI := map[string]interface{}{}
+	for k, v := range inputParams {
+		inputParamsI[k] = v
+	}
+	vp := options.NewMapValuesProvider(inputParamsI)
+
+	return &options.ParameterBag{BaseValuesProvider: vp}
 }

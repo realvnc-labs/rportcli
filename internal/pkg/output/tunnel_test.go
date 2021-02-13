@@ -38,3 +38,31 @@ func TestRenderTunnels(t *testing.T) {
 		actualRenderResult,
 	)
 }
+func TestRenderTunnel(t *testing.T) {
+	tunnel := &models.Tunnel{
+		ID:          "id22",
+		Lhost:       "lhost",
+		Lport:       "123",
+		Rhost:       "rhost",
+		Rport:       "124",
+		LportRandom: false,
+		Scheme:      "ssh",
+		ACL:         "0.0.0.0",
+	}
+
+	tr := &TunnelRenderer{}
+
+	buf := &bytes.Buffer{}
+	err := tr.RenderTunnel(buf, tunnel)
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	actualRenderResult := RemoveEmptySpaces(buf.String())
+	assert.Equal(
+		t,
+		"Created Tunnel KEY VALUE ID: id22 LHOST: lhost LPORT: 123 RHOST: rhost RPORT: 124 LPORT RANDOM: false SCHEME: ssh ACL: 0.0.0.0 ",
+		actualRenderResult,
+	)
+}

@@ -105,12 +105,6 @@ func TestGetDefaultConfig(t *testing.T) {
 	assert.Equal(t, "", config.ReadString(Password, ""))
 }
 
-func TestFromValues(t *testing.T) {
-	config := FromValues(map[string]string{"one": "1", "two": "2"})
-	assert.Equal(t, "1", config.ReadString("one", ""))
-	assert.Equal(t, "2", config.ReadString("two", ""))
-}
-
 func TestWriteConfig(t *testing.T) {
 	config := GetDefaultConfig()
 

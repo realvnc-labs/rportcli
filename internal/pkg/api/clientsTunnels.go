@@ -16,6 +16,7 @@ import (
 const (
 	ClientsURL       = "/api/v1/clients"
 	ClientTunnelsURL = "/api/v1/clients/{client_id}/tunnels/{tunnel_id}"
+	CreateTunnelURL  = "/api/v1/clients/{client_id}/tunnels"
 )
 
 type ClientsResponse struct {
@@ -51,6 +52,48 @@ func (rp *Rport) Clients(ctx context.Context) (cr *ClientsResponse, err error) {
 	}()
 
 	return
+}
+
+type TunnelResponse struct {
+	Data *models.Tunnel
+}
+
+func (rp *Rport) CreateTunnel(
+	ctx context.Context,
+	clientID, local, remote, scheme, acl, checkPort string,
+) (tunResp *TunnelResponse, err error) {
+	var req *http.Request
+	u := strings.Replace(CreateTunnelURL, "{client_id}", clientID, 1)
+	req, err = http.NewRequestWithContext(
+		ctx,
+		http.MethodPut,
+		url.JoinURL(rp.BaseURL, u),
+		nil,
+	)
+	if err != nil {
+		return
+	}
+
+	q := req.URL.Query()
+	q.Add("local", local)
+	q.Add("remote", remote)
+	q.Add("scheme", scheme)
+	q.Add("acl", acl)
+	q.Add("check_port", checkPort)
+	req.URL.RawQuery = q.Encode()
+
+	cl := &BaseClient{}
+	cl.WithAuth(rp.Auth)
+
+	tunResp = &TunnelResponse{}
+
+	resp, err := cl.Call(req, tunResp)
+	if err != nil {
+		return nil, err
+	}
+	defer closeRespBody(resp)
+
+	return tunResp, nil
 }
 
 func (rp *Rport) DeleteTunnel(ctx context.Context, clientID, tunnelID string) (err error) {

@@ -1,4 +1,4 @@
-package config
+package cli
 
 import (
 	"testing"
@@ -62,6 +62,12 @@ func TestCheckRequirementsAllMatched(t *testing.T) {
 
 	missedRequirements := CheckRequirements(params, requirementsToCheck)
 	assert.Len(t, missedRequirements, 0)
+}
+
+func TestFromValues(t *testing.T) {
+	config := FromValues(map[string]string{"one": "1", "two": "2"})
+	assert.Equal(t, "1", config.ReadString("one", ""))
+	assert.Equal(t, "2", config.ReadString("two", ""))
 }
 
 func TestCheckRequirementsMissed(t *testing.T) {

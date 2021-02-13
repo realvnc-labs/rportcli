@@ -1,6 +1,10 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/breathbath/go_utils/utils/testing"
+)
 
 type Tunnel struct {
 	ID          string `json:"id"`
@@ -36,5 +40,42 @@ func (t *Tunnel) Row() []string {
 		fmt.Sprint(t.LportRandom),
 		t.Scheme,
 		t.ACL,
+	}
+}
+
+func (t *Tunnel) KeyValues() []testing.KeyValueStr {
+	return []testing.KeyValueStr{
+		{
+			Key:   "ID",
+			Value: t.ID,
+		},
+		{
+			Key:   "LHOST",
+			Value: t.Lhost,
+		},
+		{
+			Key:   "LPORT",
+			Value: t.Lport,
+		},
+		{
+			Key:   "RHOST",
+			Value: t.Rhost,
+		},
+		{
+			Key:   "RPORT",
+			Value: t.Rport,
+		},
+		{
+			Key:   "LPORT RANDOM",
+			Value: fmt.Sprintf("%v", t.LportRandom),
+		},
+		{
+			Key:   "SCHEME",
+			Value: t.Scheme,
+		},
+		{
+			Key:   "ACL",
+			Value: t.ACL,
+		},
 	}
 }

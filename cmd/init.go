@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
@@ -21,14 +23,14 @@ func init() {
 	paramsFromArgumentsP = make(map[string]*string, len(reqs))
 	for _, req := range reqs {
 		paramVal := ""
-		initCmd.Flags().StringVarP(&paramVal, req.Field, string(req.Field[0]), req.Default, req.Description)
+		initCmd.Flags().StringVarP(&paramVal, req.Field, req.ShortName, req.Default, req.Description)
 		paramsFromArgumentsP[req.Field] = &paramVal
 	}
 	rootCmd.AddCommand(initCmd)
 }
 
 var initCmd = &cobra.Command{
-	Use:   "init [arg=value ...]",
+	Use:   "init",
 	Short: "Initialize the active profile of the config",
 	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -36,16 +38,16 @@ var initCmd = &cobra.Command{
 		for k, valP := range paramsFromArgumentsP {
 			paramsFromArguments[k] = *valP
 		}
-		config.Params = config.FromValues(paramsFromArguments)
+		config.Params = cli.FromValues(paramsFromArguments)
 
-		missedRequirements := config.CheckRequirements(config.Params, config.GetParameterRequirements())
+		missedRequirements := cli.CheckRequirements(config.Params, config.GetParameterRequirements())
 		if len(missedRequirements) > 0 {
 			reader := bufio.NewReader(os.Stdin)
 			err := config.PromptRequiredValues(missedRequirements, paramsFromArguments, reader)
 			if err != nil {
 				return err
 			}
-			config.Params = config.FromValues(paramsFromArguments)
+			config.Params = cli.FromValues(paramsFromArguments)
 		}
 
 		apiAuth := &api.BasicAuth{
