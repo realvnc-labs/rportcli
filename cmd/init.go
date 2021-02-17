@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"

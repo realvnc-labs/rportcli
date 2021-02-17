@@ -4,12 +4,13 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/breathbath/go_utils/utils/env"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	"github.com/breathbath/go_utils/utils/env"
 
 	"github.com/sirupsen/logrus"
 )

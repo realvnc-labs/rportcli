@@ -9,11 +9,11 @@ import (
 )
 
 type PromptReaderMock struct {
-	ReadCount   int
+	ReadCount           int
 	PasswordReadCount   int
-	ReadOutputs []string
+	ReadOutputs         []string
 	PasswordReadOutputs []string
-	ErrToGive   error
+	ErrToGive           error
 }
 
 func (prm *PromptReaderMock) ReadString(delim byte) (string, error) {
@@ -87,7 +87,7 @@ func TestPromptRequiredValues(t *testing.T) {
 
 func TestPromptPassword(t *testing.T) {
 	readerMock := &PromptReaderMock{
-		PasswordReadCount: 0,
+		PasswordReadCount:   0,
 		PasswordReadOutputs: []string{"123"},
 	}
 
@@ -109,7 +109,7 @@ func TestPromptPassword(t *testing.T) {
 	assert.Equal(
 		t,
 		map[string]string{
-			"password":   "123",
+			"password": "123",
 		},
 		actualKV,
 	)

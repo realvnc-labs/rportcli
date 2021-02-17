@@ -3,10 +3,11 @@ package config
 import (
 	"bufio"
 	"fmt"
-	"golang.org/x/crypto/ssh/terminal"
 	"os"
 	"strings"
 	"syscall"
+
+	"golang.org/x/term"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
 
@@ -28,7 +29,7 @@ func (dr *DefaultReader) ReadString(delim byte) (string, error) {
 }
 
 func (dr *DefaultReader) ReadPassword() (string, error) {
-	inputBytes, err := terminal.ReadPassword(syscall.Stdin)
+	inputBytes, err := term.ReadPassword(syscall.Stdin)
 	return string(inputBytes), err
 }
 

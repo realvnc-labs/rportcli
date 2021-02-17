@@ -4,11 +4,12 @@ import (
 	"io"
 	"regexp"
 
+	"golang.org/x/term"
+
 	"github.com/breathbath/go_utils/utils/testing"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/crypto/ssh/terminal"
 )
 
 var columnsCountToTerminalWidthMap = []tableWidthColumnsCountMapping{
@@ -58,7 +59,7 @@ func calcColumnsCount(widthMapping []tableWidthColumnsCountMapping) int {
 		return 0
 	}
 
-	actualTerminalWidth, _, err := terminal.GetSize(0)
+	actualTerminalWidth, _, err := term.GetSize(0)
 	if err != nil {
 		logrus.Warnf("cannot determine terminal width: %v", err)
 		return 0
