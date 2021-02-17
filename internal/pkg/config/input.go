@@ -35,6 +35,7 @@ func GetParameterRequirements() []cli.ParameterRequirement {
 			Validate:    cli.RequiredValidate,
 			Description: "Password to the rport server",
 			ShortName:   "p",
+			IsSecure:    true,
 		},
 	}
 }

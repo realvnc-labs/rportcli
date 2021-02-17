@@ -1,8 +1,12 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
+	"golang.org/x/crypto/ssh/terminal"
+	"os"
 	"strings"
+	"syscall"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
 
@@ -11,6 +15,21 @@ import (
 
 type PromptReader interface {
 	ReadString(delim byte) (string, error)
+	ReadPassword() (string, error)
+}
+
+type DefaultReader struct {
+}
+
+func (dr *DefaultReader) ReadString(delim byte) (string, error) {
+	reader := bufio.NewReader(os.Stdin)
+
+	return reader.ReadString(delim)
+}
+
+func (dr *DefaultReader) ReadPassword() (string, error) {
+	inputBytes, err := terminal.ReadPassword(syscall.Stdin)
+	return string(inputBytes), err
 }
 
 // PromptRequiredValues will ask user for the list of required values
@@ -63,7 +82,14 @@ func promptValue(req *cli.ParameterRequirement, promptReader PromptReader) (stri
 	}
 
 	fmt.Print("-> ")
-	readValue, err := promptReader.ReadString('\n')
+
+	var readValue string
+	var err error
+	if req.IsSecure {
+		readValue, err = promptReader.ReadPassword()
+	} else {
+		readValue, err = promptReader.ReadString('\n')
+	}
 	if err != nil {
 		return "", err
 	}

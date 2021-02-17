@@ -10,7 +10,9 @@ import (
 
 type PromptReaderMock struct {
 	ReadCount   int
+	PasswordReadCount   int
 	ReadOutputs []string
+	PasswordReadOutputs []string
 	ErrToGive   error
 }
 
@@ -22,6 +24,16 @@ func (prm *PromptReaderMock) ReadString(delim byte) (string, error) {
 	}
 
 	return prm.ReadOutputs[prm.ReadCount-1], prm.ErrToGive
+}
+
+func (prm *PromptReaderMock) ReadPassword() (string, error) {
+	prm.PasswordReadCount++
+
+	if len(prm.PasswordReadOutputs) < prm.PasswordReadCount {
+		return "", prm.ErrToGive
+	}
+
+	return prm.PasswordReadOutputs[prm.PasswordReadCount-1], prm.ErrToGive
 }
 
 func TestPromptRequiredValues(t *testing.T) {
@@ -68,6 +80,36 @@ func TestPromptRequiredValues(t *testing.T) {
 			"three": "pass1",
 			"two":   "log1",
 			"four":  "la",
+		},
+		actualKV,
+	)
+}
+
+func TestPromptPassword(t *testing.T) {
+	readerMock := &PromptReaderMock{
+		PasswordReadCount: 0,
+		PasswordReadOutputs: []string{"123"},
+	}
+
+	requirements := []cli.ParameterRequirement{
+		{
+			Field:    "password",
+			Validate: cli.RequiredValidate,
+			IsSecure: true,
+		},
+	}
+
+	actualKV := map[string]string{}
+	err := PromptRequiredValues(requirements, actualKV, readerMock)
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	assert.Equal(
+		t,
+		map[string]string{
+			"password":   "123",
 		},
 		actualKV,
 	)

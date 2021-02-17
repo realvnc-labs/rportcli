@@ -1,11 +1,8 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"os"
-
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
@@ -42,8 +39,7 @@ var initCmd = &cobra.Command{
 
 		missedRequirements := cli.CheckRequirements(config.Params, config.GetParameterRequirements())
 		if len(missedRequirements) > 0 {
-			reader := bufio.NewReader(os.Stdin)
-			err := config.PromptRequiredValues(missedRequirements, paramsFromArguments, reader)
+			err := config.PromptRequiredValues(missedRequirements, paramsFromArguments, &config.DefaultReader{})
 			if err != nil {
 				return err
 			}
