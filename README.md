@@ -135,6 +135,6 @@ You can also display help for a certain command:
     <td>CONN_TIMEOUT_SEC</td>
     <td>Connection timeout to call rport server (seconds)</td>
     <td>10 seconds</td>
-    <td>CONN_TIMEOUT_SEC=20 rporcli status</td>
+    <td>CONN_TIMEOUT_SEC=20 rporcli client list</td>
     </tr>
 </table>
