@@ -72,7 +72,7 @@ If current user has no home folder, RportCli will look for a config file next to
 You can override config path by providing env variable CONFIG_PATH, e.g.
 
 
-    CONFIG_PATH=/tmp/config.json rporcli me
+    CONFIG_PATH=/tmp/config.json rporcli init
     
     
 You can generate config by running:
@@ -115,3 +115,26 @@ Trigger this command to see all available commands and their options:
 You can also display help for a certain command:
 
     rportcli init --help
+
+## Additional configuration with environment variables
+
+<table>
+    <tr>
+    <th>Variable</th>    
+    <th>Description</th>    
+    <th>Default Value</th>    
+    <th>Example</th>    
+    </tr>
+    <tr>
+    <td>CONFIG_PATH</td>
+    <td>Changes default config location to the provided value</td>
+    <td>${HOME}/.config/rportcli/config.json</td>
+    <td>CONFIG_PATH=/tmp/config.json rporcli init</td>
+    </tr>
+    <tr>
+    <td>CONN_TIMEOUT_SEC</td>
+    <td>Connection timeout to call rport server (seconds)</td>
+    <td>10 seconds</td>
+    <td>CONN_TIMEOUT_SEC=20 rporcli status</td>
+    </tr>
+</table>

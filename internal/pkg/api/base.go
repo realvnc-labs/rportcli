@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/breathbath/go_utils/utils/env"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 
 const (
 	maxValidResponseCode = 399
+	connectionTimeoutSec = 10
 )
 
 type Rport struct {
@@ -36,11 +38,11 @@ func (c *BaseClient) WithAuth(a Auth) {
 }
 
 func (c *BaseClient) buildClient() *http.Client {
-	connectionTimeout := 30 * time.Second
+	connectionTimeout := env.ReadEnvInt("CONN_TIMEOUT_SEC", connectionTimeoutSec)
 	transport := &http.Transport{
 		DisableKeepAlives:     true,
 		TLSClientConfig:       &tls.Config{InsecureSkipVerify: false},
-		ResponseHeaderTimeout: connectionTimeout,
+		ResponseHeaderTimeout: time.Duration(connectionTimeout) * time.Second,
 	}
 	cl := &http.Client{Transport: transport}
 
