@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"syscall"
-
-	"golang.org/x/term"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
 	"github.com/fatih/color"
 )
@@ -29,7 +27,7 @@ func (dr *DefaultReader) ReadString(delim byte) (string, error) {
 }
 
 func (dr *DefaultReader) ReadPassword() (string, error) {
-	inputBytes, err := term.ReadPassword(int(syscall.Stdin))
+	inputBytes, err := utils.ReadPassword()
 	return string(inputBytes), err
 }
 
