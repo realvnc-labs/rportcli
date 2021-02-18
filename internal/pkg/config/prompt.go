@@ -29,7 +29,7 @@ func (dr *DefaultReader) ReadString(delim byte) (string, error) {
 }
 
 func (dr *DefaultReader) ReadPassword() (string, error) {
-	inputBytes, err := term.ReadPassword(syscall.Stdin)
+	inputBytes, err := term.ReadPassword(int(syscall.Stdin))
 	return string(inputBytes), err
 }
 
