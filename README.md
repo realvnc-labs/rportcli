@@ -94,12 +94,12 @@ basic auth login to access rport server, e.g. `admin`
 
 **password**
 
-basic auth password to access rport server, e.g. `root`
+basic auth password to access rport server, e.g. `foobaz`
 
 You can skip the interactive wizard by providing parameters as cli options , e.g.
 
 
-     rportcli init -s http://localhost:3000 -l admin -p root
+     rportcli init -s http://localhost:3000 -l admin -p foobaz
  
  
  Rportcli will check the provided options by calling the rport [status API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/cloudradar-monitoring/rport/master/api-doc.yml#/default/get_status).
