@@ -29,6 +29,7 @@ type ParameterRequirement struct {
 	Default     string
 	Description string
 	IsSecure    bool
+	IsRequired  bool
 }
 
 // CheckRequirements reads parameters which are missing in the configuration or having a default value

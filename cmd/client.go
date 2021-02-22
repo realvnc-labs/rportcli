@@ -21,13 +21,13 @@ func init() {
 
 var clientsCmd = &cobra.Command{
 	Use:   "client [command]",
-	Short: "Client API",
+	Short: "manage rport clients",
 	Args:  cobra.ArbitraryArgs,
 }
 
 var clientsListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "Client List API",
+	Short: "list all connected and disconnected rport clients",
 	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		rportAPI, err := buildRport()
@@ -48,7 +48,7 @@ var clientsListCmd = &cobra.Command{
 
 var clientCmd = &cobra.Command{
 	Use:   "get <ID>",
-	Short: "Client Read API",
+	Short: "get all details about a specific client identified by its id",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {

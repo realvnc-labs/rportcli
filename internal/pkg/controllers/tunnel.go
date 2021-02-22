@@ -22,26 +22,27 @@ const (
 	Scheme     = "scheme"
 	ACL        = "acl"
 	CheckPort  = "checkp"
-	DefaultACL = "<<PUBLIC IP>>"
+	DefaultACL = "<<YOU CURRENT PUBLIC IP>>"
 )
 
 func GetCreateTunnelRequirements() []cli.ParameterRequirement {
 	return []cli.ParameterRequirement{
 		{
 			Field:       ClientID,
-			Description: "unique client id retrieved previously",
+			Description: "[required] unique client id retrieved previously",
 			Validate:    cli.RequiredValidate,
 			ShortName:   "d",
+			IsRequired: true,
 		},
 		{
 			Field: Local,
-			Description: `server address to use for a new tunnel, e.g. '3390' or '0.0.0.0:3390'. 
+			Description: `refers to the ports of the rport server address to use for a new tunnel, e.g. '3390' or '0.0.0.0:3390'. 
 If local is not specified, a random server port will be assigned automatically`,
 			ShortName: "l",
 		},
 		{
 			Field:       Remote,
-			Description: "remote address endpoint, e.g. '3389'",
+			Description: "The ports are defined from the servers' perspective. 'Remote' refers to the ports and interfaces of the client., e.g. '3389'",
 			ShortName:   "r",
 		},
 		{
@@ -86,7 +87,10 @@ func (cc *TunnelController) Tunnels(ctx context.Context, rw io.Writer) error {
 
 	tunnels := make([]*models.Tunnel, 0)
 	for _, cl := range clResp.Data {
-		tunnels = append(tunnels, cl.Tunnels...)
+		for _, t := range cl.Tunnels {
+			t.Client = cl.ID
+			tunnels = append(tunnels, t)
+		}
 	}
 
 	return cc.TunnelRenderer.RenderTunnels(rw, tunnels)

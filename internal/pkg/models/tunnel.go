@@ -8,6 +8,7 @@ import (
 
 type Tunnel struct {
 	ID          string `json:"id"`
+	Client		string `json:"client"`
 	Lhost       string `json:"lhost"`
 	Lport       string `json:"lport"`
 	Rhost       string `json:"rhost"`
@@ -20,6 +21,7 @@ type Tunnel struct {
 func (t *Tunnel) Headers() []string {
 	return []string{
 		"ID",
+		"CLIENT",
 		"LHOST",
 		"LPORT",
 		"RHOST",
@@ -33,6 +35,7 @@ func (t *Tunnel) Headers() []string {
 func (t *Tunnel) Row() []string {
 	return []string{
 		t.ID,
+		t.Client,
 		t.Lhost,
 		t.Lport,
 		t.Rhost,
@@ -48,6 +51,10 @@ func (t *Tunnel) KeyValues() []testing.KeyValueStr {
 		{
 			Key:   "ID",
 			Value: t.ID,
+		},
+		{
+			Key:   "CLIENT",
+			Value: t.Client,
 		},
 		{
 			Key:   "LHOST",

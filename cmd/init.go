@@ -29,7 +29,7 @@ func init() {
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize the active profile of the config",
+	Short: "initialize your connection to the rportd API",
 	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		paramsFromArguments := make(map[string]string, len(paramsFromArgumentsP))
