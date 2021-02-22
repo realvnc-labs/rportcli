@@ -128,7 +128,7 @@ func TestErrorResponse(t *testing.T) {
 	if err == nil {
 		return
 	}
-	errResp, ok := err.(ErrorResp)
+	errResp, ok := err.(*ErrorResp)
 	assert.True(t, ok)
 	if !ok {
 		return

@@ -120,9 +120,10 @@ func (rp *Rport) DeleteTunnel(ctx context.Context, clientID, tunnelID string) (e
 	}
 	defer closeRespBody(resp)
 
-	if resp.StatusCode != http.StatusNoContent {
-		err = fmt.Errorf("unexpeted response code received: %d, expected code is %d", resp.StatusCode, http.StatusNoContent)
+	if resp.StatusCode == http.StatusNoContent {
+		return
 	}
+	err = fmt.Errorf("unexpeted response code received: %d, expected code is %d", resp.StatusCode, http.StatusNoContent)
 
 	return
 }

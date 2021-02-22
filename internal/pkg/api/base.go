@@ -3,6 +3,7 @@ package api
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -64,7 +65,23 @@ func (c *BaseClient) Call(req *http.Request, target interface{}) (resp *http.Res
 
 	resp, err = cl.Do(req)
 	if err != nil {
-		return resp, fmt.Errorf("request failed with error: %v", err)
+		return resp, fmt.Errorf("operation failed with an error: %v", err)
+	}
+	var respBodyBytes []byte
+	if resp.StatusCode > maxValidResponseCode {
+		respBodyBytes, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			logrus.Warnf("failed to read response body: %v", err)
+			e := c.convertResponseCodeToError(resp.StatusCode, nil)
+			return resp, e
+		}
+
+		var errResp = new(ErrorResp)
+		err = json.Unmarshal(respBodyBytes, errResp)
+		if err != nil {
+			logrus.Warnf("cannot unmarshal error response %s: %v", string(respBodyBytes), err)
+		}
+		return resp, errResp
 	}
 
 	if target == nil {
@@ -73,29 +90,34 @@ func (c *BaseClient) Call(req *http.Request, target interface{}) (resp *http.Res
 
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err == io.EOF {
-		return resp, fmt.Errorf("empty body in the response, status: %d", resp.StatusCode)
+		return resp, errors.New("no data received from command execution")
 	}
 	if err != nil {
-		return resp, fmt.Errorf("reading of the request body failed with error: %v, status: %d", err, resp.StatusCode)
+		return resp, fmt.Errorf("can't parse data from command execution: %v", err)
 	}
 
 	logrus.Debugf("Got response: '%s', status code: '%d'", string(respBody), resp.StatusCode)
 
-	if resp.StatusCode > maxValidResponseCode {
-		var errResp ErrorResp
-		err = json.Unmarshal(respBody, &errResp)
-		if err != nil {
-			logrus.Warnf("cannot unmarshal error response %s: %v", string(respBody), err)
-		}
-		return resp, errResp
-	}
-
 	err = json.Unmarshal(respBody, target)
 	if err != nil {
-		return resp, fmt.Errorf("cannot unmarshal response %s to %+v: %v", string(respBody), target, err)
+		return resp, fmt.Errorf("can't parse data from command execution: %v", err)
 	}
 
 	return resp, nil
+}
+
+func (c *BaseClient) convertResponseCodeToError(respCode int, errResp *ErrorResp) (err error) {
+	if respCode == http.StatusNotFound {
+		err = errors.New("the specified item doesn't exist")
+	} else if respCode == http.StatusInternalServerError {
+		err = fmt.Errorf("operation failed %s", errResp.Error())
+	} else if respCode == http.StatusBadRequest {
+		err = fmt.Errorf("invalid input provided %s", errResp.Error())
+	} else {
+		err = fmt.Errorf("unknown error %s", errResp.Error())
+	}
+
+	return err
 }
 
 func closeRespBody(resp *http.Response) {
