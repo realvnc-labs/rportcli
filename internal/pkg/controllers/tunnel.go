@@ -32,7 +32,7 @@ func GetCreateTunnelRequirements() []cli.ParameterRequirement {
 			Description: "[required] unique client id retrieved previously",
 			Validate:    cli.RequiredValidate,
 			ShortName:   "d",
-			IsRequired: true,
+			IsRequired:  true,
 		},
 		{
 			Field: Local,
@@ -41,9 +41,10 @@ If local is not specified, a random server port will be assigned automatically`,
 			ShortName: "l",
 		},
 		{
-			Field:       Remote,
-			Description: "The ports are defined from the servers' perspective. 'Remote' refers to the ports and interfaces of the client., e.g. '3389'",
-			ShortName:   "r",
+			Field: Remote,
+			Description: "The ports are defined from the servers' perspective. " +
+				"'Remote' refers to the ports and interfaces of the client., e.g. '3389'",
+			ShortName: "r",
 		},
 		{
 			Field:       Scheme,

@@ -8,7 +8,7 @@ import (
 
 type Tunnel struct {
 	ID          string `json:"id"`
-	Client		string `json:"client"`
+	Client      string `json:"client"`
 	Lhost       string `json:"lhost"`
 	Lport       string `json:"lport"`
 	Rhost       string `json:"rhost"`

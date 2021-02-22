@@ -75,7 +75,7 @@ func TestTunnelsController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`[{"id":"1","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]`,
+		`[{"id":"1","client":"123","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]`,
 		buf.String(),
 	)
 }
@@ -146,5 +146,5 @@ func TestTunnelCreateController(t *testing.T) {
 	})
 	err := tController.Create(context.Background(), &buf, params)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"id":"123","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6"}`, buf.String())
+	assert.Equal(t, `{"id":"123","client":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6"}`, buf.String())
 }

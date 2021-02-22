@@ -38,7 +38,7 @@ func TestRenderTunnels(t *testing.T) {
 	actualRenderResult := RemoveEmptySpaces(buf.String())
 	assert.Equal(
 		t,
-		"Tunnels ID LHOST LPORT RHOST RPORT LPORTRAND SCHEME ACL id22 lhost 123 rhost 124 false ssh 0.0.0.0 ",
+		"Tunnels ID CLIENT LHOST LPORT RHOST RPORT LPORTRAND SCHEME ACL id22 lhost 123 rhost 124 false ssh 0.0.0.0 ",
 		actualRenderResult,
 	)
 }
@@ -70,7 +70,7 @@ func TestRenderTunnel(t *testing.T) {
 	actualRenderResult := RemoveEmptySpaces(buf.String())
 	assert.Equal(
 		t,
-		"Created Tunnel KEY VALUE ID: id22 LHOST: lhost LPORT: 123 RHOST: rhost RPORT: 124 LPORT RANDOM: false SCHEME: ssh ACL: 0.0.0.0 ",
+		"Created Tunnel KEY VALUE ID: id22 CLIENT: LHOST: lhost LPORT: 123 RHOST: rhost RPORT: 124 LPORT RANDOM: false SCHEME: ssh ACL: 0.0.0.0 ",
 		actualRenderResult,
 	)
 }
