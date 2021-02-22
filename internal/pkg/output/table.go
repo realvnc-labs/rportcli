@@ -1,13 +1,10 @@
 package output
 
 import (
+	"github.com/breathbath/go_utils/utils/testing"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"io"
 	"regexp"
-	"syscall"
-
-	"golang.org/x/term"
-
-	"github.com/breathbath/go_utils/utils/testing"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
@@ -60,11 +57,7 @@ func calcColumnsCount(widthMapping []tableWidthColumnsCountMapping) int {
 		return 0
 	}
 
-	actualTerminalWidth, _, err := term.GetSize(int(syscall.Stdin))
-	if err != nil {
-		logrus.Warnf("cannot determine terminal width: %v", err)
-		return 0
-	}
+	actualTerminalWidth := utils.CalcTerminalColumnsCount()
 
 	logrus.Debugf("actual terminal width is %d", actualTerminalWidth)
 
