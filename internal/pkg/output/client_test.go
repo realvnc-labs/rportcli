@@ -20,7 +20,11 @@ func TestRenderClients(t *testing.T) {
 		},
 	}
 
-	cr := &ClientRenderer{}
+	cr := &ClientRenderer{
+		ColCountCalculator: func() int {
+			return 150
+		},
+	}
 
 	buf := &bytes.Buffer{}
 	err := cr.RenderClients(buf, clients)
@@ -43,7 +47,11 @@ func TestRenderClient(t *testing.T) {
 		Name: "SomeName",
 	}
 
-	cr := &ClientRenderer{}
+	cr := &ClientRenderer{
+		ColCountCalculator: func() int {
+			return 150
+		},
+	}
 
 	buf := &bytes.Buffer{}
 	err := cr.RenderClient(buf, client)

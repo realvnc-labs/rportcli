@@ -22,7 +22,11 @@ func TestRenderTunnels(t *testing.T) {
 		},
 	}
 
-	tr := &TunnelRenderer{}
+	tr := &TunnelRenderer{
+		ColCountCalculator: func() int {
+			return 150
+		},
+	}
 
 	buf := &bytes.Buffer{}
 	err := tr.RenderTunnels(buf, tunnels)
@@ -50,7 +54,11 @@ func TestRenderTunnel(t *testing.T) {
 		ACL:         "0.0.0.0",
 	}
 
-	tr := &TunnelRenderer{}
+	tr := &TunnelRenderer{
+		ColCountCalculator: func() int {
+			return 150
+		},
+	}
 
 	buf := &bytes.Buffer{}
 	err := tr.RenderTunnel(buf, tunnel)

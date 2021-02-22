@@ -7,7 +7,9 @@ import (
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 )
 
-type ClientRenderer struct{}
+type ClientRenderer struct {
+	ColCountCalculator CalcTerminalColumnsCount
+}
 
 func (cr *ClientRenderer) RenderClients(rw io.Writer, clients []*models.Client) error {
 	err := RenderHeader(rw, "Clients")
@@ -20,7 +22,7 @@ func (cr *ClientRenderer) RenderClients(rw io.Writer, clients []*models.Client) 
 		rowProviders = append(rowProviders, cl)
 	}
 
-	return RenderTable(rw, &models.Client{}, rowProviders)
+	return RenderTable(rw, &models.Client{}, rowProviders, cr.ColCountCalculator)
 }
 
 func (cr *ClientRenderer) RenderClient(rw io.Writer, client *models.Client) error {
@@ -48,5 +50,5 @@ func (cr *ClientRenderer) RenderClient(rw io.Writer, client *models.Client) erro
 		rowProviders = append(rowProviders, t)
 	}
 
-	return RenderTable(rw, &models.Tunnel{}, rowProviders)
+	return RenderTable(rw, &models.Tunnel{}, rowProviders, cr.ColCountCalculator)
 }

@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
-	"strings"
 
 	"github.com/fatih/color"
 )
@@ -91,7 +92,8 @@ func promptValue(req *cli.ParameterRequirement, promptReader PromptReader) (stri
 	}
 	if err != nil {
 		if strings.Contains(err.Error(), "The handle is invalid") {
-			return "", fmt.Errorf("your terminal does not support password promting, please use PowerShell or CMD or specify -p parameter explicitly")
+			return "", fmt.Errorf("your terminal does not support password promting " +
+				"please use PowerShell or CMD or specify -p parameter explicitly")
 		}
 		return "", err
 	}

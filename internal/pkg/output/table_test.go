@@ -56,7 +56,11 @@ func TestRenderKeyValues(t *testing.T) {
 
 func TestRenderTable(t *testing.T) {
 	buf := &bytes.Buffer{}
-	err := RenderTable(buf, ColumnsDataStub{}, []RowData{RowDataStub{}})
+
+	terminalWidthCalcFucn := func() int {
+		return 150
+	}
+	err := RenderTable(buf, ColumnsDataStub{}, []RowData{RowDataStub{}}, terminalWidthCalcFucn)
 	assert.NoError(t, err)
 	if err != nil {
 		return

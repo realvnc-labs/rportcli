@@ -6,7 +6,9 @@ import (
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 )
 
-type TunnelRenderer struct{}
+type TunnelRenderer struct {
+	ColCountCalculator CalcTerminalColumnsCount
+}
 
 func (cr *TunnelRenderer) RenderTunnels(rw io.Writer, tunnels []*models.Tunnel) error {
 	if len(tunnels) == 0 {
@@ -23,7 +25,7 @@ func (cr *TunnelRenderer) RenderTunnels(rw io.Writer, tunnels []*models.Tunnel) 
 		rowProviders = append(rowProviders, t)
 	}
 
-	return RenderTable(rw, &models.Tunnel{}, rowProviders)
+	return RenderTable(rw, &models.Tunnel{}, rowProviders, cr.ColCountCalculator)
 }
 
 func (cr *TunnelRenderer) RenderTunnel(rw io.Writer, t *models.Tunnel) error {

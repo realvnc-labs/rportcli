@@ -4,9 +4,10 @@ package utils
 
 import (
 	"fmt"
-	"golang.org/x/term"
 	"strings"
 	"syscall"
+
+	"golang.org/x/term"
 )
 
 func ReadPassword() ([]byte, error) {

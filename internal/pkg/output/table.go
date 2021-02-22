@@ -1,11 +1,10 @@
 package output
 
 import (
-	"github.com/breathbath/go_utils/utils/testing"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"io"
 	"regexp"
 
+	"github.com/breathbath/go_utils/utils/testing"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 )
@@ -28,6 +27,8 @@ var columnsCountToTerminalWidthMap = []tableWidthColumnsCountMapping{
 		columnsCount:      5,
 	},
 }
+
+type CalcTerminalColumnsCount func() int
 
 type tableWidthColumnsCountMapping struct {
 	minimalTableWidth int
@@ -52,12 +53,12 @@ func buildTable(rw io.Writer) *tablewriter.Table {
 	return table
 }
 
-func calcColumnsCount(widthMapping []tableWidthColumnsCountMapping) int {
+func calcColumnsCount(widthMapping []tableWidthColumnsCountMapping, calc CalcTerminalColumnsCount) int {
 	if len(widthMapping) == 0 {
 		return 0
 	}
 
-	actualTerminalWidth := utils.CalcTerminalColumnsCount()
+	actualTerminalWidth := calc()
 
 	logrus.Debugf("actual terminal width is %d", actualTerminalWidth)
 
@@ -83,10 +84,10 @@ type KvProvider interface {
 	KeyValues() []testing.KeyValueStr
 }
 
-func RenderTable(rw io.Writer, col ColumnsData, rowProviders []RowData) error {
+func RenderTable(rw io.Writer, col ColumnsData, rowProviders []RowData, calc CalcTerminalColumnsCount) error {
 	table := buildTable(rw)
 
-	colsCount := calcColumnsCount(columnsCountToTerminalWidthMap)
+	colsCount := calcColumnsCount(columnsCountToTerminalWidthMap, calc)
 	allHeaders := col.Headers()
 
 	if colsCount > len(allHeaders) || colsCount == 0 {

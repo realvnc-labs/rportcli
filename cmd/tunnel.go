@@ -49,7 +49,9 @@ var tunnelListCmd = &cobra.Command{
 			return err
 		}
 
-		tr := &output.TunnelRenderer{}
+		tr := &output.TunnelRenderer{
+			ColCountCalculator: utils.CalcTerminalColumnsCount,
+		}
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
@@ -76,7 +78,9 @@ var tunnelDeleteCmd = &cobra.Command{
 			return err
 		}
 
-		tr := &output.TunnelRenderer{}
+		tr := &output.TunnelRenderer{
+			ColCountCalculator: utils.CalcTerminalColumnsCount,
+		}
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
@@ -108,7 +112,9 @@ var tunnelCreateCmd = &cobra.Command{
 			return err
 		}
 
-		tr := &output.TunnelRenderer{}
+		tr := &output.TunnelRenderer{
+			ColCountCalculator: utils.CalcTerminalColumnsCount,
+		}
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,

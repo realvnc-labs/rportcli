@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/controllers"
@@ -32,7 +34,9 @@ var clientsListCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		cr := &output.ClientRenderer{}
+		cr := &output.ClientRenderer{
+			ColCountCalculator: utils.CalcTerminalColumnsCount,
+		}
 		clientsController := &controllers.ClientController{
 			Rport:          rportAPI,
 			ClientRenderer: cr,
@@ -56,7 +60,9 @@ var clientCmd = &cobra.Command{
 			return err
 		}
 
-		cr := &output.ClientRenderer{}
+		cr := &output.ClientRenderer{
+			ColCountCalculator: utils.CalcTerminalColumnsCount,
+		}
 		clientsController := &controllers.ClientController{
 			Rport:          rportAPI,
 			ClientRenderer: cr,
