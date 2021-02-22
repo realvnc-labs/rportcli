@@ -3,6 +3,7 @@ package output
 import (
 	"io"
 	"regexp"
+	"syscall"
 
 	"golang.org/x/term"
 
@@ -59,7 +60,7 @@ func calcColumnsCount(widthMapping []tableWidthColumnsCountMapping) int {
 		return 0
 	}
 
-	actualTerminalWidth, _, err := term.GetSize(0)
+	actualTerminalWidth, _, err := term.GetSize(int(syscall.Stdin))
 	if err != nil {
 		logrus.Warnf("cannot determine terminal width: %v", err)
 		return 0

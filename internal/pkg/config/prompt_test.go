@@ -16,7 +16,7 @@ type PromptReaderMock struct {
 	ErrToGive           error
 }
 
-func (prm *PromptReaderMock) ReadString(delim byte) (string, error) {
+func (prm *PromptReaderMock) ReadString() (string, error) {
 	prm.ReadCount++
 
 	if len(prm.ReadOutputs) < prm.ReadCount {
