@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	ClientsURL       = "/api/v1/clients"
+	ClientsURL = "/api/v1/clients"
 )
 
 var clientsStub = []*models.Client{

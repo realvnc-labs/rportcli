@@ -41,6 +41,16 @@ func GetConfig() (params *options.ParameterBag, err error) {
 	}, nil
 }
 
+func AuthConfigProvider() (login, pass string, err error) {
+	cfg, err := GetConfig()
+	if err != nil {
+		return "", "", err
+	}
+
+	login, pass = cfg.ReadString(Login, ""), cfg.ReadString(Password, "")
+	return
+}
+
 // GetDefaultConfig creates a config with default values
 func GetDefaultConfig() (params *options.ParameterBag) {
 	vp := options.NewMapValuesProvider(map[string]interface{}{

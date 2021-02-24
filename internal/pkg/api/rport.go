@@ -1,9 +1,10 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"github.com/sirupsen/logrus"
-	"net/http"
 )
 
 type Auth interface {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
@@ -41,7 +42,7 @@ var initCmd = &cobra.Command{
 
 		missedRequirements := cli.CheckRequirements(config.Params, config.GetParameterRequirements())
 		if len(missedRequirements) > 0 {
-			err := config.PromptRequiredValues(missedRequirements, paramsFromArguments, &config.DefaultReader{})
+			err := config.PromptRequiredValues(missedRequirements, paramsFromArguments, &utils.PromptReader{})
 			if err != nil {
 				return err
 			}

@@ -137,4 +137,10 @@ You can also display help for a certain command:
     <td>10 seconds</td>
     <td>CONN_TIMEOUT_SEC=20 rportcli client list</td>
     </tr>
+    <tr>
+    <td>SESSION_VALIDITY_SECONDS</td>
+    <td>initial lifetime of an interactive command session in seconds. Max value is 90 days<. /td>
+    <td>10(minutes) * 60</td>
+    <td>SESSION_VALIDITY_SECONDS=1800 rportcli command -i</td>
+    </tr>
 </table>

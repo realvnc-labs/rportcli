@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"net/http"
 	"strconv"
 
@@ -21,12 +20,7 @@ type LoginResponse struct {
 	Data models.Token `json:"data"`
 }
 
-func (rp *Rport) Login(ctx context.Context, login, pass string, tokenLifetime int) (li LoginResponse, err error) {
-	rp.Auth = &utils.BasicAuth{
-		Login: login,
-		Pass:  pass,
-	}
-
+func (rp *Rport) Login(ctx context.Context, tokenLifetime int) (li LoginResponse, err error) {
 	var req *http.Request
 	req, err = http.NewRequestWithContext(
 		ctx,

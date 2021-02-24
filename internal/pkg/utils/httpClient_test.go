@@ -1,13 +1,15 @@
 package utils
 
 import (
-	"github.com/stretchr/testify/assert"
+	"context"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestAuthRequest (t *testing.T) {
-	req, err := http.NewRequest("post", "/", nil)
+func TestAuthRequest(t *testing.T) {
+	req, err := http.NewRequestWithContext(context.Background(), "post", "/", nil)
 	assert.NoError(t, err)
 
 	ba := &BasicAuth{

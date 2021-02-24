@@ -5,31 +5,12 @@ import (
 	"strings"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
-
 	"github.com/fatih/color"
 )
 
 type PromptReader interface {
 	ReadString() (string, error)
 	ReadPassword() (string, error)
-}
-
-type DefaultReader struct {
-}
-
-func (dr *DefaultReader) ReadString() (string, error) {
-	var val = new(string)
-	_, err := fmt.Scanln(val)
-	if err != nil && err.Error() == "unexpected newline" {
-		return "", nil
-	}
-	return *val, err
-}
-
-func (dr *DefaultReader) ReadPassword() (string, error) {
-	inputBytes, err := utils.ReadPassword()
-	return string(inputBytes), err
 }
 
 // PromptRequiredValues will ask user for the list of required values

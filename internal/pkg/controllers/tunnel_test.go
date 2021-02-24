@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
 

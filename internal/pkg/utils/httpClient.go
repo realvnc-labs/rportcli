@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/breathbath/go_utils/utils/env"
-	http2 "github.com/breathbath/go_utils/utils/http"
-	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	"github.com/breathbath/go_utils/utils/env"
+	http2 "github.com/breathbath/go_utils/utils/http"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -123,14 +124,3 @@ func (c *BaseClient) convertResponseCodeToError(respCode int, errTarget error) (
 
 	return err
 }
-
-func closeRespBody(resp *http.Response) {
-	if resp == nil || resp.Body == nil {
-		return
-	}
-	closeErr := resp.Body.Close()
-	if closeErr != nil {
-		logrus.Error(closeErr)
-	}
-}
-

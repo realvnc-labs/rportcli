@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/breathbath/go_utils v1.3.11
 	github.com/fatih/color v1.10.0
+	github.com/gorilla/websocket v1.4.2
 	github.com/magiconair/properties v1.8.4
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/nathan-fiscaletti/consolesize-go v0.0.0-20210105204122-a87d9f614b9d

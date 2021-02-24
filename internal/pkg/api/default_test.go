@@ -3,10 +3,11 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 
@@ -27,9 +28,12 @@ func TestLogin(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	cl := New(srv.URL, nil)
+	cl := New(srv.URL, &utils.BasicAuth{
+		Login: "log1",
+		Pass:  "pass1",
+	})
 
-	loginInfo, err := cl.Login(context.Background(), "log1", "pass1", 10)
+	loginInfo, err := cl.Login(context.Background(), 10)
 	assert.NoError(t, err)
 	if err != nil {
 		return
