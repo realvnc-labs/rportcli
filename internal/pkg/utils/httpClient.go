@@ -1,19 +1,18 @@
-package api
+package utils
 
 import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/breathbath/go_utils/utils/env"
+	http2 "github.com/breathbath/go_utils/utils/http"
+	"github.com/sirupsen/logrus"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"time"
-
-	"github.com/breathbath/go_utils/utils/env"
-
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -21,16 +20,22 @@ const (
 	connectionTimeoutSec = 10
 )
 
-type Rport struct {
-	BaseURL string
-	Auth    Auth
+type Auth interface {
+	AuthRequest(r *http.Request) error
 }
 
-func New(baseURL string, a Auth) *Rport {
-	return &Rport{BaseURL: baseURL, Auth: a}
+type BasicAuth struct {
+	Login string
+	Pass  string
 }
 
-// BaseClient responsible for calling rport API
+func (ba *BasicAuth) AuthRequest(req *http.Request) error {
+	basicAuthHeader := http2.BuildBasicAuthString(ba.Login, ba.Pass)
+	req.Header.Add("Authorization", "Basic "+basicAuthHeader)
+
+	return nil
+}
+
 type BaseClient struct {
 	auth Auth
 }
@@ -51,7 +56,7 @@ func (c *BaseClient) buildClient() *http.Client {
 	return cl
 }
 
-func (c *BaseClient) Call(req *http.Request, target interface{}) (resp *http.Response, err error) {
+func (c *BaseClient) Call(req *http.Request, target interface{}, errTarget error) (resp *http.Response, err error) {
 	cl := c.buildClient()
 	dump, _ := httputil.DumpRequest(req, true)
 	logrus.Debugf("raw request: %s", string(dump))
@@ -76,12 +81,11 @@ func (c *BaseClient) Call(req *http.Request, target interface{}) (resp *http.Res
 			return resp, e
 		}
 
-		var errResp = new(ErrorResp)
-		err = json.Unmarshal(respBodyBytes, errResp)
+		err = json.Unmarshal(respBodyBytes, errTarget)
 		if err != nil {
 			logrus.Warnf("cannot unmarshal error response %s: %v", string(respBodyBytes), err)
 		}
-		return resp, errResp
+		return resp, errTarget
 	}
 
 	if target == nil {
@@ -106,15 +110,15 @@ func (c *BaseClient) Call(req *http.Request, target interface{}) (resp *http.Res
 	return resp, nil
 }
 
-func (c *BaseClient) convertResponseCodeToError(respCode int, errResp *ErrorResp) (err error) {
+func (c *BaseClient) convertResponseCodeToError(respCode int, errTarget error) (err error) {
 	if respCode == http.StatusNotFound {
 		err = errors.New("the specified item doesn't exist")
 	} else if respCode == http.StatusInternalServerError {
-		err = fmt.Errorf("operation failed %s", errResp.Error())
+		err = fmt.Errorf("operation failed %s", errTarget.Error())
 	} else if respCode == http.StatusBadRequest {
-		err = fmt.Errorf("invalid input provided %s", errResp.Error())
+		err = fmt.Errorf("invalid input provided %s", errTarget.Error())
 	} else {
-		err = fmt.Errorf("unknown error %s", errResp.Error())
+		err = fmt.Errorf("unknown error %s", errTarget.Error())
 	}
 
 	return err
@@ -129,3 +133,4 @@ func closeRespBody(resp *http.Response) {
 		logrus.Error(closeErr)
 	}
 }
+

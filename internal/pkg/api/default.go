@@ -2,13 +2,13 @@ package api
 
 import (
 	"context"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"net/http"
 	"strconv"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 
 	"github.com/breathbath/go_utils/utils/url"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -22,7 +22,7 @@ type LoginResponse struct {
 }
 
 func (rp *Rport) Login(ctx context.Context, login, pass string, tokenLifetime int) (li LoginResponse, err error) {
-	ba := &BasicAuth{
+	rp.Auth = &utils.BasicAuth{
 		Login: login,
 		Pass:  pass,
 	}
@@ -42,12 +42,7 @@ func (rp *Rport) Login(ctx context.Context, login, pass string, tokenLifetime in
 	q.Add("token-lifetime", strconv.Itoa(tokenLifetime))
 	req.URL.RawQuery = q.Encode()
 
-	cl := &BaseClient{}
-	cl.WithAuth(ba)
-
-	resp, err := cl.Call(req, &li)
-
-	defer closeRespBody(resp)
+	_, err = rp.CallBaseClient(req, &li)
 
 	return
 }
@@ -73,19 +68,7 @@ func (rp *Rport) Me(ctx context.Context) (user UserResponse, err error) {
 		return
 	}
 
-	cl := &BaseClient{}
-	cl.WithAuth(rp.Auth)
-
-	resp, err := cl.Call(req, &user)
-	if err != nil {
-		return user, err
-	}
-	defer func() {
-		closeErr := resp.Body.Close()
-		if closeErr != nil {
-			logrus.Error(closeErr)
-		}
-	}()
+	_, err = rp.CallBaseClient(req, &user)
 
 	return
 }
@@ -107,11 +90,7 @@ func (rp *Rport) Status(ctx context.Context) (st StatusResponse, err error) {
 		return
 	}
 
-	cl := &BaseClient{}
-	cl.WithAuth(rp.Auth)
-
-	resp, err := cl.Call(req, &st)
-	defer closeRespBody(resp)
+	_, err = rp.CallBaseClient(req, &st)
 
 	return
 }

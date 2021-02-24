@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
 
@@ -47,7 +48,7 @@ var initCmd = &cobra.Command{
 			config.Params = cli.FromValues(paramsFromArguments)
 		}
 
-		apiAuth := &api.BasicAuth{
+		apiAuth := &utils.BasicAuth{
 			Login: config.Params.ReadString(config.Login, ""),
 			Pass:  config.Params.ReadString(config.Password, ""),
 		}

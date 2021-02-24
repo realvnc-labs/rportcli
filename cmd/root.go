@@ -4,6 +4,7 @@ import (
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/applog"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +43,7 @@ func buildRport() (*api.Rport, error) {
 		return nil, err
 	}
 
-	apiAuth := &api.BasicAuth{
+	apiAuth := &utils.BasicAuth{
 		Login: cfg.ReadString(config.Login, ""),
 		Pass:  cfg.ReadString(config.Password, ""),
 	}

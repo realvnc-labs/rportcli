@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -58,7 +59,7 @@ func TestTunnelsController(t *testing.T) {
 	srv := startClientsServer()
 	defer srv.Close()
 
-	apiAuth := &api.BasicAuth{
+	apiAuth := &utils.BasicAuth{
 		Login: "log1",
 		Pass:  "pass1",
 	}
@@ -89,7 +90,7 @@ func TestTunnelDeleteController(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	apiAuth := &api.BasicAuth{
+	apiAuth := &utils.BasicAuth{
 		Login: "log1",
 		Pass:  "pass1",
 	}
@@ -123,7 +124,7 @@ func TestTunnelCreateController(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	apiAuth := &api.BasicAuth{
+	apiAuth := &utils.BasicAuth{
 		Login: "log1",
 		Pass:  "pass1",
 	}
