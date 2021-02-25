@@ -1,36 +1,30 @@
 package utils
 
 import (
+	"bufio"
 	"io"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/chzyer/readline"
 )
 
 type PromptReader struct {
 }
 
 func (pr *PromptReader) ReadString() (string, error) {
-	rl, err := readline.New("> ")
-	if err != nil {
-		return "", err
-	}
-	defer rl.Close()
-
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	msgChan := make(chan string, 1)
 	errChan := make(chan error, 1)
 	go func() {
-		msg, err := rl.Readline()
-		if err != nil {
-			errChan <- err
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			msgChan <- scanner.Text()
 			return
 		}
-
-		msgChan <- msg
+		if err := scanner.Err(); err != nil {
+			errChan <- err
+		}
 	}()
 
 	select {

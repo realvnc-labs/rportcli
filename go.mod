@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/breathbath/go_utils v1.3.11
-	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/fatih/color v1.10.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/leaanthony/spinner v0.5.3
