@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 
+	"github.com/breathbath/go_utils/utils/env"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/controllers"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
@@ -11,11 +14,20 @@ import (
 )
 
 var (
-	isInteractive bool
+	isInteractive                  bool
+	commandExecutionFromArgumentsP map[string]*string
 )
 
 func init() {
 	commandsCmd.Flags().BoolVarP(&isInteractive, "interactive", "i", false, "opens interactive session for command execution")
+
+	reqs := controllers.GetCommandRequirements()
+	commandExecutionFromArgumentsP = make(map[string]*string, len(reqs))
+	for _, req := range reqs {
+		paramVal := ""
+		commandsCmd.Flags().StringVarP(&paramVal, req.Field, req.ShortName, req.Default, req.Description)
+		commandExecutionFromArgumentsP[req.Field] = &paramVal
+	}
 
 	rootCmd.AddCommand(commandsCmd)
 }
@@ -34,21 +46,30 @@ var commandsCmd = &cobra.Command{
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			wsURLBuilder := &api.WsCommandURLProvider{
+			basicAuth := &utils.StorageBasicAuth{
 				AuthProvider: config.AuthConfigProvider,
-				BaseURL:      cfg.ReadString(config.ServerURL, config.DefaultServerURL),
+			}
+			baseRportURL := cfg.ReadString(config.ServerURL, config.DefaultServerURL)
+
+			rportCl := api.New(baseRportURL, basicAuth)
+
+			wsURLBuilder := &api.WsCommandURLProvider{
+				TokenProvider:        rportCl,
+				BaseURL:              baseRportURL,
+				TokenValiditySeconds: env.ReadEnvInt("SESSION_VALIDITY_SECONDS", api.DefaultTokenValiditySeconds),
 			}
 			wsClient, err := utils.NewWsClient(ctx, wsURLBuilder.BuildWsURL)
 			if err != nil {
 				return err
 			}
 
-			cmdExecutor := &api.InteractiveCommandExecutor{
-				ReadWriter:      wsClient,
-				UserInputReader: &utils.PromptReader{},
+			cmdExecutor := &controllers.InteractiveCommandsController{
+				ReadWriter:   wsClient,
+				PromptReader: &utils.PromptReader{},
+				Spinner:      utils.NewSpinner(),
 			}
 
-			err = cmdExecutor.Start(ctx)
+			err = cmdExecutor.Start(ctx, commandExecutionFromArgumentsP)
 
 			return err
 		}

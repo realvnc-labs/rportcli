@@ -1,10 +1,11 @@
 package config
 
 import (
+	"errors"
 	"fmt"
-	"strings"
+	"io"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"github.com/fatih/color"
 )
 
@@ -15,7 +16,7 @@ type PromptReader interface {
 
 // PromptRequiredValues will ask user for the list of required values
 func PromptRequiredValues(
-	missedRequirements []cli.ParameterRequirement,
+	missedRequirements []ParameterRequirement,
 	targetKV map[string]string,
 	promptReader PromptReader,
 ) error {
@@ -56,7 +57,7 @@ func PromptRequiredValues(
 	return nil
 }
 
-func promptValue(req *cli.ParameterRequirement, promptReader PromptReader) (string, error) {
+func promptValue(req *ParameterRequirement, promptReader PromptReader) (string, error) {
 	fmt.Println(req.Help)
 	if req.Default != "" {
 		fmt.Printf("Default value: %s\n", req.Default)
@@ -72,9 +73,8 @@ func promptValue(req *cli.ParameterRequirement, promptReader PromptReader) (stri
 		readValue, err = promptReader.ReadString()
 	}
 	if err != nil {
-		if strings.Contains(err.Error(), "The handle is invalid") {
-			return "", fmt.Errorf("your terminal does not support password promting " +
-				"please use PowerShell or CMD or specify -p parameter explicitly")
+		if err == io.EOF {
+			return "", errors.New(utils.InterruptMessage)
 		}
 		return "", err
 	}

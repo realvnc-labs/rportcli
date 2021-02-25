@@ -14,7 +14,11 @@ import (
 )
 
 const (
-	defaultPath = ".config/rportcli/config.json"
+	defaultPath      = ".config/rportcli/config.json"
+	ServerURL        = "server_url"
+	Login            = "login"
+	Password         = "password"
+	DefaultServerURL = "http://localhost:3000"
 )
 
 // GetConfig reads config data from location

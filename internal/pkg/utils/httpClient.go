@@ -37,6 +37,22 @@ func (ba *BasicAuth) AuthRequest(req *http.Request) error {
 	return nil
 }
 
+type StorageBasicAuth struct {
+	AuthProvider func() (login, pass string, err error)
+}
+
+func (sba *StorageBasicAuth) AuthRequest(req *http.Request) error {
+	login, pass, err := sba.AuthProvider()
+	if err != nil {
+		return err
+	}
+
+	basicAuthHeader := http2.BuildBasicAuthString(login, pass)
+	req.Header.Add("Authorization", "Basic "+basicAuthHeader)
+
+	return nil
+}
+
 type BaseClient struct {
 	auth Auth
 }

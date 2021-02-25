@@ -9,9 +9,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
@@ -139,7 +139,7 @@ func TestTunnelCreateController(t *testing.T) {
 	}
 
 	buf := bytes.Buffer{}
-	params := cli.FromValues(map[string]string{
+	params := config.FromValues(map[string]string{
 		ClientID:  "334",
 		Local:     "lohost1:3300",
 		Remote:    "rhost2:3344",

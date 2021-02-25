@@ -5,6 +5,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	InterruptMessage = "command interrupted, exiting"
+)
+
 func CalcTerminalColumnsCount() int {
 	actualTerminalWidth, _ := consolesize.GetConsoleSize()
 

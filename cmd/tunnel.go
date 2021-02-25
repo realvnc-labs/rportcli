@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
+
 	"github.com/sirupsen/logrus"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
@@ -63,7 +64,9 @@ var tunnelListCmd = &cobra.Command{
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
-			IPProvider:     utils.APIIPProvider{},
+			IPProvider: utils.APIIPProvider{
+				URL: utils.IPCheckerURL,
+			},
 		}
 
 		return tunnelController.Tunnels(context.Background(), os.Stdout)
@@ -92,7 +95,9 @@ var tunnelDeleteCmd = &cobra.Command{
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
-			IPProvider:     utils.APIIPProvider{},
+			IPProvider: utils.APIIPProvider{
+				URL: utils.IPCheckerURL,
+			},
 		}
 
 		return tunnelController.Delete(context.Background(), os.Stdout, args[0], args[1])
@@ -112,9 +117,9 @@ with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 		for k, valP := range tunnelCreateRequirementsP {
 			tunnelCreateRequirements[k] = *valP
 		}
-		params := cli.FromValues(tunnelCreateRequirements)
+		params := config.FromValues(tunnelCreateRequirements)
 
-		err := cli.CheckRequirementsError(params, controllers.GetCreateTunnelRequirements())
+		err := config.CheckRequirementsError(params, controllers.GetCreateTunnelRequirements())
 		if err != nil {
 			return err
 		}
@@ -130,7 +135,9 @@ with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
-			IPProvider:     utils.APIIPProvider{},
+			IPProvider: utils.APIIPProvider{
+				URL: utils.IPCheckerURL,
+			},
 		}
 
 		return tunnelController.Create(context.Background(), os.Stdout, params)

@@ -3,6 +3,8 @@ package api
 import (
 	"net/http"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"github.com/sirupsen/logrus"
 )
@@ -24,7 +26,7 @@ func (rp *Rport) CallBaseClient(req *http.Request, target interface{}) (resp *ht
 	cl := &utils.BaseClient{}
 	cl.WithAuth(rp.Auth)
 
-	var errResp ErrorResp
+	var errResp models.ErrorResp
 
 	resp, err = cl.Call(req, target, &errResp)
 	if err != nil {

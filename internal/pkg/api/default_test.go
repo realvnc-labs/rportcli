@@ -33,7 +33,7 @@ func TestLogin(t *testing.T) {
 		Pass:  "pass1",
 	})
 
-	loginInfo, err := cl.Login(context.Background(), 10)
+	loginInfo, err := cl.GetToken(context.Background(), 10)
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -110,8 +110,8 @@ func TestErrorResponse(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusBadRequest)
 		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(ErrorResp{
-			Errors: []Error{
+		e := jsonEnc.Encode(models.ErrorResp{
+			Errors: []models.Error{
 				{
 					Code:   "400",
 					Title:  "some title",
@@ -133,13 +133,13 @@ func TestErrorResponse(t *testing.T) {
 	if err == nil {
 		return
 	}
-	errResp, ok := err.(*ErrorResp)
+	errResp, ok := err.(*models.ErrorResp)
 	assert.True(t, ok)
 	if !ok {
 		return
 	}
 
-	expectedErrors := []Error{
+	expectedErrors := []models.Error{
 		{
 			Code:   "400",
 			Title:  "some title",

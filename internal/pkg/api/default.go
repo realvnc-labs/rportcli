@@ -11,16 +11,17 @@ import (
 )
 
 const (
-	LoginURL  = "/api/v1/login"
-	MeURL     = "/api/v1/me"
-	StatusURL = "/api/v1/status"
+	LoginURL                    = "/api/v1/login"
+	MeURL                       = "/api/v1/me"
+	StatusURL                   = "/api/v1/status"
+	DefaultTokenValiditySeconds = 10 * 60
 )
 
 type LoginResponse struct {
 	Data models.Token `json:"data"`
 }
 
-func (rp *Rport) Login(ctx context.Context, tokenLifetime int) (li LoginResponse, err error) {
+func (rp *Rport) GetToken(ctx context.Context, tokenLifetime int) (li LoginResponse, err error) {
 	var req *http.Request
 	req, err = http.NewRequestWithContext(
 		ctx,

@@ -8,14 +8,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const ipCheckerURL = "https://api64.ipify.org"
+const IPCheckerURL = "https://api64.ipify.org"
 
 type APIIPProvider struct {
+	URL string
 }
 
 func (ap APIIPProvider) GetIP(ctx context.Context) (string, error) {
-	logrus.Debugf("will detect public IP from %s", ipCheckerURL)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, ipCheckerURL, nil)
+	logrus.Debugf("will detect public IP from %s", ap.URL)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, ap.URL, nil)
 	if err != nil {
 		return "", nil
 	}

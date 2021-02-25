@@ -3,8 +3,6 @@ package config
 import (
 	"testing"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,18 +45,18 @@ func TestPromptRequiredValues(t *testing.T) {
 		},
 	}
 
-	requirements := []cli.ParameterRequirement{
+	requirements := []ParameterRequirement{
 		{
 			Field:    "one",
-			Validate: cli.RequiredValidate,
+			Validate: RequiredValidate,
 		},
 		{
 			Field:    "two",
-			Validate: cli.RequiredValidate,
+			Validate: RequiredValidate,
 		},
 		{
 			Field:    "three",
-			Validate: cli.RequiredValidate,
+			Validate: RequiredValidate,
 		},
 		{
 			Field:   "four",
@@ -91,10 +89,10 @@ func TestPromptPassword(t *testing.T) {
 		PasswordReadOutputs: []string{"123"},
 	}
 
-	requirements := []cli.ParameterRequirement{
+	requirements := []ParameterRequirement{
 		{
 			Field:    "password",
-			Validate: cli.RequiredValidate,
+			Validate: RequiredValidate,
 			IsSecure: true,
 		},
 	}

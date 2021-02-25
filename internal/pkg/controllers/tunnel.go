@@ -4,8 +4,9 @@ import (
 	"context"
 	"io"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
+
 	options "github.com/breathbath/go_utils/utils/config"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cli"
 	"github.com/sirupsen/logrus"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
@@ -25,12 +26,12 @@ const (
 	DefaultACL = "<<YOU CURRENT PUBLIC IP>>"
 )
 
-func GetCreateTunnelRequirements() []cli.ParameterRequirement {
-	return []cli.ParameterRequirement{
+func GetCreateTunnelRequirements() []config.ParameterRequirement {
+	return []config.ParameterRequirement{
 		{
 			Field:       ClientID,
 			Description: "[required] unique client id retrieved previously",
-			Validate:    cli.RequiredValidate,
+			Validate:    config.RequiredValidate,
 			ShortName:   "d",
 			IsRequired:  true,
 		},
