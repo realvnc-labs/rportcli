@@ -17,8 +17,12 @@ func (pr *PromptReader) ReadString() (string, error) {
 		for scanner.Scan() {
 			return scanner.Text(), nil
 		}
+		err := scanner.Err()
+		if err != nil {
+			return "", err
+		}
 
-		return "", scanner.Err()
+		return "", io.EOF
 	})
 }
 
