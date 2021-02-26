@@ -80,10 +80,11 @@ func TestStatus(t *testing.T) {
 		assert.Equal(t, "/api/v1/status", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
 		e := jsonEnc.Encode(StatusResponse{Data: models.Status{
-			SessionsCount: 1,
-			Version:       "v123",
-			Fingerprint:   "fp123",
-			ConnectURL:    "conn",
+			ClientsConnected:    3,
+			ClientsDisconnected: 1,
+			Version:             "v123",
+			Fingerprint:         "fp123",
+			ConnectURL:          "conn",
 		}})
 		assert.NoError(t, e)
 	}))
@@ -103,7 +104,8 @@ func TestStatus(t *testing.T) {
 	assert.Equal(t, "v123", statusResp.Data.Version)
 	assert.Equal(t, "conn", statusResp.Data.ConnectURL)
 	assert.Equal(t, "fp123", statusResp.Data.Fingerprint)
-	assert.Equal(t, 1, statusResp.Data.SessionsCount)
+	assert.Equal(t, 3, statusResp.Data.ClientsConnected)
+	assert.Equal(t, 1, statusResp.Data.ClientsDisconnected)
 }
 
 func TestErrorResponse(t *testing.T) {
