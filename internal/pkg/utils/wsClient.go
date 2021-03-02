@@ -63,5 +63,8 @@ func (wc *WsClient) Read() (msg []byte, err error) {
 
 func (wc *WsClient) Write(inputMsg []byte) (n int, err error) {
 	err = wc.Conn.WriteMessage(websocket.TextMessage, inputMsg)
+	if err == nil {
+		logrus.Debugf("sent command message '%s' to the rport", string(inputMsg))
+	}
 	return len(inputMsg), err
 }

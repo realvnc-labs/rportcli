@@ -33,7 +33,7 @@ func (cr *TunnelRenderer) RenderTunnel(rw io.Writer, t *models.Tunnel) error {
 		return nil
 	}
 
-	err := RenderHeader(rw, "Created Tunnel")
+	err := RenderHeader(rw, "Tunnel")
 	if err != nil {
 		return err
 	}

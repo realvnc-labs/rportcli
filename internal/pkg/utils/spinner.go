@@ -25,6 +25,10 @@ func (s *Spinner) Update(msg string) {
 	s.baseSpinner.UpdateMessage(msg)
 }
 
-func (s *Spinner) Stop(msg string) {
+func (s *Spinner) StopSuccess(msg string) {
 	s.baseSpinner.Success(msg)
+}
+
+func (s *Spinner) StopError(msg string) {
+	s.baseSpinner.Error(msg)
 }

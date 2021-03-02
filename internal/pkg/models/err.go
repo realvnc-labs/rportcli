@@ -1,8 +1,8 @@
 package models
 
 import (
-	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type Error struct {
@@ -16,10 +16,14 @@ type ErrorResp struct {
 }
 
 func (er ErrorResp) Error() string {
-	jsonStr, err := json.Marshal(er)
-	if err != nil {
-		jsonStr = []byte{}
+	errs := make([]string, 0, len(er.Errors))
+	for _, err := range er.Errors {
+		if err.Code == "" && err.Detail == "" {
+			errs = append(errs, err.Title)
+		} else {
+			errs = append(errs, fmt.Sprintf("%s, code: %s, details: %s", err.Title, err.Code, err.Detail))
+		}
 	}
 
-	return fmt.Sprintf("API error response: '%s'", jsonStr)
+	return strings.Join(errs, "\n")
 }

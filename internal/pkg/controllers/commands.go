@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"io"
@@ -24,7 +25,7 @@ const (
 	timeout                  = "timeout"
 	execConcurrently         = "conc"
 	waitingMsg               = "waiting for the command to finish"
-	finishedMsg              = "finished command execution"
+	finishedMsg              = "finished command execution on all clients"
 )
 
 func GetCommandRequirements() []config.ParameterRequirement {
@@ -80,13 +81,20 @@ type ReadWriter interface {
 type Spinner interface {
 	Start(msg string)
 	Update(msg string)
-	Stop(msg string)
+	StopSuccess(msg string)
+	StopError(msg string)
+}
+
+type JobRenderer interface {
+	RenderJob(rw io.Writer, j *models.Job) error
 }
 
 type InteractiveCommandsController struct {
 	ReadWriter   ReadWriter
 	PromptReader config.PromptReader
 	Spinner      Spinner
+	JobRenderer  JobRenderer
+	OutputWriter io.Writer
 }
 
 func (icm *InteractiveCommandsController) Start(ctx context.Context, parametersFromArguments map[string]*string) error {
@@ -165,7 +173,7 @@ func (icm *InteractiveCommandsController) sendCommand(wsCmd models.WsCommand) er
 
 func (icm *InteractiveCommandsController) startReading(ctx context.Context) error {
 	errsChan := make(chan error, 1)
-	msgChan := make(chan string, 1)
+	msgChan := make(chan []byte, 1)
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
@@ -183,13 +191,13 @@ func (icm *InteractiveCommandsController) startReading(ctx context.Context) erro
 					}
 					errsChan <- err
 				}
-				msgChan <- string(msg)
+				msgChan <- msg
 			}
 		}
 	}()
 
 	icm.Spinner.Start(waitingMsg)
-	defer icm.Spinner.Stop(finishedMsg)
+	defer icm.Spinner.StopSuccess(finishedMsg)
 mainLoop:
 	for {
 		select {
@@ -199,7 +207,7 @@ mainLoop:
 			if !ok {
 				return nil
 			}
-			err := icm.processMessage(msg)
+			err := icm.processRawMessage(msg)
 			if err != nil {
 				return err
 			}
@@ -212,7 +220,35 @@ mainLoop:
 	return nil
 }
 
-func (icm *InteractiveCommandsController) processMessage(msg string) error {
-	icm.Spinner.Stop(msg)
+func (icm *InteractiveCommandsController) processRawMessage(msg []byte) error {
+	var job models.Job
+	err := json.Unmarshal(msg, &job)
+	if err != nil || job.Jid == "" {
+		logrus.Debugf("cannot unmarshal %s to the Job: %v, will try interpret it as an error", string(msg), err)
+		var errResp models.ErrorResp
+		err = json.Unmarshal(msg, &errResp)
+		if err != nil {
+			logrus.Errorf("cannot recognise command output message: %s, reason: %v", string(msg), err)
+			return err
+		}
+		icm.Spinner.StopError(errResp.Error())
+		return nil
+	}
+
+	logrus.Debugf("received message: '%s'", string(msg))
+
+	var buf bytes.Buffer
+	err = icm.JobRenderer.RenderJob(&buf, &job)
+	if err != nil {
+		return err
+	}
+
+	if job.Error != "" {
+		icm.Spinner.StopError(job.Error)
+		_, err := icm.OutputWriter.Write(buf.Bytes())
+		return err
+	}
+
+	icm.Spinner.StopSuccess(buf.String())
 	return nil
 }

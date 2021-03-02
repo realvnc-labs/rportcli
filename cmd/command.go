@@ -3,6 +3,8 @@ package cmd
 import (
 	"context"
 	"errors"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
+	"os"
 
 	"github.com/breathbath/go_utils/utils/env"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/controllers"
@@ -67,6 +69,8 @@ var commandsCmd = &cobra.Command{
 				ReadWriter:   wsClient,
 				PromptReader: &utils.PromptReader{},
 				Spinner:      utils.NewSpinner(),
+				JobRenderer:  &output.JobRenderer{},
+				OutputWriter: os.Stdin,
 			}
 
 			err = cmdExecutor.Start(ctx, commandExecutionFromArgumentsP)

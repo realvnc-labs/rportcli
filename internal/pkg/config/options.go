@@ -37,10 +37,6 @@ func CheckRequirements(params *options.ParameterBag, requirementsToCheck []Param
 	missedRequirements := make([]ParameterRequirement, 0)
 	for _, req := range requirementsToCheck {
 		paramInConfig, _ := params.Read(req.Field, nil)
-		if req.Default != "" && paramInConfig == req.Default {
-			missedRequirements = append(missedRequirements, req)
-			continue
-		}
 
 		if req.Validate == nil {
 			continue

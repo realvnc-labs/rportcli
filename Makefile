@@ -10,9 +10,9 @@ help:
 	@echo "Usage: make [<target>]"
 	@echo "where available targets are:"
 	@echo
-	@echo "build             : Build Tacoscript binary for the current OS"
-	@echo "build-win         : Build Tacoscript binary for Windows"
-	@echo "build-nix         : Build Tacoscript binary for Linux"
+	@echo "build             : Build binary for the current OS"
+	@echo "build-win         : Build binary for Windows"
+	@echo "build-nix         : Build binary for Linux"
 	@echo "help              : Print this help"
 	@echo "test              : Run unit tests, if any"
 	@echo "sca               : Run SCA"
