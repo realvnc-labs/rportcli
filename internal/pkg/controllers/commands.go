@@ -228,7 +228,7 @@ func (icm *InteractiveCommandsController) processRawMessage(msg []byte) error {
 		var errResp models.ErrorResp
 		err = json.Unmarshal(msg, &errResp)
 		if err != nil {
-			logrus.Errorf("cannot recognise command output message: %s, reason: %v", string(msg), err)
+			logrus.Errorf("cannot recognize command output message: %s, reason: %v", string(msg), err)
 			return err
 		}
 		icm.Spinner.StopError(errResp.Error())

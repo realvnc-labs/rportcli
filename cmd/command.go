@@ -3,8 +3,9 @@ package cmd
 import (
 	"context"
 	"errors"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 	"os"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
 	"github.com/breathbath/go_utils/utils/env"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/controllers"

@@ -1,9 +1,10 @@
 package models
 
 import (
-	"github.com/breathbath/go_utils/utils/testing"
 	"strconv"
 	"time"
+
+	"github.com/breathbath/go_utils/utils/testing"
 )
 
 type JobResult struct {

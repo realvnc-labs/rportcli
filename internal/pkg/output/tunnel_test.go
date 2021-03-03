@@ -70,7 +70,7 @@ func TestRenderTunnel(t *testing.T) {
 	actualRenderResult := RemoveEmptySpaces(buf.String())
 	assert.Equal(
 		t,
-		"Created Tunnel KEY VALUE ID: id22 CLIENT: LHOST: lhost LPORT: 123 RHOST: rhost RPORT: 124 LPORT RANDOM: false SCHEME: ssh ACL: 0.0.0.0 ",
+		"Tunnel KEY VALUE ID: id22 CLIENT: LHOST: lhost LPORT: 123 RHOST: rhost RPORT: 124 LPORT RANDOM: false SCHEME: ssh ACL: 0.0.0.0 ",
 		actualRenderResult,
 	)
 }
