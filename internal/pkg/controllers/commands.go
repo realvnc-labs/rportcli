@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"io"
@@ -110,10 +109,8 @@ func (icm *InteractiveCommandsController) Start(ctx context.Context, parametersF
 	if err != nil {
 		return err
 	}
-	readingCtx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
-	err = icm.startReading(readingCtx)
+	err = icm.startReading(ctx)
 
 	return err
 }
@@ -237,18 +234,13 @@ func (icm *InteractiveCommandsController) processRawMessage(msg []byte) error {
 
 	logrus.Debugf("received message: '%s'", string(msg))
 
-	var buf bytes.Buffer
-	err = icm.JobRenderer.RenderJob(&buf, &job)
-	if err != nil {
-		return err
-	}
-
 	if job.Error != "" {
-		icm.Spinner.StopError(job.Error)
-		_, err := icm.OutputWriter.Write(buf.Bytes())
+		icm.Spinner.StopError("Error: " + job.Error)
+		err = icm.JobRenderer.RenderJob(os.Stdout, &job)
 		return err
 	}
 
-	icm.Spinner.StopSuccess(buf.String())
-	return nil
+	icm.Spinner.StopSuccess("Success. Command Execution Result:")
+	err = icm.JobRenderer.RenderJob(os.Stdout, &job)
+	return err
 }
