@@ -40,7 +40,7 @@ func TestRenderJob(t *testing.T) {
 	actualRenderResult := RemoveEmptySpaces(buf.String())
 	assert.Equal(
 		t,
-		"Command Execution Result KEY VALUE Job ID: 123 Status: success Command Output: some std Command Error Output: Started at: 2021-01-01T00:00:01Z Finished at: 2021-01-01T00:00:01Z Client ID: cl123 Command: ls Shell: cmd Pid: 123 Timeout sec: 10 Created By: me Multi Job ID: ",
+		"Command Execution Result Job ID: 123 Status: success Command Output: some std Command Error Output: Started at: 2021-01-01T00:00:01Z Finished at: 2021-01-01T00:00:01Z Client ID: cl123 Command: ls Shell: cmd Pid: 123 Timeout sec: 10 Created By: me Multi Job ID: ",
 		actualRenderResult,
 	)
 }
