@@ -32,6 +32,7 @@ func (rp *Rport) CallBaseClient(req *http.Request, target interface{}) (resp *ht
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() {
 		closeErr := resp.Body.Close()
 		if closeErr != nil {

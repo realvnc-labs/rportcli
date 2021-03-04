@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	options "github.com/breathbath/go_utils/utils/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
@@ -14,7 +15,7 @@ func GetInitRequirements() []config.ParameterRequirement {
 		{
 			Field:       config.ServerURL,
 			Help:        "Enter Server Url",
-			Default:     config.DefaultServerURL,
+			Validate:    config.RequiredValidate,
 			Description: "Server address of rport to connect to",
 			ShortName:   "s",
 		},
@@ -36,43 +37,43 @@ func GetInitRequirements() []config.ParameterRequirement {
 	}
 }
 
-type InitController struct{}
+type ConfigWriter func(params *options.ParameterBag) (err error)
 
-func (cc *InitController) InitConfig(ctx context.Context, parametersFromArguments map[string]*string) error {
+type InitController struct {
+	ConfigWriter ConfigWriter
+	PromptReader config.PromptReader
+}
+
+func (ic *InitController) InitConfig(ctx context.Context, parametersFromArguments map[string]*string) error {
 	paramsFromArguments := make(map[string]string, len(parametersFromArguments))
 	for k, valP := range parametersFromArguments {
 		paramsFromArguments[k] = *valP
 	}
-	config.Params = config.FromValues(paramsFromArguments)
+	params := config.FromValues(paramsFromArguments)
 
-	missedRequirements := config.CheckRequirements(config.Params, GetInitRequirements())
+	missedRequirements := config.CheckRequirements(params, GetInitRequirements())
 	if len(missedRequirements) > 0 {
-		err := config.PromptRequiredValues(missedRequirements, paramsFromArguments, &utils.PromptReader{})
+		err := config.PromptRequiredValues(missedRequirements, paramsFromArguments, ic.PromptReader)
 		if err != nil {
 			return err
 		}
-		config.Params = config.FromValues(paramsFromArguments)
+		params = config.FromValues(paramsFromArguments)
 	}
 
 	apiAuth := &utils.BasicAuth{
-		Login: config.Params.ReadString(config.Login, ""),
-		Pass:  config.Params.ReadString(config.Password, ""),
+		Login: params.ReadString(config.Login, ""),
+		Pass:  params.ReadString(config.Password, ""),
 	}
 
-	cl := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
-	_, err := cl.Status(context.Background())
+	cl := api.New(params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
+	_, err := cl.Status(ctx)
 	if err != nil {
-		return fmt.Errorf("config verification failed against the rport API: %v", err)
+		return fmt.Errorf("config verification failed against the rport: %v", err)
 	}
 
-	err = config.WriteConfig(config.Params)
+	err = ic.ConfigWriter(params)
 	if err != nil {
 		return err
-	}
-
-	_, err = cl.Status(ctx)
-	if err != nil {
-		return fmt.Errorf("config verification failed against the rport API: %v", err)
 	}
 
 	return nil

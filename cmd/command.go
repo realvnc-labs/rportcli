@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
@@ -66,9 +69,16 @@ var commandsCmd = &cobra.Command{
 				return err
 			}
 
+			sigs := make(chan os.Signal, 1)
+			signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
 			cmdExecutor := &controllers.InteractiveCommandsController{
-				ReadWriter:   wsClient,
-				PromptReader: &utils.PromptReader{},
+				ReadWriter: wsClient,
+				PromptReader: &utils.PromptReader{
+					Sc:              bufio.NewScanner(os.Stdin),
+					SigChan:         sigs,
+					PasswordScanner: utils.ReadPassword,
+				},
 				Spinner:      utils.NewSpinner(),
 				JobRenderer:  &output.JobRenderer{},
 				OutputWriter: os.Stdin,

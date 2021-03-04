@@ -101,6 +101,8 @@ func (c *BaseClient) Call(req *http.Request, target interface{}, errTarget error
 		err = json.Unmarshal(respBodyBytes, errTarget)
 		if err != nil {
 			logrus.Warnf("cannot unmarshal error response %s: %v", string(respBodyBytes), err)
+			e := c.convertResponseCodeToError(resp.StatusCode, nil)
+			return resp, e
 		}
 		return resp, errTarget
 	}
@@ -131,11 +133,23 @@ func (c *BaseClient) convertResponseCodeToError(respCode int, errTarget error) (
 	if respCode == http.StatusNotFound {
 		err = errors.New("the specified item doesn't exist")
 	} else if respCode == http.StatusInternalServerError {
-		err = fmt.Errorf("operation failed %s", errTarget.Error())
+		if errTarget != nil {
+			err = fmt.Errorf("operation failed %s", errTarget.Error())
+		} else {
+			err = errors.New("operation failed")
+		}
 	} else if respCode == http.StatusBadRequest {
-		err = fmt.Errorf("invalid input provided %s", errTarget.Error())
+		if errTarget != nil {
+			err = fmt.Errorf("invalid input provided: %s", errTarget.Error())
+		} else {
+			err = errors.New("invalid input provided")
+		}
 	} else {
-		err = fmt.Errorf("unknown error %s", errTarget.Error())
+		if errTarget != nil {
+			err = fmt.Errorf("unknown error: %s", errTarget.Error())
+		} else {
+			err = errors.New("unknown error")
+		}
 	}
 
 	return err

@@ -1,23 +1,30 @@
 package utils
 
 import (
-	"bufio"
 	"io"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
+type Scanner interface {
+	Scan() bool
+	Text() string
+	Err() error
+}
+
+type PasswordScanner func() ([]byte, error)
+
 type PromptReader struct {
+	Sc              Scanner
+	SigChan         chan os.Signal
+	PasswordScanner PasswordScanner
 }
 
 func (pr *PromptReader) ReadString() (string, error) {
 	return pr.promptForStrValue(func() (string, error) {
-		scanner := bufio.NewScanner(os.Stdin)
-		for scanner.Scan() {
-			return scanner.Text(), nil
+		for pr.Sc.Scan() {
+			return pr.Sc.Text(), nil
 		}
-		err := scanner.Err()
+		err := pr.Sc.Err()
 		if err != nil {
 			return "", err
 		}
@@ -28,14 +35,12 @@ func (pr *PromptReader) ReadString() (string, error) {
 
 func (pr *PromptReader) ReadPassword() (string, error) {
 	return pr.promptForStrValue(func() (string, error) {
-		inputBytes, err := ReadPassword()
+		inputBytes, err := pr.PasswordScanner()
 		return string(inputBytes), err
 	})
 }
 
 func (pr *PromptReader) promptForStrValue(reader func() (string, error)) (string, error) {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	msgChan := make(chan string, 1)
 	errChan := make(chan error, 1)
 	go func() {
@@ -48,7 +53,7 @@ func (pr *PromptReader) promptForStrValue(reader func() (string, error)) (string
 	}()
 
 	select {
-	case <-sigs:
+	case <-pr.SigChan:
 		return "", io.EOF
 	case msg := <-msgChan:
 		return msg, nil
