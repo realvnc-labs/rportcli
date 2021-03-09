@@ -43,9 +43,10 @@ If local is not specified, a random server port will be assigned automatically`,
 		},
 		{
 			Field: Remote,
-			Description: "The ports are defined from the servers' perspective. " +
+			Description: "[required] the ports are defined from the servers' perspective. " +
 				"'Remote' refers to the ports and interfaces of the client., e.g. '3389'",
-			ShortName: "r",
+			ShortName:  "r",
+			IsRequired: true,
 		},
 		{
 			Field:       Scheme,
