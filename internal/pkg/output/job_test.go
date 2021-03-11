@@ -28,10 +28,12 @@ func TestRenderJob(t *testing.T) {
 		},
 	}
 
-	jr := &JobRenderer{}
-
 	buf := &bytes.Buffer{}
-	err = jr.RenderJob(buf, tunnel)
+	jr := &JobRenderer{
+		Writer: buf,
+	}
+
+	err = jr.RenderJob(tunnel)
 	assert.NoError(t, err)
 	if err != nil {
 		return

@@ -32,3 +32,18 @@ func (s *Spinner) StopSuccess(msg string) {
 func (s *Spinner) StopError(msg string) {
 	s.baseSpinner.Error(msg)
 }
+
+type NullSpinner struct {
+}
+
+func (ns *NullSpinner) Start(msg string) {
+}
+
+func (ns *NullSpinner) Update(msg string) {
+}
+
+func (ns *NullSpinner) StopSuccess(msg string) {
+}
+
+func (ns *NullSpinner) StopError(msg string) {
+}

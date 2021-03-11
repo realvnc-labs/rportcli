@@ -72,6 +72,10 @@ var commandsCmd = &cobra.Command{
 			sigs := make(chan os.Signal, 1)
 			signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
+			var spinner controllers.Spinner = &utils.NullSpinner{}
+			if Verbose {
+				spinner = utils.NewSpinner()
+			}
 			cmdExecutor := &controllers.InteractiveCommandsController{
 				ReadWriter: wsClient,
 				PromptReader: &utils.PromptReader{
@@ -79,9 +83,11 @@ var commandsCmd = &cobra.Command{
 					SigChan:         sigs,
 					PasswordScanner: utils.ReadPassword,
 				},
-				Spinner:      utils.NewSpinner(),
-				JobRenderer:  &output.JobRenderer{},
-				OutputWriter: os.Stdin,
+				Spinner: spinner,
+				JobRenderer: &output.JobRenderer{
+					Writer: os.Stdin,
+					Format: getOutputFormat(),
+				},
 			}
 
 			err = cmdExecutor.Start(ctx, commandExecutionFromArgumentsP)

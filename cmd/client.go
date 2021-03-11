@@ -36,13 +36,15 @@ var clientsListCmd = &cobra.Command{
 		}
 		cr := &output.ClientRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,
+			Writer:             os.Stdout,
+			Format:             getOutputFormat(),
 		}
 		clientsController := &controllers.ClientController{
 			Rport:          rportAPI,
 			ClientRenderer: cr,
 		}
 
-		return clientsController.Clients(context.Background(), os.Stdout)
+		return clientsController.Clients(context.Background())
 	},
 }
 
@@ -62,12 +64,14 @@ var clientCmd = &cobra.Command{
 
 		cr := &output.ClientRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,
+			Writer:             os.Stdout,
+			Format:             getOutputFormat(),
 		}
 		clientsController := &controllers.ClientController{
 			Rport:          rportAPI,
 			ClientRenderer: cr,
 		}
 
-		return clientsController.Client(context.Background(), args[0], os.Stdout)
+		return clientsController.Client(context.Background(), args[0])
 	},
 }

@@ -3,7 +3,6 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 
@@ -11,8 +10,8 @@ import (
 )
 
 type ClientRenderer interface {
-	RenderClients(rw io.Writer, clients []*models.Client) error
-	RenderClient(rw io.Writer, client *models.Client) error
+	RenderClients(clients []*models.Client) error
+	RenderClient(client *models.Client) error
 }
 
 type ClientController struct {
@@ -20,16 +19,16 @@ type ClientController struct {
 	ClientRenderer ClientRenderer
 }
 
-func (cc *ClientController) Clients(ctx context.Context, rw io.Writer) error {
+func (cc *ClientController) Clients(ctx context.Context) error {
 	clResp, err := cc.Rport.Clients(ctx)
 	if err != nil {
 		return err
 	}
 
-	return cc.ClientRenderer.RenderClients(rw, clResp.Data)
+	return cc.ClientRenderer.RenderClients(clResp.Data)
 }
 
-func (cc *ClientController) Client(ctx context.Context, id string, rw io.Writer) error {
+func (cc *ClientController) Client(ctx context.Context, id string) error {
 	clResp, err := cc.Rport.Clients(ctx)
 	if err != nil {
 		return err
@@ -37,7 +36,7 @@ func (cc *ClientController) Client(ctx context.Context, id string, rw io.Writer)
 
 	for _, cl := range clResp.Data {
 		if cl.ID == id {
-			return cc.ClientRenderer.RenderClient(rw, cl)
+			return cc.ClientRenderer.RenderClient(cl)
 		}
 	}
 

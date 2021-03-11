@@ -8,14 +8,27 @@ import (
 
 type TunnelRenderer struct {
 	ColCountCalculator CalcTerminalColumnsCount
+	Writer             io.Writer
+	Format             string
 }
 
-func (cr *TunnelRenderer) RenderTunnels(rw io.Writer, tunnels []*models.Tunnel) error {
+func (tr *TunnelRenderer) RenderTunnels(tunnels []*models.Tunnel) error {
+	return RenderByFormat(
+		tr.Format,
+		tr.Writer,
+		tunnels,
+		func() error {
+			return tr.renderTunnelsInHumanFormat(tunnels)
+		},
+	)
+}
+
+func (tr *TunnelRenderer) renderTunnelsInHumanFormat(tunnels []*models.Tunnel) error {
 	if len(tunnels) == 0 {
 		return nil
 	}
 
-	err := RenderHeader(rw, "Tunnels")
+	err := RenderHeader(tr.Writer, "Tunnels")
 	if err != nil {
 		return err
 	}
@@ -25,20 +38,43 @@ func (cr *TunnelRenderer) RenderTunnels(rw io.Writer, tunnels []*models.Tunnel) 
 		rowProviders = append(rowProviders, t)
 	}
 
-	return RenderTable(rw, &models.Tunnel{}, rowProviders, cr.ColCountCalculator)
+	return RenderTable(tr.Writer, &models.Tunnel{}, rowProviders, tr.ColCountCalculator)
 }
 
-func (cr *TunnelRenderer) RenderTunnel(rw io.Writer, t *models.Tunnel) error {
+func (tr *TunnelRenderer) RenderTunnel(t *models.Tunnel) error {
+	return RenderByFormat(
+		tr.Format,
+		tr.Writer,
+		t,
+		func() error {
+			return tr.renderTunnelInHumanFormat(t)
+		},
+	)
+}
+
+func (tr *TunnelRenderer) renderTunnelInHumanFormat(t *models.Tunnel) error {
 	if t == nil {
 		return nil
 	}
 
-	err := RenderHeader(rw, "Tunnel")
+	err := RenderHeader(tr.Writer, "Tunnel")
 	if err != nil {
 		return err
 	}
 
-	RenderKeyValues(rw, t)
+	RenderKeyValues(tr.Writer, t)
 
 	return nil
+}
+
+func (tr *TunnelRenderer) RenderDelete(os KvProvider) error {
+	return RenderByFormat(
+		tr.Format,
+		tr.Writer,
+		os,
+		func() error {
+			RenderKeyValues(tr.Writer, os)
+			return nil
+		},
+	)
 }

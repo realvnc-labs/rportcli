@@ -6,6 +6,19 @@ import (
 	"github.com/breathbath/go_utils/utils/testing"
 )
 
+type OperationStatus struct {
+	Status string `json:"status"`
+}
+
+func (os *OperationStatus) KeyValues() []testing.KeyValueStr {
+	return []testing.KeyValueStr{
+		{
+			Key:   "Status",
+			Value: os.Status,
+		},
+	}
+}
+
 type Tunnel struct {
 	ID          string `json:"id"`
 	Client      string `json:"client"`

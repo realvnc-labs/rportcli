@@ -20,14 +20,15 @@ func TestRenderClients(t *testing.T) {
 		},
 	}
 
+	buf := &bytes.Buffer{}
 	cr := &ClientRenderer{
 		ColCountCalculator: func() int {
 			return 150
 		},
+		Writer: buf,
 	}
 
-	buf := &bytes.Buffer{}
-	err := cr.RenderClients(buf, clients)
+	err := cr.RenderClients(clients)
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -47,14 +48,15 @@ func TestRenderClient(t *testing.T) {
 		Name: "SomeName",
 	}
 
+	buf := &bytes.Buffer{}
 	cr := &ClientRenderer{
 		ColCountCalculator: func() int {
 			return 150
 		},
+		Writer: buf,
 	}
 
-	buf := &bytes.Buffer{}
-	err := cr.RenderClient(buf, client)
+	err := cr.RenderClient(client)
 	assert.NoError(t, err)
 	if err != nil {
 		return

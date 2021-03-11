@@ -85,7 +85,7 @@ type Spinner interface {
 }
 
 type JobRenderer interface {
-	RenderJob(rw io.Writer, j *models.Job) error
+	RenderJob(j *models.Job) error
 }
 
 type InteractiveCommandsController struct {
@@ -93,7 +93,6 @@ type InteractiveCommandsController struct {
 	PromptReader config.PromptReader
 	Spinner      Spinner
 	JobRenderer  JobRenderer
-	OutputWriter io.Writer
 }
 
 func (icm *InteractiveCommandsController) Start(ctx context.Context, parametersFromArguments map[string]*string) error {
@@ -236,11 +235,11 @@ func (icm *InteractiveCommandsController) processRawMessage(msg []byte) error {
 
 	if job.Error != "" {
 		icm.Spinner.StopError("Error: " + job.Error)
-		err = icm.JobRenderer.RenderJob(os.Stdout, &job)
+		err = icm.JobRenderer.RenderJob(&job)
 		return err
 	}
 
 	icm.Spinner.StopSuccess("Success. Command Execution Result:")
-	err = icm.JobRenderer.RenderJob(os.Stdout, &job)
+	err = icm.JobRenderer.RenderJob(&job)
 	return err
 }

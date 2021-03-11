@@ -14,7 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type ClientRendererMock struct{}
+type ClientRendererMock struct {
+	Writer io.Writer
+}
 
 var clientStub = &models.Client{
 	ID:       "123",
@@ -33,13 +35,13 @@ var clientStub = &models.Client{
 	},
 }
 
-func (crm *ClientRendererMock) RenderClients(rw io.Writer, clients []*models.Client) error {
+func (crm *ClientRendererMock) RenderClients(clients []*models.Client) error {
 	jsonBytes, err := json.Marshal(clients)
 	if err != nil {
 		return err
 	}
 
-	_, err = rw.Write(jsonBytes)
+	_, err = crm.Writer.Write(jsonBytes)
 	if err != nil {
 		return err
 	}
@@ -47,13 +49,13 @@ func (crm *ClientRendererMock) RenderClients(rw io.Writer, clients []*models.Cli
 	return nil
 }
 
-func (crm *ClientRendererMock) RenderClient(rw io.Writer, client *models.Client) error {
+func (crm *ClientRendererMock) RenderClient(client *models.Client) error {
 	jsonBytes, err := json.Marshal(client)
 	if err != nil {
 		return err
 	}
 
-	_, err = rw.Write(jsonBytes)
+	_, err = crm.Writer.Write(jsonBytes)
 	if err != nil {
 		return err
 	}
@@ -66,10 +68,10 @@ func TestClientsController(t *testing.T) {
 	defer srv.Close()
 
 	cl := api.New(srv.URL, nil)
-	clController := ClientController{Rport: cl, ClientRenderer: &ClientRendererMock{}}
-
 	buf := bytes.Buffer{}
-	err := clController.Clients(context.Background(), &buf)
+	clController := ClientController{Rport: cl, ClientRenderer: &ClientRendererMock{Writer: &buf}}
+
+	err := clController.Clients(context.Background())
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -87,10 +89,10 @@ func TestClientFoundController(t *testing.T) {
 	defer srv.Close()
 
 	cl := api.New(srv.URL, nil)
-	clController := ClientController{Rport: cl, ClientRenderer: &ClientRendererMock{}}
-
 	buf := bytes.Buffer{}
-	err := clController.Client(context.Background(), "123", &buf)
+	clController := ClientController{Rport: cl, ClientRenderer: &ClientRendererMock{Writer: &buf}}
+
+	err := clController.Client(context.Background(), "123")
 	assert.NoError(t, err)
 	if err != nil {
 		return

@@ -2,14 +2,13 @@ package controllers
 
 import (
 	"context"
-	"io"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
 	options "github.com/breathbath/go_utils/utils/config"
 	"github.com/sirupsen/logrus"
-
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 
@@ -68,8 +67,9 @@ If local is not specified, a random server port will be assigned automatically`,
 }
 
 type TunnelRenderer interface {
-	RenderTunnels(rw io.Writer, tunnels []*models.Tunnel) error
-	RenderTunnel(rw io.Writer, t *models.Tunnel) error
+	RenderTunnels(tunnels []*models.Tunnel) error
+	RenderTunnel(t *models.Tunnel) error
+	RenderDelete(s output.KvProvider) error
 }
 
 type IPProvider interface {
@@ -82,7 +82,7 @@ type TunnelController struct {
 	IPProvider     IPProvider
 }
 
-func (cc *TunnelController) Tunnels(ctx context.Context, rw io.Writer) error {
+func (cc *TunnelController) Tunnels(ctx context.Context) error {
 	clResp, err := cc.Rport.Clients(ctx)
 	if err != nil {
 		return err
@@ -96,16 +96,16 @@ func (cc *TunnelController) Tunnels(ctx context.Context, rw io.Writer) error {
 		}
 	}
 
-	return cc.TunnelRenderer.RenderTunnels(rw, tunnels)
+	return cc.TunnelRenderer.RenderTunnels(tunnels)
 }
 
-func (cc *TunnelController) Delete(ctx context.Context, rw io.Writer, clientID, tunnelID string) error {
+func (cc *TunnelController) Delete(ctx context.Context, clientID, tunnelID string) error {
 	err := cc.Rport.DeleteTunnel(ctx, clientID, tunnelID)
 	if err != nil {
 		return err
 	}
 
-	err = output.RenderHeader(rw, "OK")
+	err = cc.TunnelRenderer.RenderDelete(&models.OperationStatus{Status: "OK"})
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (cc *TunnelController) Delete(ctx context.Context, rw io.Writer, clientID, 
 	return nil
 }
 
-func (cc *TunnelController) Create(ctx context.Context, rw io.Writer, params *options.ParameterBag) error {
+func (cc *TunnelController) Create(ctx context.Context, params *options.ParameterBag) error {
 	clientID := params.ReadString(ClientID, "")
 	local := params.ReadString(Local, "")
 	remote := params.ReadString(Remote, "")
@@ -134,5 +134,5 @@ func (cc *TunnelController) Create(ctx context.Context, rw io.Writer, params *op
 		return err
 	}
 
-	return cc.TunnelRenderer.RenderTunnel(rw, tun.Data)
+	return cc.TunnelRenderer.RenderTunnel(tun.Data)
 }

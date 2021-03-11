@@ -9,10 +9,23 @@ import (
 
 type ClientRenderer struct {
 	ColCountCalculator CalcTerminalColumnsCount
+	Writer             io.Writer
+	Format             string
 }
 
-func (cr *ClientRenderer) RenderClients(rw io.Writer, clients []*models.Client) error {
-	err := RenderHeader(rw, "Clients")
+func (cr *ClientRenderer) RenderClients(clients []*models.Client) error {
+	return RenderByFormat(
+		cr.Format,
+		cr.Writer,
+		clients,
+		func() error {
+			return cr.renderClientsToHumanFormat(clients)
+		},
+	)
+}
+
+func (cr *ClientRenderer) renderClientsToHumanFormat(clients []*models.Client) error {
+	err := RenderHeader(cr.Writer, "Clients")
 	if err != nil {
 		return err
 	}
@@ -22,25 +35,36 @@ func (cr *ClientRenderer) RenderClients(rw io.Writer, clients []*models.Client) 
 		rowProviders = append(rowProviders, cl)
 	}
 
-	return RenderTable(rw, &models.Client{}, rowProviders, cr.ColCountCalculator)
+	return RenderTable(cr.Writer, &models.Client{}, rowProviders, cr.ColCountCalculator)
 }
 
-func (cr *ClientRenderer) RenderClient(rw io.Writer, client *models.Client) error {
+func (cr *ClientRenderer) RenderClient(client *models.Client) error {
+	return RenderByFormat(
+		cr.Format,
+		cr.Writer,
+		client,
+		func() error {
+			return cr.renderClientToHumanFormat(client)
+		},
+	)
+}
+
+func (cr *ClientRenderer) renderClientToHumanFormat(client *models.Client) error {
 	if client == nil {
 		return nil
 	}
-	err := RenderHeader(rw, fmt.Sprintf("Client [%s]\n", client.ID))
+	err := RenderHeader(cr.Writer, fmt.Sprintf("Client [%s]\n", client.ID))
 	if err != nil {
 		return err
 	}
 
-	RenderKeyValues(rw, client)
+	RenderKeyValues(cr.Writer, client)
 
 	if len(client.Tunnels) == 0 {
 		return nil
 	}
 
-	err = RenderHeader(rw, "\nTunnels")
+	err = RenderHeader(cr.Writer, "\nTunnels")
 	if err != nil {
 		return err
 	}
@@ -50,5 +74,5 @@ func (cr *ClientRenderer) RenderClient(rw io.Writer, client *models.Client) erro
 		rowProviders = append(rowProviders, t)
 	}
 
-	return RenderTable(rw, &models.Tunnel{}, rowProviders, cr.ColCountCalculator)
+	return RenderTable(cr.Writer, &models.Tunnel{}, rowProviders, cr.ColCountCalculator)
 }

@@ -9,6 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
@@ -18,15 +20,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type TunnelRendererMock struct{}
+type TunnelRendererMock struct {
+	Writer io.Writer
+}
 
-func (trm *TunnelRendererMock) RenderTunnels(rw io.Writer, tunnels []*models.Tunnel) error {
+func (trm *TunnelRendererMock) RenderTunnels(tunnels []*models.Tunnel) error {
 	jsonBytes, err := json.Marshal(tunnels)
 	if err != nil {
 		return err
 	}
 
-	_, err = rw.Write(jsonBytes)
+	_, err = trm.Writer.Write(jsonBytes)
 	if err != nil {
 		return err
 	}
@@ -34,13 +38,27 @@ func (trm *TunnelRendererMock) RenderTunnels(rw io.Writer, tunnels []*models.Tun
 	return nil
 }
 
-func (trm *TunnelRendererMock) RenderTunnel(rw io.Writer, t *models.Tunnel) error {
+func (trm *TunnelRendererMock) RenderDelete(s output.KvProvider) error {
+	jsonBytes, err := json.Marshal(s)
+	if err != nil {
+		return err
+	}
+
+	_, err = trm.Writer.Write(jsonBytes)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (trm *TunnelRendererMock) RenderTunnel(t *models.Tunnel) error {
 	jsonBytes, err := json.Marshal(t)
 	if err != nil {
 		return err
 	}
 
-	_, err = rw.Write(jsonBytes)
+	_, err = trm.Writer.Write(jsonBytes)
 	if err != nil {
 		return err
 	}
@@ -66,10 +84,10 @@ func TestTunnelsController(t *testing.T) {
 	}
 	cl := api.New(srv.URL, apiAuth)
 
-	tController := TunnelController{Rport: cl, TunnelRenderer: &TunnelRendererMock{}}
-
 	buf := bytes.Buffer{}
-	err := tController.Tunnels(context.Background(), &buf)
+	tController := TunnelController{Rport: cl, TunnelRenderer: &TunnelRendererMock{Writer: &buf}}
+
+	err := tController.Tunnels(context.Background())
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -96,12 +114,12 @@ func TestTunnelDeleteController(t *testing.T) {
 		Pass:  "pass1",
 	}
 	cl := api.New(srv.URL, apiAuth)
-	tController := TunnelController{Rport: cl, TunnelRenderer: &TunnelRendererMock{}}
-
 	buf := bytes.Buffer{}
-	err := tController.Delete(context.Background(), &buf, "cl1", "tun2")
+	tController := TunnelController{Rport: cl, TunnelRenderer: &TunnelRendererMock{Writer: &buf}}
+
+	err := tController.Delete(context.Background(), "cl1", "tun2")
 	assert.NoError(t, err)
-	assert.Equal(t, "OK\n", buf.String())
+	assert.Equal(t, `{"status":"OK"}`, buf.String())
 }
 
 func TestTunnelCreateController(t *testing.T) {
@@ -129,16 +147,18 @@ func TestTunnelCreateController(t *testing.T) {
 		Login: "log1",
 		Pass:  "pass1",
 	}
+
+	buf := bytes.Buffer{}
+
 	cl := api.New(srv.URL, apiAuth)
 	tController := TunnelController{
 		Rport:          cl,
-		TunnelRenderer: &TunnelRendererMock{},
+		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
 		IPProvider: IPProviderMock{
 			IP: "3.4.5.6",
 		},
 	}
 
-	buf := bytes.Buffer{}
 	params := config.FromValues(map[string]string{
 		ClientID:  "334",
 		Local:     "lohost1:3300",
@@ -146,7 +166,7 @@ func TestTunnelCreateController(t *testing.T) {
 		Scheme:    "ssh",
 		CheckPort: "1",
 	})
-	err := tController.Create(context.Background(), &buf, params)
+	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
 	assert.Equal(t, `{"id":"123","client":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6"}`, buf.String())
 }
