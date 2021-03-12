@@ -9,6 +9,8 @@ import (
 	"github.com/fatih/color"
 )
 
+const maxPromptIterations = 100
+
 type PromptReader interface {
 	ReadString() (string, error)
 	ReadPassword() (string, error)
@@ -40,6 +42,7 @@ func PromptRequiredValues(
 		}
 
 		err = missedReqP.Validate(missedReqP.Field, readValue)
+		promptCount := 0
 		for err != nil {
 			readValue, err = promptValue(missedReqP, promptReader)
 			if err != nil {
@@ -49,6 +52,10 @@ func PromptRequiredValues(
 			err = missedReqP.Validate(missedReqP.Field, readValue)
 			if err != nil {
 				color.Red(err.Error())
+			}
+			promptCount++
+			if promptCount > maxPromptIterations {
+				return fmt.Errorf("max prompt attempts %d elapsed", maxPromptIterations)
 			}
 		}
 		targetKV[missedReqP.Field] = readValue

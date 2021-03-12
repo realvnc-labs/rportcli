@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"os/signal"
@@ -224,11 +225,11 @@ func (icm *InteractiveCommandsController) processRawMessage(msg []byte) error {
 		var errResp models.ErrorResp
 		err = json.Unmarshal(msg, &errResp)
 		if err != nil {
-			logrus.Errorf("cannot recognize command output message: %s, reason: %v", string(msg), err)
-			return err
+			e := fmt.Errorf("cannot recognize command output message: %s, reason: %v", string(msg), err)
+			return e
 		}
 		icm.Spinner.StopError(errResp.Error())
-		return nil
+		return errResp
 	}
 
 	logrus.Debugf("received message: '%s'", string(msg))
