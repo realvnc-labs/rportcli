@@ -3,6 +3,7 @@ package output
 import (
 	"io"
 	"regexp"
+	"strings"
 
 	"github.com/breathbath/go_utils/utils/testing"
 	"github.com/olekukonko/tablewriter"
@@ -129,5 +130,5 @@ func RenderKeyValues(rw io.Writer, kvP KvProvider) {
 
 func RemoveEmptySpaces(input string) string {
 	r := regexp.MustCompile(`\s+`)
-	return r.ReplaceAllString(input, " ")
+	return strings.TrimSpace(r.ReplaceAllString(input, " "))
 }
