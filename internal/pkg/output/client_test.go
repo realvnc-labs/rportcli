@@ -37,7 +37,7 @@ func TestRenderClients(t *testing.T) {
 	actualRenderResult := RemoveEmptySpaces(buf.String())
 	assert.Equal(
 		t,
-		"Clients ID NAME NUM TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL 123 SomeName 0 124 SomeOtherName 0 ",
+		"Clients ID NAME NUM TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL 123 SomeName 0 124 SomeOtherName 0",
 		actualRenderResult,
 	)
 }
@@ -63,6 +63,6 @@ func TestRenderClient(t *testing.T) {
 	}
 
 	actualRenderResult := RemoveEmptySpaces(buf.String())
-	expectedResult := `Client [123] KEY VALUE ID: 123 Name: SomeName Os: OsArch: OsFamily: OsKernel: Hostname: Ipv4: Ipv6: Tags: Version: Address: `
+	expectedResult := `Client [123] KEY VALUE ID: 123 Name: SomeName Os: OsArch: OsFamily: OsKernel: Hostname: Ipv4: Ipv6: Tags: Version: Address:`
 	assert.Equal(t, expectedResult, actualRenderResult)
 }

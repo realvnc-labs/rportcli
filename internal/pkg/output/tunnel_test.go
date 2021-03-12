@@ -9,8 +9,8 @@ import (
 )
 
 func TestRenderTunnels(t *testing.T) {
-	testCases := []struct{
-		Format string
+	testCases := []struct {
+		Format         string
 		ExpectedOutput string
 		ColCountToGive int
 	}{
@@ -76,9 +76,10 @@ id22        lhost 123   rhost 124   false     ssh    0.0.0.0
 	}
 	for _, testCase := range testCases {
 		buf := &bytes.Buffer{}
+		colCountToGive := testCase.ColCountToGive
 		tr := &TunnelRenderer{
 			ColCountCalculator: func() int {
-				return testCase.ColCountToGive
+				return colCountToGive
 			},
 			Writer: buf,
 			Format: testCase.Format,
@@ -98,13 +99,13 @@ id22        lhost 123   rhost 124   false     ssh    0.0.0.0
 	}
 }
 func TestRenderTunnel(t *testing.T) {
-	testCases := []struct{
-		Format string
+	testCases := []struct {
+		Format         string
 		ExpectedOutput string
 		ColCountToGive int
 	}{
 		{
-			Format:         FormatHuman,
+			Format: FormatHuman,
 			ExpectedOutput: `Tunnel
 KEY           VALUE   
 ID:           id22    
@@ -120,13 +121,13 @@ ACL:          0.0.0.0
 			ColCountToGive: 150,
 		},
 		{
-			Format:         FormatJSON,
+			Format: FormatJSON,
 			ExpectedOutput: `{"id":"id22","client":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0"}
 `,
 			ColCountToGive: 10,
 		},
 		{
-			Format:         FormatJSONPretty,
+			Format: FormatJSONPretty,
 			ExpectedOutput: `{
   "id": "id22",
   "client": "",
@@ -142,7 +143,7 @@ ACL:          0.0.0.0
 			ColCountToGive: 10,
 		},
 		{
-			Format:         FormatYAML,
+			Format: FormatYAML,
 			ExpectedOutput: `id: id22
 client: ""
 lhost: lhost
@@ -169,9 +170,10 @@ acl: 0.0.0.0
 
 	for _, testCase := range testCases {
 		buf := &bytes.Buffer{}
+		colCountToGive := testCase.ColCountToGive
 		tr := &TunnelRenderer{
 			ColCountCalculator: func() int {
-				return testCase.ColCountToGive
+				return colCountToGive
 			},
 			Writer: buf,
 			Format: testCase.Format,

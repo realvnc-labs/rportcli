@@ -51,7 +51,7 @@ func TestRenderKeyValues(t *testing.T) {
 	buf := &bytes.Buffer{}
 	RenderKeyValues(buf, KVProviderStub{})
 	actualRenderResult := RemoveEmptySpaces(buf.String())
-	assert.Equal(t, "KEY VALUE one: 1 two: 2 ", actualRenderResult)
+	assert.Equal(t, "KEY VALUE one: 1 two: 2", actualRenderResult)
 }
 
 func TestRenderTable(t *testing.T) {
@@ -67,5 +67,5 @@ func TestRenderTable(t *testing.T) {
 	}
 
 	actualRenderResult := RemoveEmptySpaces(buf.String())
-	assert.Equal(t, "COL1 COL2 COL3 val1 val2 val3 ", actualRenderResult)
+	assert.Equal(t, "COL1 COL2 COL3 val1 val2 val3", actualRenderResult)
 }

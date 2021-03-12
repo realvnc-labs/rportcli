@@ -13,8 +13,8 @@ func TestRenderJob(t *testing.T) {
 	timeToCheck, err := time.Parse("2006-01-02T15:04:05", "2021-01-01T00:00:01")
 	assert.NoError(t, err)
 
-	testCases := []struct{
-		Format string
+	testCases := []struct {
+		Format         string
 		ExpectedOutput string
 	}{
 		{
