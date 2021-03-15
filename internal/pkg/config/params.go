@@ -9,7 +9,7 @@ var Params *options.ParameterBag
 
 func init() {
 	var err error
-	Params, err = GetConfig()
+	Params, err = LoadConfig()
 	if err != nil {
 		logrus.Debugf("failed to read config: %v", err)
 		Params = GetDefaultConfig()

@@ -44,18 +44,13 @@ var commandsCmd = &cobra.Command{
 	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if isInteractive {
-			cfg, err := config.GetConfig()
-			if err != nil {
-				return err
-			}
-
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
 			basicAuth := &utils.StorageBasicAuth{
 				AuthProvider: config.AuthConfigProvider,
 			}
-			baseRportURL := cfg.ReadString(config.ServerURL, config.DefaultServerURL)
+			baseRportURL := config.Params.ReadString(config.ServerURL, config.DefaultServerURL)
 
 			rportCl := api.New(baseRportURL, basicAuth)
 

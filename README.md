@@ -38,8 +38,7 @@ Verify the checksum:
     
     #Compare the command output to the contents of file rportcli-v0.0.1pre1-windows-amd64.zip.md5 they should match
   
-  
-    
+
 _Note: if the checksums didn't match please skip the installation!_
 
 Unpack and install the rportcli binary on your host machine
@@ -100,11 +99,28 @@ You can skip the interactive wizard by providing parameters as cli options , e.g
 
 
      rportcli init -s http://localhost:3000 -l admin -p foobaz
+
+
+If you prefer to use environment variables instead you can do the following: 
+
+
+    export RPORT_USER=admin
+    export RPORT_PASSWORD=foobaz
+    export RPORT_SERVER_URL=http://localhost:3000
+    #now you can run any rportcli command without config
+    rportcli client list
+
+
+You can also use a hybrid variant, where e.g. user and server url are provided as config options and password as an environment variable.
+
+
+     rportcli init -s http://localhost:3000 -l admin
+     export RPORT_SERVER_URL=http://localhost:3000
+     rportcli client list
  
- 
- Rportcli will check the provided options by calling the rport [status API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/cloudradar-monitoring/rport/master/api-doc.yml#/default/get_status).
- 
- Rportcli will generate config file at the defined locations and use it all following report requests.
+
+After the config initialisation, Rportcli will check the provided options by calling the rport [status API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/cloudradar-monitoring/rport/master/api-doc.yml#/default/get_status).
+
 
 ## Cli
 
@@ -139,8 +155,26 @@ You can also display help for a certain command:
     </tr>
     <tr>
     <td>SESSION_VALIDITY_SECONDS</td>
-    <td>initial lifetime of an interactive command session in seconds. Max value is 90 days<. /td>
+    <td>initial lifetime of an interactive command session in seconds. Max value is 90 days</td>
     <td>10(minutes) * 60</td>
     <td>SESSION_VALIDITY_SECONDS=1800 rportcli command -i</td>
+    </tr>
+    <tr>
+    <td>RPORT_USER</td>
+    <td>basic auth login to access rport server</td>
+    <td></td>
+    <td>RPORT_USER=admin rportcli client list</td>
+    </tr>
+    <tr>
+    <td>RPORT_PASSWORD</td>
+    <td>basic auth password to access rport server</td>
+    <td></td>
+    <td>RPORT_PASSWORD=foobaz rportcli client list</td>
+    </tr>
+    <tr>
+    <td>RPORT_SERVER_URL</td>
+    <td>address of rport server</td>
+    <td>http://localhost:3000</td>
+    <td>RPORT_SERVER_URL=http://localhost:3000 rportcli client list</td>
     </tr>
 </table>

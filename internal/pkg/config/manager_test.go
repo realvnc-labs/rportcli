@@ -11,14 +11,14 @@ import (
 )
 
 func TestOSFileLocationFromEnv(t *testing.T) {
-	err := os.Setenv("CONFIG_PATH", "lala")
+	err := os.Setenv(PathForConfigEnvVar, "lala")
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 
 	defer func() {
-		e := os.Unsetenv("CONFIG_PATH")
+		e := os.Unsetenv(PathForConfigEnvVar)
 		if e != nil {
 			logrus.Error(e)
 		}
@@ -31,7 +31,7 @@ func TestOSFileLocationFromHome(t *testing.T) {
 	assert.Contains(t, getConfigLocation(), ".config/rportcli/config.json")
 }
 
-func TestReadConfig(t *testing.T) {
+func TestLoadConfigFromFile(t *testing.T) {
 	config := map[string]interface{}{
 		"somekey": "someValue",
 		"one":     1,
@@ -53,20 +53,20 @@ func TestReadConfig(t *testing.T) {
 		}
 	}()
 
-	err = os.Setenv("CONFIG_PATH", "config.json")
+	err = os.Setenv(PathForConfigEnvVar, "config.json")
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 
 	defer func() {
-		e := os.Unsetenv("CONFIG_PATH")
+		e := os.Unsetenv(PathForConfigEnvVar)
 		if e != nil {
 			logrus.Error(e)
 		}
 	}()
 
-	cfg, err := GetConfig()
+	cfg, err := LoadConfig()
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -76,26 +76,72 @@ func TestReadConfig(t *testing.T) {
 	assert.Equal(t, 1, cfg.ReadInt("one", 0))
 }
 
-func TestReadConfigError(t *testing.T) {
-	err := os.Setenv("CONFIG_PATH", "configNotExisting.json")
+func TestLoadConfigFromEnvOrFile(t *testing.T) {
+	rawJSON := []byte(`{"server_url":"https://10.10.10.11:3000"}`)
+	filePath := "config123.json"
+
+	err := ioutil.WriteFile(filePath, rawJSON, 0600)
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+	defer func() {
+		e := os.Remove(filePath)
+		if e != nil {
+			logrus.Error(e)
+		}
+	}()
+
+	envs := map[string]string{
+		PathForConfigEnvVar: filePath,
+		PasswordEnvVar: "somepass",
+		LoginEnvVar: "log1",
+	}
+
+	for k, v := range envs {
+		err = os.Setenv(k, v)
+		assert.NoError(t, err)
+		if err != nil {
+			return
+		}
+	}
+
+	defer func() {
+		for k, _ := range envs {
+			e := os.Unsetenv(k)
+			if e != nil {
+				logrus.Error(e)
+			}
+		}
+	}()
+
+	cfg, err := LoadConfig()
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	assert.Equal(t, "somepass", cfg.ReadString(Password, ""))
+	assert.Equal(t, "log1", cfg.ReadString(Login, ""))
+	assert.Equal(t, "https://10.10.10.11:3000", cfg.ReadString(ServerURL, ""))
+}
+
+func TestLoadConfigFromFileError(t *testing.T) {
+	err := os.Setenv(PathForConfigEnvVar, "configNotExisting.json")
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 
 	defer func() {
-		e := os.Unsetenv("CONFIG_PATH")
+		e := os.Unsetenv(PathForConfigEnvVar)
 		if e != nil {
 			logrus.Error(e)
 		}
 	}()
 
-	_, err = GetConfig()
-	assert.Error(t, err)
-	if err == nil {
-		return
-	}
-	assert.Contains(t, err.Error(), "configNotExisting.json doesn't exist")
+	_, err = LoadConfig()
+	assert.NoError(t, err)
 }
 
 func TestGetDefaultConfig(t *testing.T) {
@@ -108,14 +154,14 @@ func TestGetDefaultConfig(t *testing.T) {
 func TestWriteConfig(t *testing.T) {
 	config := GetDefaultConfig()
 
-	err := os.Setenv("CONFIG_PATH", "configToCheckAfter.json")
+	err := os.Setenv(PathForConfigEnvVar, "configToCheckAfter.json")
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 
 	defer func() {
-		e := os.Unsetenv("CONFIG_PATH")
+		e := os.Unsetenv(PathForConfigEnvVar)
 		if e != nil {
 			logrus.Error(e)
 		}

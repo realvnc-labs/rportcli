@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -9,53 +8,34 @@ import (
 
 	options "github.com/breathbath/go_utils/utils/config"
 	"github.com/breathbath/go_utils/utils/env"
-	"github.com/breathbath/go_utils/utils/fs"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	defaultPath      = ".config/rportcli/config.json"
-	ServerURL        = "server_url"
-	Login            = "login"
-	Password         = "password"
-	DefaultServerURL = "http://localhost:3000"
+	defaultPath         = ".config/rportcli/config.json"
+	ServerURL           = "server_url"
+	Login               = "login"
+	Password            = "password"
+	DefaultServerURL    = "http://localhost:3000"
+	PathForConfigEnvVar = "CONFIG_PATH"
+	LoginEnvVar         = "RPORT_USER"
+	PasswordEnvVar      = "RPORT_PASSWORD"
+	ServerURLEnvVar     = "RPORT_SERVER_URL"
 )
 
-// GetConfig reads config data from location
-func GetConfig() (params *options.ParameterBag, err error) {
+func LoadConfig() (params *options.ParameterBag, err error) {
 	configLocation := getConfigLocation()
-	if !fs.FileExists(configLocation) {
-		err = fmt.Errorf("config file %s doesn't exist", configLocation)
-		return
-	}
-
-	f, err := os.Open(configLocation)
-	if err != nil {
-		err = fmt.Errorf("failed to open the file %s: %v", configLocation, err)
-		return
-	}
-
-	jvp, err := options.NewJsonValuesProvider(f)
-	if err != nil {
-		return nil, err
-	}
 
 	return &options.ParameterBag{
-		BaseValuesProvider: jvp,
+		BaseValuesProvider: NewValuesProvider(configLocation),
 	}, nil
 }
 
 func AuthConfigProvider() (login, pass string, err error) {
-	cfg, err := GetConfig()
-	if err != nil {
-		return "", "", err
-	}
-
-	login, pass = cfg.ReadString(Login, ""), cfg.ReadString(Password, "")
+	login, pass = Params.ReadString(Login, ""), Params.ReadString(Password, "")
 	return
 }
 
-// GetDefaultConfig creates a config with default values
 func GetDefaultConfig() (params *options.ParameterBag) {
 	vp := options.NewMapValuesProvider(map[string]interface{}{
 		ServerURL: DefaultServerURL,
@@ -94,7 +74,7 @@ func WriteConfig(params *options.ParameterBag) (err error) {
 }
 
 func getConfigLocation() (configPath string) {
-	configPathFromEnv := env.ReadEnv("CONFIG_PATH", "")
+	configPathFromEnv := env.ReadEnv(PathForConfigEnvVar, "")
 	if configPathFromEnv != "" {
 		configPath = configPathFromEnv
 		return

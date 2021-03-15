@@ -80,14 +80,9 @@ func Execute() error {
 }
 
 func buildRport() (*api.Rport, error) {
-	cfg, err := config.GetConfig()
-	if err != nil {
-		return nil, err
-	}
-
 	apiAuth := &utils.BasicAuth{
-		Login: cfg.ReadString(config.Login, ""),
-		Pass:  cfg.ReadString(config.Password, ""),
+		Login: config.Params.ReadString(config.Login, ""),
+		Pass:  config.Params.ReadString(config.Password, ""),
 	}
 	rportAPI := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
 
