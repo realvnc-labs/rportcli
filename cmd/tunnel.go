@@ -53,10 +53,7 @@ var tunnelListCmd = &cobra.Command{
 	Short: "list all active tunnels created with rport",
 	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		rportAPI, err := buildRport()
-		if err != nil {
-			return err
-		}
+		rportAPI := buildRport()
 
 		tr := &output.TunnelRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,
@@ -86,10 +83,7 @@ var tunnelDeleteCmd = &cobra.Command{
 			return fmt.Errorf("either CLIENT_ID or TUNNEL_ID is not provided")
 		}
 
-		rportAPI, err := buildRport()
-		if err != nil {
-			return err
-		}
+		rportAPI := buildRport()
 
 		tr := &output.TunnelRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,
@@ -128,10 +122,7 @@ with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 			return err
 		}
 
-		rportAPI, err := buildRport()
-		if err != nil {
-			return err
-		}
+		rportAPI := buildRport()
 
 		tr := &output.TunnelRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,

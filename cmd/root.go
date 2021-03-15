@@ -79,12 +79,12 @@ func Execute() error {
 	return nil
 }
 
-func buildRport() (*api.Rport, error) {
+func buildRport() *api.Rport {
 	apiAuth := &utils.BasicAuth{
 		Login: config.Params.ReadString(config.Login, ""),
 		Pass:  config.Params.ReadString(config.Password, ""),
 	}
 	rportAPI := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
 
-	return rportAPI, nil
+	return rportAPI
 }

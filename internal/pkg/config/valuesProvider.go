@@ -2,22 +2,23 @@ package config
 
 import (
 	"fmt"
+	"io"
+	"os"
+
 	options "github.com/breathbath/go_utils/utils/config"
 	"github.com/breathbath/go_utils/utils/fs"
 	"github.com/sirupsen/logrus"
-	"io"
-	"os"
 )
 
 type ValuesProvider struct {
-	configFilePath string
-	envValuesProvider options.ValuesProvider
+	configFilePath     string
+	envValuesProvider  options.ValuesProvider
 	fileValuesProvider options.ValuesProvider
 }
 
 func NewValuesProvider(configFilePath string) *ValuesProvider {
 	return &ValuesProvider{
-		configFilePath: configFilePath,
+		configFilePath:    configFilePath,
 		envValuesProvider: options.EnvValuesProvider{},
 	}
 }
@@ -44,7 +45,7 @@ func (cvp *ValuesProvider) Read(name string) (val interface{}, found bool) {
 	return cvp.fileValuesProvider.Read(name)
 }
 
-func (cvp *ValuesProvider) readFromEnv(name string) (val interface{}, found bool){
+func (cvp *ValuesProvider) readFromEnv(name string) (val interface{}, found bool) {
 	envNameToRead := ""
 	switch name {
 	case Login:

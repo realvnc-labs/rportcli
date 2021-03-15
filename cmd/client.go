@@ -30,10 +30,7 @@ var clientsListCmd = &cobra.Command{
 	Short: "list all connected and disconnected rport clients",
 	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		rportAPI, err := buildRport()
-		if err != nil {
-			return err
-		}
+		rportAPI := buildRport()
 		cr := &output.ClientRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,
 			Writer:             os.Stdout,
@@ -57,10 +54,7 @@ var clientCmd = &cobra.Command{
 			return fmt.Errorf("client id is not provided")
 		}
 
-		rportAPI, err := buildRport()
-		if err != nil {
-			return err
-		}
+		rportAPI := buildRport()
 
 		cr := &output.ClientRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,

@@ -94,8 +94,8 @@ func TestLoadConfigFromEnvOrFile(t *testing.T) {
 
 	envs := map[string]string{
 		PathForConfigEnvVar: filePath,
-		PasswordEnvVar: "somepass",
-		LoginEnvVar: "log1",
+		PasswordEnvVar:      "somepass",
+		LoginEnvVar:         "log1",
 	}
 
 	for k, v := range envs {
@@ -107,7 +107,7 @@ func TestLoadConfigFromEnvOrFile(t *testing.T) {
 	}
 
 	defer func() {
-		for k, _ := range envs {
+		for k := range envs {
 			e := os.Unsetenv(k)
 			if e != nil {
 				logrus.Error(e)
