@@ -78,9 +78,12 @@ func TestTunnelsController(t *testing.T) {
 	srv := startClientsServer()
 	defer srv.Close()
 
-	apiAuth := &utils.BasicAuth{
-		Login: "log1",
-		Pass:  "pass1",
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1"
+			pass = "pass1"
+			return
+		},
 	}
 	cl := api.New(srv.URL, apiAuth)
 
@@ -109,9 +112,12 @@ func TestTunnelDeleteController(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	apiAuth := &utils.BasicAuth{
-		Login: "log1",
-		Pass:  "pass1",
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1"
+			pass = "pass1"
+			return
+		},
 	}
 	cl := api.New(srv.URL, apiAuth)
 	buf := bytes.Buffer{}
@@ -143,9 +149,12 @@ func TestTunnelCreateController(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	apiAuth := &utils.BasicAuth{
-		Login: "log1",
-		Pass:  "pass1",
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1"
+			pass = "pass1"
+			return
+		},
 	}
 
 	buf := bytes.Buffer{}

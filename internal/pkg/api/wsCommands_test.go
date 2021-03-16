@@ -4,20 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
-
-type TokenProviderMock struct {
-	loginResp     LoginResponse
-	tokenLifetime int
-	errToGive     error
-}
-
-func (tpm *TokenProviderMock) GetToken(ctx context.Context, tokenLifetime int) (li LoginResponse, err error) {
-	tpm.tokenLifetime = tokenLifetime
-	return tpm.loginResp, tpm.errToGive
-}
 
 func TestBuildWsURL(t *testing.T) {
 	testCases := []struct {
@@ -40,16 +28,12 @@ func TestBuildWsURL(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
-		tokenProv := &TokenProviderMock{
-			loginResp: LoginResponse{
-				Data: models.Token{
-					Token: testCase.tokenToGive,
-				},
-			},
-		}
 		urlProvider := &WsCommandURLProvider{
 			BaseURL:              testCase.inputURL,
-			TokenProvider:        tokenProv,
+			TokenProvider: func() (token string, err error) {
+				token = testCase.tokenToGive
+				return
+			},
 			TokenValiditySeconds: testCase.tokenValidity,
 		}
 
@@ -60,6 +44,5 @@ func TestBuildWsURL(t *testing.T) {
 		}
 
 		assert.Equal(t, testCase.expectedURL, actualWsURL)
-		assert.Equal(t, testCase.tokenValidity, tokenProv.tokenLifetime)
 	}
 }

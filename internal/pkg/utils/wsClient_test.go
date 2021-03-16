@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -56,12 +57,12 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logrus.Error(err)
 			break
 		}
 		err = c.WriteMessage(mt, message)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logrus.Error(err)
 			break
 		}
 	}

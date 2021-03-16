@@ -12,15 +12,17 @@ import (
 )
 
 const (
-	defaultPath         = ".config/rportcli/config.json"
-	ServerURL           = "server_url"
-	Login               = "login"
-	Password            = "password"
-	DefaultServerURL    = "http://localhost:3000"
-	PathForConfigEnvVar = "CONFIG_PATH"
-	LoginEnvVar         = "RPORT_USER"
-	PasswordEnvVar      = "RPORT_PASSWORD"
-	ServerURLEnvVar     = "RPORT_SERVER_URL"
+	defaultPath                  = ".config/rportcli/config.json"
+	ServerURL                    = "server_url"
+	Login                        = "login"
+	Token                        = "token"
+	Password                     = "password"
+	DefaultServerURL             = "http://localhost:3000"
+	PathForConfigEnvVar          = "CONFIG_PATH"
+	LoginEnvVar                  = "RPORT_USER"
+	PasswordEnvVar               = "RPORT_PASSWORD"
+	ServerURLEnvVar              = "RPORT_SERVER_URL"
+	SessionValiditySecondsEnvVar = "SESSION_VALIDITY_SECONDS"
 )
 
 func LoadConfig() (params *options.ParameterBag, err error) {
@@ -31,16 +33,10 @@ func LoadConfig() (params *options.ParameterBag, err error) {
 	}, nil
 }
 
-func AuthConfigProvider() (login, pass string, err error) {
-	login, pass = Params.ReadString(Login, ""), Params.ReadString(Password, "")
-	return
-}
-
 func GetDefaultConfig() (params *options.ParameterBag) {
 	vp := options.NewMapValuesProvider(map[string]interface{}{
 		ServerURL: DefaultServerURL,
-		Password:  "",
-		Login:     "",
+		Token:     "",
 	})
 
 	return &options.ParameterBag{BaseValuesProvider: vp}

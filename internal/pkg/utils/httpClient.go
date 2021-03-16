@@ -25,18 +25,6 @@ type Auth interface {
 	AuthRequest(r *http.Request) error
 }
 
-type BasicAuth struct {
-	Login string
-	Pass  string
-}
-
-func (ba *BasicAuth) AuthRequest(req *http.Request) error {
-	basicAuthHeader := http2.BuildBasicAuthString(ba.Login, ba.Pass)
-	req.Header.Add("Authorization", "Basic "+basicAuthHeader)
-
-	return nil
-}
-
 type StorageBasicAuth struct {
 	AuthProvider func() (login, pass string, err error)
 }
@@ -51,6 +39,35 @@ func (sba *StorageBasicAuth) AuthRequest(req *http.Request) error {
 	req.Header.Add("Authorization", "Basic "+basicAuthHeader)
 
 	return nil
+}
+
+type BearerAuth struct {
+	TokenProvider func() (string, error)
+}
+
+func (ba *BearerAuth) AuthRequest(req *http.Request) error {
+	token, err := ba.TokenProvider()
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Authorization", "Bearer "+token)
+
+	return nil
+}
+
+type FallbackAuth struct {
+	PrimaryAuth Auth
+	FallbackAuth Auth
+}
+
+func (fa *FallbackAuth) AuthRequest(req *http.Request) error {
+	err := fa.PrimaryAuth.AuthRequest(req)
+	if err == nil {
+		return nil
+	}
+
+	return fa.FallbackAuth.AuthRequest(req)
 }
 
 type BaseClient struct {

@@ -185,5 +185,5 @@ func TestWriteConfig(t *testing.T) {
 	if err != nil {
 		return
 	}
-	assert.Equal(t, `{"login":"","password":"","server_url":"http://localhost:3000"}`+"\n", string(fileContents))
+	assert.Equal(t, `{"server_url":"http://localhost:3000","token":""}`+"\n", string(fileContents))
 }

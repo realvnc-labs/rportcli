@@ -28,9 +28,12 @@ func TestLogin(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	cl := New(srv.URL, &utils.BasicAuth{
-		Login: "log1",
-		Pass:  "pass1",
+	cl := New(srv.URL, &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1"
+			pass = "pass1"
+			return
+		},
 	})
 
 	loginInfo, err := cl.GetToken(context.Background(), 10)
@@ -57,9 +60,12 @@ func TestMe(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	cl := New(srv.URL, &utils.BasicAuth{
-		Login: "log1",
-		Pass:  "pass1",
+	cl := New(srv.URL, &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1"
+			pass = "pass1"
+			return
+		},
 	})
 
 	usrResp, err := cl.Me(context.Background())
@@ -90,9 +96,12 @@ func TestStatus(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	cl := New(srv.URL, &utils.BasicAuth{
-		Login: "log1",
-		Pass:  "pass1",
+	cl := New(srv.URL, &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1"
+			pass = "pass1"
+			return
+		},
 	})
 
 	statusResp, err := cl.Status(context.Background())
@@ -125,9 +134,12 @@ func TestErrorResponse(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	cl := New(srv.URL, &utils.BasicAuth{
-		Login: "log1",
-		Pass:  "pass1",
+	cl := New(srv.URL, &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1"
+			pass = "pass1"
+			return
+		},
 	})
 
 	_, err := cl.Status(context.Background())

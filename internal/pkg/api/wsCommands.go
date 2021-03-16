@@ -15,18 +15,14 @@ const (
 	WsPrefix      = "ws"
 )
 
-type TokenProvider interface {
-	GetToken(ctx context.Context, tokenLifetime int) (li LoginResponse, err error)
-}
-
 type WsCommandURLProvider struct {
 	BaseURL              string
-	TokenProvider        TokenProvider
+	TokenProvider        func() (token string, err error)
 	TokenValiditySeconds int
 }
 
 func (wup *WsCommandURLProvider) BuildWsURL(ctx context.Context) (wsURL string, err error) {
-	token, err := wup.TokenProvider.GetToken(ctx, wup.TokenValiditySeconds)
+	token, err := wup.TokenProvider()
 	if err != nil {
 		return "", err
 	}
@@ -36,9 +32,9 @@ func (wup *WsCommandURLProvider) BuildWsURL(ctx context.Context) (wsURL string, 
 	return
 }
 
-func (wup *WsCommandURLProvider) buildWsURL(token LoginResponse, baseURL string) string {
+func (wup *WsCommandURLProvider) buildWsURL(token string, baseURL string) string {
 	baseURL = wup.replaceHTTPWithWsProtocolPrefix(baseURL)
-	return url.JoinURL(baseURL, CommandsWSUri) + "?access_token=" + token.Data.Token
+	return url.JoinURL(baseURL, CommandsWSUri) + "?access_token=" + token
 }
 
 func (wup *WsCommandURLProvider) replaceHTTPWithWsProtocolPrefix(u string) string {

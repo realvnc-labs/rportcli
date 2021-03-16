@@ -80,11 +80,22 @@ func Execute() error {
 }
 
 func buildRport() *api.Rport {
-	apiAuth := &utils.BasicAuth{
-		Login: config.Params.ReadString(config.Login, ""),
-		Pass:  config.Params.ReadString(config.Password, ""),
+	auth := &utils.FallbackAuth{
+		PrimaryAuth: &utils.StorageBasicAuth{
+			AuthProvider: func() (login, pass string, err error) {
+				login = config.Params.ReadString(config.Login, "")
+				pass = config.Params.ReadString(config.Password, "")
+				return
+			},
+		},
+		FallbackAuth: &utils.BearerAuth{
+			TokenProvider: func() (string, error) {
+				return config.Params.ReadString(config.Token, ""), nil
+			},
+		},
 	}
-	rportAPI := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
+
+	rportAPI := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), auth)
 
 	return rportAPI
 }

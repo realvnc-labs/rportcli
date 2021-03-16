@@ -35,10 +35,15 @@ func TestCreateTunnel(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	cl := New(srv.URL, &utils.BasicAuth{
-		Login: "log1",
-		Pass:  "pass1",
-	})
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1"
+			pass = "pass1"
+			return
+		},
+	}
+
+	cl := New(srv.URL, apiAuth)
 
 	clientsResp, err := cl.CreateTunnel(
 		context.Background(),
@@ -74,10 +79,15 @@ func TestDeleteTunnel(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	cl := New(srv.URL, &utils.BasicAuth{
-		Login: "log1",
-		Pass:  "pass1",
-	})
+
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1"
+			pass = "pass1"
+			return
+		},
+	}
+	cl := New(srv.URL, apiAuth)
 
 	err := cl.DeleteTunnel(
 		context.Background(),

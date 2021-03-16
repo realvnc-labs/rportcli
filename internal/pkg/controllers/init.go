@@ -3,8 +3,8 @@ package controllers
 import (
 	"context"
 	"fmt"
-
 	options "github.com/breathbath/go_utils/utils/config"
+	"github.com/breathbath/go_utils/utils/env"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
@@ -60,18 +60,29 @@ func (ic *InitController) InitConfig(ctx context.Context, parametersFromArgument
 		params = config.FromValues(paramsFromArguments)
 	}
 
-	apiAuth := &utils.BasicAuth{
-		Login: params.ReadString(config.Login, ""),
-		Pass:  params.ReadString(config.Password, ""),
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = params.ReadString(config.Login, "")
+			pass = params.ReadString(config.Password, "")
+			return
+		},
 	}
 
 	cl := api.New(params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
-	_, err := cl.Status(ctx)
+	loginResp, err := cl.GetToken(ctx, env.ReadEnvInt(config.SessionValiditySecondsEnvVar, int(api.DefaultTokenValiditySeconds)))
 	if err != nil {
 		return fmt.Errorf("config verification failed against the rport: %v", err)
 	}
+	if loginResp.Data.Token == "" {
+		return fmt.Errorf("empty token received from rport")
+	}
 
-	err = ic.ConfigWriter(params)
+	paramsToSave := config.FromValues(map[string]string{
+		config.ServerURL: params.ReadString(config.ServerURL, ""),
+		config.Token:     loginResp.Data.Token,
+	})
+
+	err = ic.ConfigWriter(paramsToSave)
 	if err != nil {
 		return err
 	}

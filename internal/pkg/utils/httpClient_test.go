@@ -12,9 +12,12 @@ func TestAuthRequest(t *testing.T) {
 	req, err := http.NewRequestWithContext(context.Background(), "post", "/", nil)
 	assert.NoError(t, err)
 
-	ba := &BasicAuth{
-		Login: "root",
-		Pass:  "root",
+	ba := &StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "root"
+			pass = "root"
+			return
+		},
 	}
 	err = ba.AuthRequest(req)
 	assert.NoError(t, err)

@@ -10,7 +10,6 @@ import (
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
-	"github.com/breathbath/go_utils/utils/env"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/controllers"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
@@ -47,17 +46,13 @@ var commandsCmd = &cobra.Command{
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 
-			basicAuth := &utils.StorageBasicAuth{
-				AuthProvider: config.AuthConfigProvider,
-			}
 			baseRportURL := config.Params.ReadString(config.ServerURL, config.DefaultServerURL)
-
-			rportCl := api.New(baseRportURL, basicAuth)
-
 			wsURLBuilder := &api.WsCommandURLProvider{
-				TokenProvider:        rportCl,
+				TokenProvider: func() (token string, err error) {
+					token = config.Params.ReadString(config.Token, "")
+					return
+				},
 				BaseURL:              baseRportURL,
-				TokenValiditySeconds: env.ReadEnvInt("SESSION_VALIDITY_SECONDS", api.DefaultTokenValiditySeconds),
 			}
 			wsClient, err := utils.NewWsClient(ctx, wsURLBuilder.BuildWsURL)
 			if err != nil {

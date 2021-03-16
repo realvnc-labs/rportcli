@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 
@@ -14,7 +15,7 @@ const (
 	LoginURL                    = "/api/v1/login"
 	MeURL                       = "/api/v1/me"
 	StatusURL                   = "/api/v1/status"
-	DefaultTokenValiditySeconds = 10 * 60
+	DefaultTokenValiditySeconds = 90 * 24 * time.Hour //90 days is max value
 )
 
 type LoginResponse struct {

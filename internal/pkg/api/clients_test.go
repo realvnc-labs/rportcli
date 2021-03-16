@@ -90,9 +90,12 @@ func TestClientsList(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	cl := New(srv.URL, &utils.BasicAuth{
-		Login: "log1",
-		Pass:  "pass1",
+	cl := New(srv.URL, &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1"
+			pass = "pass1"
+			return
+		},
 	})
 
 	clientsResp, err := cl.Clients(context.Background())

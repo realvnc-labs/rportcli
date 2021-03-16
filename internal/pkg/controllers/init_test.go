@@ -3,8 +3,12 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	options "github.com/breathbath/go_utils/utils/config"
@@ -14,11 +18,29 @@ import (
 
 func TestInitSuccess(t *testing.T) {
 	statusRequested := false
+
+	const tokenGiven = "some token"
+	const tokenValidityVal = "90"
+	err := os.Setenv(config.SessionValiditySecondsEnvVar, tokenValidityVal)
+	assert.NoError(t, err)
+	if err == nil {
+		defer func() {
+			e := os.Unsetenv(config.SessionValiditySecondsEnvVar)
+			if e != nil {
+				logrus.Error(e)
+			}
+		}()
+	}
+
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		resp := api.StatusResponse{}
+		resp := api.LoginResponse{
+			Data: models.Token{
+				Token: tokenGiven,
+			},
+		}
 		statusRequested = true
 		assert.Equal(t, http.MethodGet, r.Method)
-		assert.Equal(t, "/api/v1/status", r.URL.String())
+		assert.Equal(t, "/api/v1/login?token-lifetime=" + tokenValidityVal, r.URL.String())
 		assert.Equal(t, "Basic bG9naW46cGFzc3dvcmRz", r.Header.Get("Authorization"))
 
 		rw.WriteHeader(http.StatusOK)
@@ -41,7 +63,7 @@ func TestInitSuccess(t *testing.T) {
 	login := "login"
 	pass := "passwords"
 
-	err := tController.InitConfig(context.Background(), map[string]*string{
+	err = tController.InitConfig(context.Background(), map[string]*string{
 		"server_url": &srvURL,
 		"login":      &login,
 		"password":   &pass,
@@ -51,18 +73,23 @@ func TestInitSuccess(t *testing.T) {
 	if err != nil {
 		return
 	}
-	assert.Equal(t, srvURL, writtenParamsP.ReadString("server_url", ""))
-	assert.Equal(t, login, writtenParamsP.ReadString("login", ""))
-	assert.Equal(t, pass, writtenParamsP.ReadString("password", ""))
+	assert.Equal(t, srvURL, writtenParamsP.ReadString(config.ServerURL, ""))
+	assert.Equal(t, tokenGiven, writtenParamsP.ReadString(config.Token, ""))
 	assert.True(t, statusRequested)
 }
 
 func TestInitFromPrompt(t *testing.T) {
-	login := "one"
-	pass := "two"
+	const login = "one"
+	const pass = "two"
+	const tokenToGive =  "some tok"
 
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		resp := api.StatusResponse{}
+		resp := api.LoginResponse{
+			Data: models.Token{
+				Token: tokenToGive,
+			},
+		}
+
 		rw.WriteHeader(http.StatusOK)
 		jsonEnc := json.NewEncoder(rw)
 		err := jsonEnc.Encode(resp)
@@ -96,9 +123,8 @@ func TestInitFromPrompt(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, srvURL, writtenParamsP.ReadString("server_url", ""))
-	assert.Equal(t, login, writtenParamsP.ReadString("login", ""))
-	assert.Equal(t, pass, writtenParamsP.ReadString("password", ""))
+	assert.Equal(t, srvURL, writtenParamsP.ReadString(config.ServerURL, ""))
+	assert.Equal(t, tokenToGive, writtenParamsP.ReadString(config.Token, ""))
 }
 
 func TestInitError(t *testing.T) {
