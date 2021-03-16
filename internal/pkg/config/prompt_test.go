@@ -12,6 +12,7 @@ type PromptReaderMock struct {
 	ReadOutputs         []string
 	PasswordReadOutputs []string
 	ErrToGive           error
+	Inputs              []string
 }
 
 func (prm *PromptReaderMock) ReadString() (string, error) {
@@ -32,6 +33,10 @@ func (prm *PromptReaderMock) ReadPassword() (string, error) {
 	}
 
 	return prm.PasswordReadOutputs[prm.PasswordReadCount-1], prm.ErrToGive
+}
+
+func (prm *PromptReaderMock) Output(text string) {
+	prm.Inputs = append(prm.Inputs, text)
 }
 
 func TestPromptRequiredValues(t *testing.T) {

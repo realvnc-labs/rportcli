@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"io"
 	"os"
 )
@@ -38,6 +39,10 @@ func (pr *PromptReader) ReadPassword() (string, error) {
 		inputBytes, err := pr.PasswordScanner()
 		return string(inputBytes), err
 	})
+}
+
+func (pr *PromptReader) Output(text string) {
+	fmt.Print(text)
 }
 
 func (pr *PromptReader) promptForStrValue(reader func() (string, error)) (string, error) {

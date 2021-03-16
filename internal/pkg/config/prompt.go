@@ -14,6 +14,7 @@ const maxPromptIterations = 100
 type PromptReader interface {
 	ReadString() (string, error)
 	ReadPassword() (string, error)
+	Output(text string)
 }
 
 // PromptRequiredValues will ask user for the list of required values
@@ -67,10 +68,10 @@ func PromptRequiredValues(
 func promptValue(req *ParameterRequirement, promptReader PromptReader) (string, error) {
 	fmt.Println(req.Help)
 	if req.Default != "" {
-		fmt.Printf("Default value: %s\n", req.Default)
+		promptReader.Output(fmt.Sprintf("Default value: %s\n", req.Default))
 	}
 
-	fmt.Print("-> ")
+	promptReader.Output("-> ")
 
 	var readValue string
 	var err error
