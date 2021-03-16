@@ -25,10 +25,9 @@ var (
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if OutputFormat != "" && OutputFormat != output.FormatHuman && OutputFormat != output.FormatYAML && OutputFormat != output.FormatJSON {
 				return fmt.Errorf(
-					"unknown format '%s', supported formats are %s, %s, %s",
+					"unknown format '%s', supported formats are %s, %s",
 					OutputFormat,
 					output.FormatJSON,
-					output.FormatJSONPretty,
 					output.FormatYAML,
 				)
 			}
