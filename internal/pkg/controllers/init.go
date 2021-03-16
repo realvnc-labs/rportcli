@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+
 	options "github.com/breathbath/go_utils/utils/config"
 	"github.com/breathbath/go_utils/utils/env"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
@@ -69,7 +70,7 @@ func (ic *InitController) InitConfig(ctx context.Context, parametersFromArgument
 	}
 
 	cl := api.New(params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
-	loginResp, err := cl.GetToken(ctx, env.ReadEnvInt(config.SessionValiditySecondsEnvVar, int(api.DefaultTokenValiditySeconds)))
+	loginResp, err := cl.GetToken(ctx, env.ReadEnvInt(config.SessionValiditySecondsEnvVar, api.DefaultTokenValiditySeconds))
 	if err != nil {
 		return fmt.Errorf("config verification failed against the rport: %v", err)
 	}

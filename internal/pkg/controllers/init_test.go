@@ -3,13 +3,14 @@ package controllers
 import (
 	"context"
 	"encoding/json"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
+	"github.com/sirupsen/logrus"
 
 	options "github.com/breathbath/go_utils/utils/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
@@ -40,13 +41,13 @@ func TestInitSuccess(t *testing.T) {
 		}
 		statusRequested = true
 		assert.Equal(t, http.MethodGet, r.Method)
-		assert.Equal(t, "/api/v1/login?token-lifetime=" + tokenValidityVal, r.URL.String())
+		assert.Equal(t, "/api/v1/login?token-lifetime="+tokenValidityVal, r.URL.String())
 		assert.Equal(t, "Basic bG9naW46cGFzc3dvcmRz", r.Header.Get("Authorization"))
 
 		rw.WriteHeader(http.StatusOK)
 		jsonEnc := json.NewEncoder(rw)
-		err := jsonEnc.Encode(resp)
-		assert.NoError(t, err)
+		e := jsonEnc.Encode(resp)
+		assert.NoError(t, e)
 	}))
 	defer srv.Close()
 
@@ -57,6 +58,7 @@ func TestInitSuccess(t *testing.T) {
 			writtenParamsP = params
 			return nil
 		},
+		PromptReader: &PromptReaderMock{},
 	}
 
 	srvURL := srv.URL
@@ -81,7 +83,7 @@ func TestInitSuccess(t *testing.T) {
 func TestInitFromPrompt(t *testing.T) {
 	const login = "one"
 	const pass = "two"
-	const tokenToGive =  "some tok"
+	const tokenToGive = "some tok"
 
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		resp := api.LoginResponse{
@@ -137,16 +139,17 @@ func TestInitError(t *testing.T) {
 		ConfigWriter: func(params *options.ParameterBag) (err error) {
 			return nil
 		},
+		PromptReader: &PromptReaderMock{},
 	}
 
 	srvURL := srv.URL
-	login := "log1"
-	pass := "pass1"
+	login := "log1123"
+	password := "pass111"
 
 	err := tController.InitConfig(context.Background(), map[string]*string{
-		"server_url": &srvURL,
-		"login":      &login,
-		"password":   &pass,
+		config.ServerURL: &srvURL,
+		config.Login:     &login,
+		config.Password:  &password,
 	})
 
 	assert.EqualError(t, err, "config verification failed against the rport: operation failed")

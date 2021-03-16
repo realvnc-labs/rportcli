@@ -17,7 +17,7 @@ import (
 func TestLogin(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		assert.Equal(t, "Basic bG9nMTpwYXNzMQ==", authHeader)
+		assert.Equal(t, "Basic bG9nMTQzMTUzOnBhc3MxMTM0MzE=", authHeader)
 
 		assert.Equal(t, "/api/v1/login?token-lifetime=10", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
@@ -30,8 +30,8 @@ func TestLogin(t *testing.T) {
 
 	cl := New(srv.URL, &utils.StorageBasicAuth{
 		AuthProvider: func() (login, pass string, err error) {
-			login = "log1"
-			pass = "pass1"
+			login = "log143153"
+			pass = "pass113431"
 			return
 		},
 	})
@@ -48,7 +48,7 @@ func TestLogin(t *testing.T) {
 func TestMe(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		assert.Equal(t, "Basic bG9nMTpwYXNzMQ==", authHeader)
+		assert.Equal(t, "Basic bG9nMTEzNDM6cGFzczEzNDEyMzQzMg==", authHeader)
 
 		assert.Equal(t, "/api/v1/me", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
@@ -62,8 +62,8 @@ func TestMe(t *testing.T) {
 
 	cl := New(srv.URL, &utils.StorageBasicAuth{
 		AuthProvider: func() (login, pass string, err error) {
-			login = "log1"
-			pass = "pass1"
+			login = "log11343"
+			pass = "pass134123432"
 			return
 		},
 	})
@@ -81,7 +81,7 @@ func TestMe(t *testing.T) {
 func TestStatus(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		assert.Equal(t, "Basic bG9nMTpwYXNzMQ==", authHeader)
+		assert.Equal(t, "Basic bG9nMTMzMzpwYXNzMTM0MTIzNA==", authHeader)
 
 		assert.Equal(t, "/api/v1/status", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
@@ -98,8 +98,8 @@ func TestStatus(t *testing.T) {
 
 	cl := New(srv.URL, &utils.StorageBasicAuth{
 		AuthProvider: func() (login, pass string, err error) {
-			login = "log1"
-			pass = "pass1"
+			login = "log1333"
+			pass = "pass1341234"
 			return
 		},
 	})
@@ -136,8 +136,8 @@ func TestErrorResponse(t *testing.T) {
 
 	cl := New(srv.URL, &utils.StorageBasicAuth{
 		AuthProvider: func() (login, pass string, err error) {
-			login = "log1"
-			pass = "pass1"
+			login = "log1dfasf"
+			pass = "pass134124"
 			return
 		},
 	})

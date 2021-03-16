@@ -52,7 +52,7 @@ var commandsCmd = &cobra.Command{
 					token = config.Params.ReadString(config.Token, "")
 					return
 				},
-				BaseURL:              baseRportURL,
+				BaseURL: baseRportURL,
 			}
 			wsClient, err := utils.NewWsClient(ctx, wsURLBuilder.BuildWsURL)
 			if err != nil {

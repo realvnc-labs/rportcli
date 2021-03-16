@@ -57,7 +57,7 @@ func (ba *BearerAuth) AuthRequest(req *http.Request) error {
 }
 
 type FallbackAuth struct {
-	PrimaryAuth Auth
+	PrimaryAuth  Auth
 	FallbackAuth Auth
 }
 

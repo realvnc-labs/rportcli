@@ -66,7 +66,7 @@ func PromptRequiredValues(
 }
 
 func promptValue(req *ParameterRequirement, promptReader PromptReader) (string, error) {
-	fmt.Println(req.Help)
+	promptReader.Output(req.Help + "\n")
 	if req.Default != "" {
 		promptReader.Output(fmt.Sprintf("Default value: %s\n", req.Default))
 	}

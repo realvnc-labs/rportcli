@@ -32,7 +32,7 @@ func (wup *WsCommandURLProvider) BuildWsURL(ctx context.Context) (wsURL string, 
 	return
 }
 
-func (wup *WsCommandURLProvider) buildWsURL(token string, baseURL string) string {
+func (wup *WsCommandURLProvider) buildWsURL(token, baseURL string) string {
 	baseURL = wup.replaceHTTPWithWsProtocolPrefix(baseURL)
 	return url.JoinURL(baseURL, CommandsWSUri) + "?access_token=" + token
 }

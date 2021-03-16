@@ -14,13 +14,13 @@ func TestAuthRequest(t *testing.T) {
 
 	ba := &StorageBasicAuth{
 		AuthProvider: func() (login, pass string, err error) {
-			login = "root"
-			pass = "root"
+			login = "looooaaaa"
+			pass = "paoooo"
 			return
 		},
 	}
 	err = ba.AuthRequest(req)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "Basic cm9vdDpyb290", req.Header.Get("Authorization"))
+	assert.Equal(t, "Basic bG9vb29hYWFhOnBhb29vbw==", req.Header.Get("Authorization"))
 }

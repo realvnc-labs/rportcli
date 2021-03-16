@@ -80,8 +80,8 @@ func TestTunnelsController(t *testing.T) {
 
 	apiAuth := &utils.StorageBasicAuth{
 		AuthProvider: func() (login, pass string, err error) {
-			login = "log1"
-			pass = "pass1"
+			login = "log145"
+			pass = "pass144"
 			return
 		},
 	}
@@ -105,7 +105,7 @@ func TestTunnelsController(t *testing.T) {
 
 func TestTunnelDeleteController(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "Basic bG9nMTpwYXNzMQ==", r.Header.Get("Authorization"))
+		assert.Equal(t, "Basic bG9nMTU1OnBhc3MxNTU=", r.Header.Get("Authorization"))
 		assert.Equal(t, http.MethodDelete, r.Method)
 		assert.Equal(t, "/api/v1/clients/cl1/tunnels/tun2", r.URL.String())
 		rw.WriteHeader(http.StatusNoContent)
@@ -114,8 +114,8 @@ func TestTunnelDeleteController(t *testing.T) {
 
 	apiAuth := &utils.StorageBasicAuth{
 		AuthProvider: func() (login, pass string, err error) {
-			login = "log1"
-			pass = "pass1"
+			login = "log155"
+			pass = "pass155"
 			return
 		},
 	}

@@ -28,10 +28,11 @@ func TestBuildWsURL(t *testing.T) {
 		},
 	}
 	for _, testCase := range testCases {
+		tc := testCase
 		urlProvider := &WsCommandURLProvider{
-			BaseURL:              testCase.inputURL,
+			BaseURL: testCase.inputURL,
 			TokenProvider: func() (token string, err error) {
-				token = testCase.tokenToGive
+				token = tc.tokenToGive
 				return
 			},
 			TokenValiditySeconds: testCase.tokenValidity,

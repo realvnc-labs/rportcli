@@ -16,7 +16,7 @@ import (
 
 func TestCreateTunnel(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "Basic bG9nMTpwYXNzMQ==", r.Header.Get("Authorization"))
+		assert.Equal(t, "Basic bG9nMWRmYWRmOnBhc3MxZGZhc2ZhZGY=", r.Header.Get("Authorization"))
 		assert.Equal(t, http.MethodPut, r.Method)
 
 		assert.Equal(t, "/api/v1/clients/334/tunnels?acl=127.0.0.1&check_port=1&local=lohost1%3A3300&remote=rhost2%3A3344&scheme=ssh", r.URL.String())
@@ -36,9 +36,9 @@ func TestCreateTunnel(t *testing.T) {
 	defer srv.Close()
 
 	apiAuth := &utils.StorageBasicAuth{
-		AuthProvider: func() (login, pass string, err error) {
-			login = "log1"
-			pass = "pass1"
+		AuthProvider: func() (l, p string, err error) {
+			l = "log1dfadf"
+			p = "pass1dfasfadf"
 			return
 		},
 	}
@@ -78,7 +78,6 @@ func TestDeleteTunnel(t *testing.T) {
 		rw.WriteHeader(http.StatusNoContent)
 	}))
 	defer srv.Close()
-
 
 	apiAuth := &utils.StorageBasicAuth{
 		AuthProvider: func() (login, pass string, err error) {

@@ -2,11 +2,12 @@ package utils
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/assert"
