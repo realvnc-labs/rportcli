@@ -2,8 +2,9 @@ package utils
 
 import (
 	"fmt"
-	http2 "github.com/breathbath/go_utils/utils/http"
 	"net/http"
+
+	http2 "github.com/breathbath/go_utils/utils/http"
 )
 
 type Auth interface {

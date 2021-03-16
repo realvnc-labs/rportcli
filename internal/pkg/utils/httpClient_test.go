@@ -2,10 +2,11 @@ package utils
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type ErrorMock struct {
@@ -42,23 +43,23 @@ func TestBaseClient(t *testing.T) {
 			expectedErrTarget: nil,
 		},
 		{
-			respCodeToGive:    http.StatusInternalServerError,
-			bodyToGive:        `{"error":"some error"}`,
-			target:            &SomeModel{},
-			errTarget:         &ErrorMock{},
-			expectedError:     "some error",
-			expectedTarget:    nil,
+			respCodeToGive: http.StatusInternalServerError,
+			bodyToGive:     `{"error":"some error"}`,
+			target:         &SomeModel{},
+			errTarget:      &ErrorMock{},
+			expectedError:  "some error",
+			expectedTarget: nil,
 			expectedErrTarget: &ErrorMock{
 				Err: "some error",
 			},
 		},
 		{
-			respCodeToGive:    http.StatusBadRequest,
-			bodyToGive:        `{"error":"some error"}`,
-			target:            &SomeModel{},
-			errTarget:         nil,
-			expectedError:     "invalid input provided",
-			expectedTarget:    nil,
+			respCodeToGive: http.StatusBadRequest,
+			bodyToGive:     `{"error":"some error"}`,
+			target:         &SomeModel{},
+			errTarget:      nil,
+			expectedError:  "invalid input provided",
+			expectedTarget: nil,
 		},
 	}
 
