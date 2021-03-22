@@ -3,7 +3,7 @@ package models
 import (
 	"fmt"
 
-	"github.com/breathbath/go_utils/utils/testing"
+	"github.com/breathbath/go_utils/v2/pkg/testing"
 )
 
 type OperationStatus struct {

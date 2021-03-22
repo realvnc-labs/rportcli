@@ -19,20 +19,22 @@ func TestRenderJob(t *testing.T) {
 	}{
 		{
 			Format: FormatHuman,
-			ExpectedOutput: `Command Execution Result
-Job ID: 123
-Status: success
-Command Output: some std
-Command Error Output: 
-Started at: 2021-01-01T00:00:01Z
-Finished at: 2021-01-01T00:00:01Z
-Client ID: cl123
-Command: ls
-Shell: cmd
-Pid: 123
-Timeout sec: 10
-Created By: me
-Multi Job ID: 
+			ExpectedOutput: `Client ID: cl123
+Client Name: 
+    Command Execution Result
+    Job ID: 123
+    Status: success
+    Command Output:
+      some std
+    Command Error Output:
+    Started at: 2021-01-01 00:00:01 +0000 UTC
+    Finished at: 2021-01-01 00:00:01 +0000 UTC
+    Command: ls
+    Shell: cmd
+    Pid: 123
+    Timeout sec: 10
+    Created By: me
+    Multi Job ID: 
 `,
 		},
 		{
@@ -68,6 +70,7 @@ Multi Job ID:
 status: success
 finishedat: 2021-01-01T00:00:01Z
 clientid: cl123
+clientname: ""
 command: ls
 shell: cmd
 pid: 123
@@ -104,6 +107,7 @@ result:
 		jr := &JobRenderer{
 			Writer: buf,
 			Format: testCase.Format,
+			IsFullOutput: true,
 		}
 
 		err = jr.RenderJob(tunnel)

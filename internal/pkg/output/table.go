@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/breathbath/go_utils/utils/testing"
+	"github.com/breathbath/go_utils/v2/pkg/testing"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sirupsen/logrus"
 )

@@ -5,9 +5,7 @@ import (
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
-
-	options "github.com/breathbath/go_utils/utils/config"
+	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/sirupsen/logrus"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
@@ -24,47 +22,6 @@ const (
 	CheckPort  = "checkp"
 	DefaultACL = "<<YOU CURRENT PUBLIC IP>>"
 )
-
-func GetCreateTunnelRequirements() []config.ParameterRequirement {
-	return []config.ParameterRequirement{
-		{
-			Field:       ClientID,
-			Description: "[required] unique client id retrieved previously",
-			Validate:    config.RequiredValidate,
-			ShortName:   "d",
-			IsRequired:  true,
-		},
-		{
-			Field: Local,
-			Description: `refers to the ports of the rport server address to use for a new tunnel, e.g. '3390' or '0.0.0.0:3390'. 
-If local is not specified, a random server port will be assigned automatically`,
-			ShortName: "l",
-		},
-		{
-			Field: Remote,
-			Description: "[required] the ports are defined from the servers' perspective. " +
-				"'Remote' refers to the ports and interfaces of the client., e.g. '3389'",
-			ShortName:  "r",
-			IsRequired: true,
-		},
-		{
-			Field:       Scheme,
-			Description: "URI scheme to be used. For example, 'ssh', 'rdp', etc.",
-			ShortName:   "s",
-		},
-		{
-			Field:       ACL,
-			Description: "ACL, IP addresses who is allowed to use the tunnel. For example, '142.78.90.8,201.98.123.0/24,'",
-			Default:     DefaultACL,
-			ShortName:   "a",
-		},
-		{
-			Field:       CheckPort,
-			Description: "A flag whether to check availability of a public port. By default check is enabled. To disable it specify '0 or false'.",
-			ShortName:   "p",
-		},
-	}
-}
 
 type TunnelRenderer interface {
 	RenderTunnels(tunnels []*models.Tunnel) error

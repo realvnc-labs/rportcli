@@ -15,40 +15,62 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	paramsFromArgumentsP map[string]*string
-)
-
 func init() {
-	reqs := controllers.GetInitRequirements()
-	paramsFromArgumentsP = make(map[string]*string, len(reqs))
-	for _, req := range reqs {
-		paramVal := ""
-		initCmd.Flags().StringVarP(&paramVal, req.Field, req.ShortName, req.Default, req.Description)
-		paramsFromArgumentsP[req.Field] = &paramVal
-	}
+	config.DefineCommandInputs(initCmd, getInitRequirements())
 	rootCmd.AddCommand(initCmd)
 }
 
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "initialize your connection to the rportd API",
-	Args:  cobra.ArbitraryArgs,
+	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
+		promptReader := &utils.PromptReader{
+			Sc:              bufio.NewScanner(os.Stdin),
+			SigChan:         sigs,
+			PasswordScanner: utils.ReadPassword,
+		}
+		params, err := config.CollectParams(cmd, getCommandRequirements(), promptReader)
+		if err != nil {
+			return err
+		}
+
 		initController := &controllers.InitController{
 			ConfigWriter: config.WriteConfig,
-			PromptReader: &utils.PromptReader{
-				Sc:              bufio.NewScanner(os.Stdin),
-				SigChan:         sigs,
-				PasswordScanner: utils.ReadPassword,
-			},
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		return initController.InitConfig(ctx, paramsFromArgumentsP)
+		return initController.InitConfig(ctx, params)
 	},
+}
+
+func getInitRequirements() []config.ParameterRequirement {
+	return []config.ParameterRequirement{
+		{
+			Field:       config.ServerURL,
+			Help:        "Enter Server Url",
+			Validate:    config.RequiredValidate,
+			Description: "Server address of rport to connect to",
+			ShortName:   "s",
+		},
+		{
+			Field:       config.Login,
+			Help:        "Enter a valid login value",
+			Validate:    config.RequiredValidate,
+			Description: "GetToken to the rport server",
+			ShortName:   "l",
+		},
+		{
+			Field:       config.Password,
+			Help:        "Enter a valid password value",
+			Validate:    config.RequiredValidate,
+			Description: "Password to the rport server",
+			ShortName:   "p",
+			IsSecure:    true,
+		},
+	}
 }

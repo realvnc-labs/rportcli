@@ -5,7 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	options "github.com/breathbath/go_utils/utils/config"
+	options "github.com/breathbath/go_utils/v2/pkg/config"
+)
+
+const (
+	BoolRequirementType   = "bool"
+	StringRequirementType = "string"
 )
 
 // Validate validation callback
@@ -30,6 +35,7 @@ type ParameterRequirement struct {
 	Description string
 	IsSecure    bool
 	IsRequired  bool
+	Type        string
 }
 
 // CheckRequirements reads parameters which are missing in the configuration or having a default value

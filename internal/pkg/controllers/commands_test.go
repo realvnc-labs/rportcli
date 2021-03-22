@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
@@ -44,29 +46,6 @@ func (rwm *ReadWriterMock) Write(inputMsg []byte) (n int, err error) {
 func (rwm *ReadWriterMock) Close() error {
 	rwm.isClosed = true
 	return rwm.closeError
-}
-
-type SpinnerMock struct {
-	startMsgs       []string
-	updateMsgs      []string
-	stopSuccessMsgs []string
-	stopErrorMsgs   []string
-}
-
-func (sm *SpinnerMock) Start(msg string) {
-	sm.startMsgs = append(sm.startMsgs, msg)
-}
-
-func (sm *SpinnerMock) Update(msg string) {
-	sm.updateMsgs = append(sm.updateMsgs, msg)
-}
-
-func (sm *SpinnerMock) StopSuccess(msg string) {
-	sm.stopSuccessMsgs = append(sm.stopSuccessMsgs, msg)
-}
-
-func (sm *SpinnerMock) StopError(msg string) {
-	sm.stopErrorMsgs = append(sm.stopErrorMsgs, msg)
 }
 
 type JobRendererMock struct {
@@ -120,34 +99,21 @@ func TestInteractiveCommandExecutionSuccess(t *testing.T) {
 		PasswordReadOutputs: []string{},
 	}
 
-	s := &SpinnerMock{
-		startMsgs:       []string{},
-		updateMsgs:      []string{},
-		stopSuccessMsgs: []string{},
-		stopErrorMsgs:   []string{},
-	}
-
 	jr := &JobRendererMock{}
 
 	ic := &InteractiveCommandsController{
 		ReadWriter:   rw,
-		PromptReader: pr,
-		Spinner:      s,
 		JobRenderer:  jr,
 	}
 
-	cids := "1235"
-	cmd := "cmd"
-	to := "1"
-	gi := "333"
-	ec := "1"
-	err = ic.Start(context.Background(), map[string]*string{
-		clientIDs:        &cids,
-		command:          &cmd,
-		timeout:          &to,
-		groupIDs:         &gi,
-		execConcurrently: &ec,
+	params := config.FromValues(map[string]string{
+		ClientIDs:        "1235",
+		Command:          "cmd",
+		Timeout:          "1",
+		GroupIDs:         "333",
+		ExecConcurrently: "1",
 	})
+	err = ic.Start(context.Background(), params)
 
 	assert.NoError(t, err)
 
@@ -163,76 +129,6 @@ func TestInteractiveCommandExecutionSuccess(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, string(jobRespBytes), string(actualJobRenderResult))
 	assert.True(t, rw.isClosed)
-	assert.Len(t, s.stopErrorMsgs, 0)
-	assert.Len(t, s.stopSuccessMsgs, 2)
-}
-
-func TestInteractiveCommandExecutionWithPromptParams(t *testing.T) {
-	jobResp := models.Job{
-		Jid:    "123",
-		Status: "done",
-	}
-	jobRespBytes, err := json.Marshal(jobResp)
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
-
-	rw := &ReadWriterMock{
-		itemsToRead: []ReadChunk{
-			{
-				Output: jobRespBytes,
-			},
-			{
-				Err: io.EOF,
-			},
-		},
-		writtenItems: []string{},
-		isClosed:     false,
-	}
-
-	pr := &PromptReaderMock{
-		ReadOutputs: []string{
-			"123",
-			"dir",
-		},
-		PasswordReadOutputs: []string{},
-	}
-
-	s := &SpinnerMock{
-		startMsgs:       []string{},
-		updateMsgs:      []string{},
-		stopSuccessMsgs: []string{},
-		stopErrorMsgs:   []string{},
-	}
-
-	jr := &JobRendererMock{}
-
-	ic := &InteractiveCommandsController{
-		ReadWriter:   rw,
-		PromptReader: pr,
-		Spinner:      s,
-		JobRenderer:  jr,
-	}
-
-	err = ic.Start(context.Background(), map[string]*string{})
-
-	assert.NoError(t, err)
-
-	assert.Equal(t, pr.PasswordReadCount, 0)
-	assert.Equal(t, pr.ReadCount, 2)
-
-	assert.Len(t, rw.writtenItems, 1)
-	expectedCommandInput := `{"command":"dir","client_ids":["123"],"timeout_sec":30,"execute_concurrently":false}`
-	assert.Equal(t, expectedCommandInput, rw.writtenItems[0])
-
-	assert.NotNil(t, jr.jobToRender)
-	actualJobRenderResult, err := json.Marshal(jr.jobToRender)
-	assert.NoError(t, err)
-	assert.Equal(t, string(jobRespBytes), string(actualJobRenderResult))
-	assert.True(t, rw.isClosed)
-	assert.Len(t, s.stopErrorMsgs, 0)
-	assert.Len(t, s.stopSuccessMsgs, 2)
 }
 
 func TestInteractiveCommandExecutionWithInvalidResponse(t *testing.T) {
@@ -263,33 +159,18 @@ func TestInteractiveCommandExecutionWithInvalidResponse(t *testing.T) {
 		isClosed:     false,
 	}
 
-	pr := &PromptReaderMock{
-		ReadOutputs:         []string{},
-		PasswordReadOutputs: []string{},
-	}
-
-	s := &SpinnerMock{
-		startMsgs:       []string{},
-		updateMsgs:      []string{},
-		stopSuccessMsgs: []string{},
-		stopErrorMsgs:   []string{},
-	}
-
 	jr := &JobRendererMock{}
 
 	ic := &InteractiveCommandsController{
 		ReadWriter:   rw,
-		PromptReader: pr,
-		Spinner:      s,
 		JobRenderer:  jr,
 	}
 
-	cids := "123"
-	cmd := "ls"
-	err = ic.Start(context.Background(), map[string]*string{
-		clientIDs: &cids,
-		command:   &cmd,
+	params := config.FromValues(map[string]string{
+		ClientIDs: "123",
+		Command:   "ls",
 	})
+	err = ic.Start(context.Background(), params)
 
 	assert.Error(t, err)
 	if err == nil {

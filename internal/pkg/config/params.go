@@ -1,7 +1,7 @@
 package config
 
 import (
-	options "github.com/breathbath/go_utils/utils/config"
+	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/sirupsen/logrus"
 )
 

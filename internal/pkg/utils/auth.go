@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	http2 "github.com/breathbath/go_utils/utils/http"
+	http2 "github.com/breathbath/go_utils/v2/pkg/http"
 )
 
 type Auth interface {

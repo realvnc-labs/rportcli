@@ -7,7 +7,7 @@ import (
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 
-	"github.com/breathbath/go_utils/utils/url"
+	"github.com/breathbath/go_utils/v2/pkg/url"
 )
 
 const (

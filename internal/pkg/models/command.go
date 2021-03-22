@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/breathbath/go_utils/utils/testing"
+	"github.com/breathbath/go_utils/v2/pkg/testing"
 )
 
 type JobResult struct {
@@ -17,6 +17,7 @@ type Job struct {
 	Status     string    `json:"status"`
 	FinishedAt time.Time `json:"finished_at"`
 	ClientID   string    `json:"client_id"`
+	ClientName string    `json:"client_name,omitempty"`
 	Command    string    `json:"command"`
 	Shell      string    `json:"shell"`
 	Pid        int       `json:"pid"`

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	options "github.com/breathbath/go_utils/utils/config"
-	"github.com/breathbath/go_utils/utils/env"
+	options "github.com/breathbath/go_utils/v2/pkg/config"
+	"github.com/breathbath/go_utils/v2/pkg/env"
 	"github.com/sirupsen/logrus"
 )
 

@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
@@ -16,27 +17,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	tunnelCreateRequirementsP map[string]*string
-)
-
 func init() {
 	tunnelsCmd.AddCommand(tunnelListCmd)
 	tunnelsCmd.AddCommand(tunnelDeleteCmd)
 
-	tunnelCreateRequirements := controllers.GetCreateTunnelRequirements()
-	tunnelCreateRequirementsP = make(map[string]*string, len(tunnelCreateRequirements))
-	for _, req := range tunnelCreateRequirements {
-		paramVal := ""
-		tunnelCreateCmd.Flags().StringVarP(&paramVal, req.Field, req.ShortName, req.Default, req.Description)
-		if req.IsRequired {
-			err := tunnelCreateCmd.MarkFlagRequired(req.Field)
-			if err != nil {
-				logrus.Error(err)
-			}
-		}
-		tunnelCreateRequirementsP[req.Field] = &paramVal
-	}
+	config.DefineCommandInputs(tunnelCreateCmd, getCreateTunnelRequirements())
 	tunnelsCmd.AddCommand(tunnelCreateCmd)
 
 	rootCmd.AddCommand(tunnelsCmd)
@@ -51,7 +36,7 @@ var tunnelsCmd = &cobra.Command{
 var tunnelListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "list all active tunnels created with rport",
-	Args:  cobra.ArbitraryArgs,
+	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		rportAPI := buildRport()
 
@@ -109,15 +94,17 @@ rportcli tunnel create -l 0.0.0.0:22 -r 3394 -d bc0b705d-b5fb-4df5-84e3-82dba437
 this example opens port 3394 on the rport server and forwards to port 22 of the client bc0b705d-b5fb-4df5-84e3-82dba437bbef
 with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 `,
-	Args: cobra.ArbitraryArgs,
+	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		tunnelCreateRequirements := make(map[string]string, len(tunnelCreateRequirementsP))
-		for k, valP := range tunnelCreateRequirementsP {
-			tunnelCreateRequirements[k] = *valP
-		}
-		params := config.FromValues(tunnelCreateRequirements)
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-		err := config.CheckRequirementsError(params, controllers.GetCreateTunnelRequirements())
+		promptReader := &utils.PromptReader{
+			Sc:              bufio.NewScanner(os.Stdin),
+			SigChan:         sigs,
+			PasswordScanner: utils.ReadPassword,
+		}
+		params, err := config.CollectParams(cmd, getCommandRequirements(), promptReader)
 		if err != nil {
 			return err
 		}
@@ -139,4 +126,47 @@ with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 
 		return tunnelController.Create(context.Background(), params)
 	},
+}
+
+func getCreateTunnelRequirements() []config.ParameterRequirement {
+	return []config.ParameterRequirement{
+		{
+			Field:       controllers.ClientID,
+			Description: "[required] unique client id retrieved previously",
+			Validate:    config.RequiredValidate,
+			ShortName:   "d",
+			IsRequired:  true,
+		},
+		{
+			Field: controllers.Local,
+			Description: `refers to the ports of the rport server address to use for a new tunnel, e.g. '3390' or '0.0.0.0:3390'. 
+If local is not specified, a random server port will be assigned automatically`,
+			ShortName: "l",
+		},
+		{
+			Field: controllers.Remote,
+			Description: "[required] the ports are defined from the servers' perspective. " +
+				"'Remote' refers to the ports and interfaces of the client., e.g. '3389'",
+			ShortName:  "r",
+			IsRequired: true,
+		},
+		{
+			Field:       controllers.Scheme,
+			Description: "URI scheme to be used. For example, 'ssh', 'rdp', etc.",
+			ShortName:   "s",
+		},
+		{
+			Field:       controllers.ACL,
+			Description: "ACL, IP addresses who is allowed to use the tunnel. For example, '142.78.90.8,201.98.123.0/24,'",
+			Default:     controllers.DefaultACL,
+			ShortName:   "a",
+		},
+		{
+			Field:       controllers.CheckPort,
+			Description: "A flag whether to check availability of a public port. By default check is disabled.",
+			ShortName:   "p",
+			Type:        config.BoolRequirementType,
+			Default:     "0",
+		},
+	}
 }

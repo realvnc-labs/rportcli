@@ -5,8 +5,8 @@ import (
 	"io"
 	"os"
 
-	options "github.com/breathbath/go_utils/utils/config"
-	"github.com/breathbath/go_utils/utils/fs"
+	options "github.com/breathbath/go_utils/v2/pkg/config"
+	"github.com/breathbath/go_utils/v2/pkg/fs"
 	"github.com/sirupsen/logrus"
 )
 
@@ -19,7 +19,7 @@ type ValuesProvider struct {
 func NewValuesProvider(configFilePath string) *ValuesProvider {
 	return &ValuesProvider{
 		configFilePath:    configFilePath,
-		envValuesProvider: options.EnvValuesProvider{},
+		envValuesProvider: &options.EnvValuesProvider{},
 	}
 }
 
@@ -79,7 +79,7 @@ func (cvp *ValuesProvider) createFileValuesProvider() (options.ValuesProvider, e
 		return nil, err
 	}
 
-	jvp, err := options.NewJsonValuesProvider(f)
+	jvp, err := options.NewJSONValuesProvider(f)
 	if err != nil {
 		return nil, err
 	}

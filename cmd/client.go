@@ -28,7 +28,7 @@ var clientsCmd = &cobra.Command{
 var clientsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "list all connected and disconnected rport clients",
-	Args:  cobra.ArbitraryArgs,
+	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		rportAPI := buildRport()
 		cr := &output.ClientRenderer{

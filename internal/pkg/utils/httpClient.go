@@ -11,7 +11,7 @@ import (
 	"net/http/httputil"
 	"time"
 
-	"github.com/breathbath/go_utils/utils/env"
+	"github.com/breathbath/go_utils/v2/pkg/env"
 	"github.com/sirupsen/logrus"
 )
 

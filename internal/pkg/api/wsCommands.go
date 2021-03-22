@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/breathbath/go_utils/utils/url"
+	"github.com/breathbath/go_utils/v2/pkg/url"
 )
 
 const (
