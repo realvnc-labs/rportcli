@@ -16,11 +16,12 @@ func TestRenderJob(t *testing.T) {
 	testCases := []struct {
 		Format         string
 		ExpectedOutput string
+		IsFullOutput   bool
 	}{
 		{
 			Format: FormatHuman,
 			ExpectedOutput: `Client ID: cl123
-Client Name: 
+Client Name: some cl name
     Command Execution Result
     Job ID: 123
     Status: success
@@ -36,10 +37,18 @@ Client Name:
     Created By: me
     Multi Job ID: 
 `,
+			IsFullOutput: true,
+		},
+		{
+			Format: FormatHuman,
+			ExpectedOutput: `some cl name
+    some std
+`,
+			IsFullOutput: false,
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"jid":"123","status":"success","finished_at":"2021-01-01T00:00:01Z","client_id":"cl123","command":"ls","shell":"cmd","pid":123,"started_at":"2021-01-01T00:00:01Z","created_by":"me","multi_job_id":"","timeout_sec":10,"error":"","result":{"stdout":"some std","stderr":""}}
+			ExpectedOutput: `{"jid":"123","status":"success","finished_at":"2021-01-01T00:00:01Z","client_id":"cl123","client_name":"some cl name","command":"ls","shell":"cmd","pid":123,"started_at":"2021-01-01T00:00:01Z","created_by":"me","multi_job_id":"","timeout_sec":10,"error":"","result":{"stdout":"some std","stderr":""}}
 `,
 		},
 		{
@@ -49,6 +58,7 @@ Client Name:
   "status": "success",
   "finished_at": "2021-01-01T00:00:01Z",
   "client_id": "cl123",
+  "client_name": "some cl name",
   "command": "ls",
   "shell": "cmd",
   "pid": 123,
@@ -70,7 +80,7 @@ Client Name:
 status: success
 finishedat: 2021-01-01T00:00:01Z
 clientid: cl123
-clientname: ""
+clientname: some cl name
 command: ls
 shell: cmd
 pid: 123
@@ -91,6 +101,7 @@ result:
 		Status:     "success",
 		FinishedAt: timeToCheck,
 		ClientID:   "cl123",
+		ClientName: "some cl name",
 		Command:    "ls",
 		Shell:      "cmd",
 		Pid:        123,
@@ -107,7 +118,7 @@ result:
 		jr := &JobRenderer{
 			Writer:       buf,
 			Format:       testCase.Format,
-			IsFullOutput: true,
+			IsFullOutput: testCase.IsFullOutput,
 		}
 
 		err = jr.RenderJob(tunnel)
