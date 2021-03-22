@@ -105,8 +105,8 @@ result:
 	for _, testCase := range testCases {
 		buf := &bytes.Buffer{}
 		jr := &JobRenderer{
-			Writer: buf,
-			Format: testCase.Format,
+			Writer:       buf,
+			Format:       testCase.Format,
 			IsFullOutput: true,
 		}
 

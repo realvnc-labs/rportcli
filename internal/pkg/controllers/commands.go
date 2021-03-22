@@ -48,8 +48,8 @@ type JobRenderer interface {
 }
 
 type InteractiveCommandsController struct {
-	ReadWriter   ReadWriter
-	JobRenderer  JobRenderer
+	ReadWriter  ReadWriter
+	JobRenderer JobRenderer
 }
 
 func (icm *InteractiveCommandsController) Start(ctx context.Context, params *options.ParameterBag) error {

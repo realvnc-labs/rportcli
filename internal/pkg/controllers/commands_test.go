@@ -102,8 +102,8 @@ func TestInteractiveCommandExecutionSuccess(t *testing.T) {
 	jr := &JobRendererMock{}
 
 	ic := &InteractiveCommandsController{
-		ReadWriter:   rw,
-		JobRenderer:  jr,
+		ReadWriter:  rw,
+		JobRenderer: jr,
 	}
 
 	params := config.FromValues(map[string]string{
@@ -162,8 +162,8 @@ func TestInteractiveCommandExecutionWithInvalidResponse(t *testing.T) {
 	jr := &JobRendererMock{}
 
 	ic := &InteractiveCommandsController{
-		ReadWriter:   rw,
-		JobRenderer:  jr,
+		ReadWriter:  rw,
+		JobRenderer: jr,
 	}
 
 	params := config.FromValues(map[string]string{
