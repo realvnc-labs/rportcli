@@ -3,10 +3,11 @@ package cmd
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
+
+	options "github.com/breathbath/go_utils/v2/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
@@ -19,6 +20,8 @@ import (
 
 func init() {
 	tunnelsCmd.AddCommand(tunnelListCmd)
+
+	config.DefineCommandInputs(tunnelDeleteCmd, getDeleteTunnelRequirements())
 	tunnelsCmd.AddCommand(tunnelDeleteCmd)
 
 	config.DefineCommandInputs(tunnelCreateCmd, getCreateTunnelRequirements())
@@ -57,15 +60,22 @@ var tunnelListCmd = &cobra.Command{
 	},
 }
 
-const minArgsCount = 2
-
 var tunnelDeleteCmd = &cobra.Command{
-	Use:   "delete <CLIENT_ID> <TUNNEL_ID>",
+	Use:   "delete",
 	Short: "terminates the specified tunnel of the specified client",
-	Args:  cobra.MinimumNArgs(minArgsCount),
+	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) < minArgsCount {
-			return fmt.Errorf("either CLIENT_ID or TUNNEL_ID is not provided")
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+		promptReader := &utils.PromptReader{
+			Sc:              bufio.NewScanner(os.Stdin),
+			SigChan:         sigs,
+			PasswordScanner: utils.ReadPassword,
+		}
+		params, err := config.CollectParams(cmd, getDeleteTunnelRequirements(), promptReader)
+		if err != nil {
+			return err
 		}
 
 		rportAPI := buildRport()
@@ -83,7 +93,10 @@ var tunnelDeleteCmd = &cobra.Command{
 			},
 		}
 
-		return tunnelController.Delete(context.Background(), args[0], args[1])
+		clientID := params.ReadString(controllers.ClientID, "")
+		tunnelID := params.ReadString(controllers.TunnelID, "")
+		clientName := params.ReadString(controllers.ClientNameFlag, "")
+		return tunnelController.Delete(context.Background(), clientID, clientName, tunnelID)
 	},
 }
 
@@ -136,6 +149,7 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 			Validate:    config.RequiredValidate,
 			ShortName:   "d",
 			IsRequired:  true,
+			Help:        "Enter a client ID",
 		},
 		{
 			Field: controllers.Local,
@@ -149,6 +163,8 @@ If local is not specified, a random server port will be assigned automatically`,
 				"'Remote' refers to the ports and interfaces of the client., e.g. '3389'",
 			ShortName:  "r",
 			IsRequired: true,
+			Validate:   config.RequiredValidate,
+			Help:       "Enter a remote port value",
 		},
 		{
 			Field:       controllers.Scheme,
@@ -167,6 +183,35 @@ If local is not specified, a random server port will be assigned automatically`,
 			ShortName:   "p",
 			Type:        config.BoolRequirementType,
 			Default:     "0",
+		},
+	}
+}
+
+func getDeleteTunnelRequirements() []config.ParameterRequirement {
+	return []config.ParameterRequirement{
+		{
+			Field:       controllers.ClientID,
+			Description: "[conditionally required] client id, if not provided, client name should be given",
+			Validate:    config.RequiredValidate,
+			ShortName:   "i",
+			IsRequired:  true,
+			IsEnabled: func(providedParams *options.ParameterBag) bool {
+				return providedParams.ReadString(controllers.ClientNameFlag, "") == ""
+			},
+			Help: "Enter a client id",
+		},
+		{
+			Field:       controllers.ClientNameFlag,
+			Description: `client name, if no client id is not provided`,
+			ShortName:   "n",
+		},
+		{
+			Field:       controllers.TunnelID,
+			Description: "[required]  tunnel id to delete",
+			ShortName:   "t",
+			IsRequired:  true,
+			Validate:    config.RequiredValidate,
+			Help:        "Enter a tunnel id",
 		},
 	}
 }

@@ -31,6 +31,7 @@ type ParameterRequirement struct {
 	ShortName   string
 	Help        string
 	Validate    Validate
+	IsEnabled   func(providedParams *options.ParameterBag) bool
 	Default     string
 	Description string
 	IsSecure    bool
@@ -44,9 +45,10 @@ func CheckRequirements(params *options.ParameterBag, requirementsToCheck []Param
 	for _, req := range requirementsToCheck {
 		paramInConfig, _ := params.Read(req.Field, nil)
 
-		if req.Validate == nil {
+		if req.Validate == nil || (req.IsEnabled != nil && !req.IsEnabled(params)) {
 			continue
 		}
+
 		err := req.Validate(req.Field, paramInConfig)
 		if err != nil {
 			missedRequirements = append(missedRequirements, req)

@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
@@ -14,7 +16,8 @@ import (
 )
 
 const (
-	ClientID   = "clid"
+	ClientID   = "client"
+	TunnelID   = "tunnel"
 	Local      = "local"
 	Remote     = "remote"
 	Scheme     = "scheme"
@@ -37,6 +40,7 @@ type TunnelController struct {
 	Rport          *api.Rport
 	TunnelRenderer TunnelRenderer
 	IPProvider     IPProvider
+	ClientSearch   ClientSearch
 }
 
 func (cc *TunnelController) Tunnels(ctx context.Context) error {
@@ -56,7 +60,27 @@ func (cc *TunnelController) Tunnels(ctx context.Context) error {
 	return cc.TunnelRenderer.RenderTunnels(tunnels)
 }
 
-func (cc *TunnelController) Delete(ctx context.Context, clientID, tunnelID string) error {
+func (cc *TunnelController) Delete(ctx context.Context, clientID, clientName, tunnelID string) error {
+	if clientID == "" && clientName == "" {
+		return errors.New("no client id nor name provided")
+	}
+
+	if clientID == "" {
+		clients, err := cc.ClientSearch.Search(ctx, clientName)
+		if err != nil {
+			return err
+		}
+
+		if len(clients) == 0 {
+			return fmt.Errorf("unknown client '%s'", clientName)
+		}
+
+		if len(clients) != 1 {
+			return fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", clientName)
+		}
+		clientID = clients[0].ID
+	}
+
 	err := cc.Rport.DeleteTunnel(ctx, clientID, tunnelID)
 	if err != nil {
 		return err

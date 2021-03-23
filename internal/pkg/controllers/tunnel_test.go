@@ -103,7 +103,7 @@ func TestTunnelsController(t *testing.T) {
 	)
 }
 
-func TestTunnelDeleteController(t *testing.T) {
+func TestTunnelDeleteByClientIDController(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "Basic bG9nMTU1OnBhc3MxNTU=", r.Header.Get("Authorization"))
 		assert.Equal(t, http.MethodDelete, r.Method)
@@ -121,11 +121,90 @@ func TestTunnelDeleteController(t *testing.T) {
 	}
 	cl := api.New(srv.URL, apiAuth)
 	buf := bytes.Buffer{}
-	tController := TunnelController{Rport: cl, TunnelRenderer: &TunnelRendererMock{Writer: &buf}}
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
+		ClientSearch:   &ClientSearchMock{},
+	}
 
-	err := tController.Delete(context.Background(), "cl1", "tun2")
+	err := tController.Delete(context.Background(), "cl1", "", "tun2")
 	assert.NoError(t, err)
 	assert.Equal(t, `{"status":"OK"}`, buf.String())
+}
+
+func TestTunnelDeleteByClientNameController(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodDelete, r.Method)
+		assert.Equal(t, "/api/v1/clients/cl2/tunnels/tun4", r.URL.String())
+		rw.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log24124"
+			pass = "pass341324"
+			return
+		},
+	}
+	cl := api.New(srv.URL, apiAuth)
+	buf := bytes.Buffer{}
+	searchMock := &ClientSearchMock{
+		clientsToGive: []models.Client{
+			{
+				ID:   "cl2",
+				Name: "some client",
+			},
+		},
+	}
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
+		ClientSearch:   searchMock,
+	}
+
+	err := tController.Delete(context.Background(), "", "some client", "tun4")
+	assert.NoError(t, err)
+	assert.Equal(t, `{"status":"OK"}`, buf.String())
+}
+
+func TestTunnelDeleteByAmbiguousClientName(t *testing.T) {
+	searchMock := &ClientSearchMock{
+		clientsToGive: []models.Client{
+			{
+				ID:   "cl1",
+				Name: "some client 1",
+			},
+			{
+				ID:   "cl2",
+				Name: "some client 2",
+			},
+		},
+	}
+	tController := TunnelController{
+		ClientSearch: searchMock,
+	}
+
+	err := tController.Delete(context.Background(), "", "some client", "tun3")
+	assert.EqualError(t, err, `client identified by 'some client' is ambiguous, use a more precise name or use the client id`)
+}
+
+func TestTunnelDeleteNotFoundClientName(t *testing.T) {
+	searchMock := &ClientSearchMock{
+		clientsToGive: []models.Client{},
+	}
+	tController := TunnelController{
+		ClientSearch: searchMock,
+	}
+
+	err := tController.Delete(context.Background(), "", "some client", "tun5")
+	assert.EqualError(t, err, `unknown client 'some client'`)
+}
+
+func TestInvalidInputForTunnelDelete(t *testing.T) {
+	tController := TunnelController{}
+	err := tController.Delete(context.Background(), "", "", "tunnel11")
+	assert.EqualError(t, err, "no client id nor name provided")
 }
 
 func TestTunnelCreateController(t *testing.T) {

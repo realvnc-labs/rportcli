@@ -1,5 +1,11 @@
 package controllers
 
+import (
+	"context"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
+)
+
 type PromptReaderMock struct {
 	ReadCount           int
 	PasswordReadCount   int
@@ -31,4 +37,15 @@ func (prm *PromptReaderMock) ReadPassword() (string, error) {
 
 func (prm *PromptReaderMock) Output(text string) {
 	prm.Inputs = append(prm.Inputs, text)
+}
+
+type ClientSearchMock struct {
+	searchTermGiven string
+	clientsToGive   []models.Client
+	errorToGive     error
+}
+
+func (csm *ClientSearchMock) Search(ctx context.Context, term string) (foundCls []models.Client, err error) {
+	csm.searchTermGiven = term
+	return csm.clientsToGive, csm.errorToGive
 }
