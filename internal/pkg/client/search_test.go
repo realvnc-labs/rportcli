@@ -3,9 +3,10 @@ package client
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 var clientsList = []models.Client{
@@ -71,12 +72,12 @@ func TestFindClientsFromDataProvider(t *testing.T) {
 	assert.Len(t, foundCls, 2)
 	assert.Equal(t, foundCls, []models.Client{
 		{
-			ID:       "1",
-			Name:     "my tiny client",
+			ID:   "1",
+			Name: "my tiny client",
 		},
 		{
-			ID:       "2",
-			Name:     "my Tiny nice client",
+			ID:   "2",
+			Name: "my Tiny nice client",
 		},
 	})
 	assert.Equal(t, clientsList, cacheMock.clientsToStore)
@@ -99,8 +100,8 @@ func TestFindClientsFromCache(t *testing.T) {
 	assert.Len(t, foundCls, 1)
 	assert.Equal(t, foundCls, []models.Client{
 		{
-			ID:       "3",
-			Name:     "$100 usd client",
+			ID:   "3",
+			Name: "$100 usd client",
 		},
 	})
 	assert.Len(t, cacheMock.clientsToStore, 0)
@@ -110,7 +111,7 @@ func TestDataProviderError(t *testing.T) {
 	search := Search{
 		DataProvider: &DataProviderMock{
 			clientsToGive: clientsList,
-			errToGive: errors.New("some load error"),
+			errToGive:     errors.New("some load error"),
 		},
 		Cache: &CacheMock{
 			clientsToStore: []models.Client{},
@@ -144,9 +145,9 @@ func TestCacheExistsError(t *testing.T) {
 			clientsToGive: []models.Client{},
 		},
 		Cache: &CacheMock{
-			clientsToStore: []models.Client{},
+			clientsToStore:  []models.Client{},
 			existsErrToGive: errors.New("some exists err"),
-			clientsToLoad:  []models.Client{},
+			clientsToLoad:   []models.Client{},
 		},
 	}
 

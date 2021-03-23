@@ -3,8 +3,9 @@ package controllers
 import (
 	"context"
 	"fmt"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"strings"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 )

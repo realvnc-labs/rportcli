@@ -70,7 +70,7 @@ func TestClientsController(t *testing.T) {
 	cl := api.New(srv.URL, nil)
 	buf := bytes.Buffer{}
 	clController := ClientController{
-		Rport: cl,
+		Rport:          cl,
 		ClientRenderer: &ClientRendererMock{Writer: &buf},
 	}
 
@@ -95,7 +95,7 @@ func TestClientFoundByIDController(t *testing.T) {
 	buf := bytes.Buffer{}
 
 	clController := ClientController{
-		Rport: cl,
+		Rport:          cl,
 		ClientRenderer: &ClientRendererMock{Writer: &buf},
 	}
 
@@ -120,7 +120,7 @@ func TestClientFoundByNameController(t *testing.T) {
 	buf := bytes.Buffer{}
 
 	clController := ClientController{
-		Rport: cl,
+		Rport:          cl,
 		ClientRenderer: &ClientRendererMock{Writer: &buf},
 	}
 
@@ -145,7 +145,7 @@ func TestClientNotFoundController(t *testing.T) {
 	buf := bytes.Buffer{}
 
 	clController := ClientController{
-		Rport: cl,
+		Rport:          cl,
 		ClientRenderer: &ClientRendererMock{Writer: &buf},
 	}
 

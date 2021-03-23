@@ -2,8 +2,9 @@ package client
 
 import (
 	"context"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"strings"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 )
 
 type DataProvider interface {

@@ -81,7 +81,7 @@ var clientsStub = []*models.Client{
 func TestClientsList(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		assert.Equal(t, "Basic bG9nMTE1NTo1NjQzMTQ=", authHeader)
+		assert.Equal(t, "Basic bG9nMTE2Njo1NjQzMjI=", authHeader)
 
 		assert.Equal(t, ClientsURL, r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
@@ -92,8 +92,8 @@ func TestClientsList(t *testing.T) {
 
 	cl := New(srv.URL, &utils.StorageBasicAuth{
 		AuthProvider: func() (login, pass string, err error) {
-			login = "log1155"
-			pass = "564314"
+			login = "log1166"
+			pass = "564322"
 			return
 		},
 	})

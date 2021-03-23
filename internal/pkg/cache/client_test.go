@@ -3,12 +3,13 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"github.com/breathbath/go_utils/v2/pkg/io"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/breathbath/go_utils/v2/pkg/io"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
+	"github.com/stretchr/testify/assert"
 )
 
 // we put all in one method as in different tests it might give file access conflicts
@@ -21,12 +22,12 @@ func assertStoreAndLoad(t *testing.T) {
 	cc := &ClientsCache{}
 	providedClients := []models.Client{
 		{
-			ID:       "1",
-			Name:     "client 1",
+			ID:   "1",
+			Name: "client 1",
 		},
 		{
-			ID:       "2",
-			Name:     "client 2",
+			ID:   "2",
+			Name: "client 2",
 		},
 	}
 	err := cc.Store(context.Background(), providedClients)
