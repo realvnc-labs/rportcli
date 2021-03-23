@@ -165,7 +165,7 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 			Field:       controllers.ClientID,
 			Description: "[conditionally required] client id, if not provided, client name should be given",
 			Validate:    config.RequiredValidate,
-			ShortName:   "d",
+			ShortName:   "c",
 			IsRequired:  true,
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
 				return providedParams.ReadString(controllers.ClientNameFlag, "") == ""
@@ -191,6 +191,15 @@ If local is not specified, a random server port will be assigned automatically`,
 			IsRequired: true,
 			Validate:   config.RequiredValidate,
 			Help:       "Enter a remote port value",
+			IsEnabled: func(providedParams *options.ParameterBag) bool {
+				scheme := providedParams.ReadString(controllers.Scheme, "")
+				if scheme == "" {
+					return true
+				}
+
+				port := utils.GetPortByScheme(scheme)
+				return port == 0
+			},
 		},
 		{
 			Field:       controllers.Scheme,
@@ -219,7 +228,7 @@ func getDeleteTunnelRequirements() []config.ParameterRequirement {
 			Field:       controllers.ClientID,
 			Description: "[conditionally required] client id, if not provided, client name should be given",
 			Validate:    config.RequiredValidate,
-			ShortName:   "i",
+			ShortName:   "c",
 			IsRequired:  true,
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
 				return providedParams.ReadString(controllers.ClientNameFlag, "") == ""

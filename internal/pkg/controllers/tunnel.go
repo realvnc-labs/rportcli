@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/sirupsen/logrus"
@@ -119,8 +121,19 @@ func (cc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	}
 
 	local := params.ReadString(Local, "")
+
 	remote := params.ReadString(Remote, "")
 	scheme := params.ReadString(Scheme, "")
+	if scheme == "" {
+		port, _ := utils.ExtractPortAndHost(remote)
+		scheme = utils.GetSchemeByPort(port)
+	}
+
+	if remote == "" {
+		remotePort := utils.GetPortByScheme(scheme)
+		remote = strconv.Itoa(remotePort)
+	}
+
 	acl := params.ReadString(ACL, "")
 	if (acl == "" || acl == DefaultACL) && cc.IPProvider != nil {
 		ip, e := cc.IPProvider.GetIP(context.Background())

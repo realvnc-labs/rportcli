@@ -367,3 +367,95 @@ func TestTunnelCreateNotFoundClientName(t *testing.T) {
 	err := tController.Create(context.Background(), params)
 	assert.EqualError(t, err, `unknown client 'some client'`)
 }
+
+func TestTunnelCreateWithSchemeDiscovery(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/api/v1/clients/32312/tunnels?acl=3.4.5.8&check_port=&local=lohost33%3A3301&remote=rhost5%3A22&scheme=ssh", r.URL.String())
+		jsonEnc := json.NewEncoder(rw)
+		e := jsonEnc.Encode(api.TunnelResponse{Data: &models.Tunnel{
+			ID:       "444",
+			Lhost:    "lohost33",
+			ClientID: "32312",
+		}})
+		assert.NoError(t, e)
+	}))
+	defer srv.Close()
+
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) { return "logiin1", "passsii1", nil },
+	}
+
+	buf := bytes.Buffer{}
+
+	cl := api.New(srv.URL, apiAuth)
+
+	searchMock := &ClientSearchMock{clientsToGive: []models.Client{}}
+
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
+		IPProvider: IPProviderMock{
+			IP: "3.4.5.8",
+		},
+		ClientSearch: searchMock,
+	}
+
+	params := config.FromValues(map[string]string{
+		ClientID: "32312",
+		Local:    "lohost33:3301",
+		Remote:   "rhost5:22",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		`{"id":"444","client_id":"32312","client_name":"","lhost":"lohost33","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}`,
+		buf.String(),
+	)
+}
+
+func TestTunnelCreateWithPortDiscovery(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/api/v1/clients/1313/tunnels?acl=3.4.5.9&check_port=&local=lohost44%3A3302&remote=22&scheme=ssh", r.URL.String())
+		jsonEnc := json.NewEncoder(rw)
+		e := jsonEnc.Encode(api.TunnelResponse{Data: &models.Tunnel{
+			ID:       "777",
+			Lhost:    "lohost44",
+			ClientID: "1313",
+		}})
+		assert.NoError(t, e)
+	}))
+	defer srv.Close()
+
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) { return "logiin122", "passsii133", nil },
+	}
+
+	buf := bytes.Buffer{}
+
+	cl := api.New(srv.URL, apiAuth)
+
+	searchMock := &ClientSearchMock{clientsToGive: []models.Client{}}
+
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
+		IPProvider: IPProviderMock{
+			IP: "3.4.5.9",
+		},
+		ClientSearch: searchMock,
+	}
+
+	params := config.FromValues(map[string]string{
+		ClientID: "1313",
+		Local:    "lohost44:3302",
+		Scheme:   "ssh",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}`,
+		buf.String(),
+	)
+}
