@@ -58,7 +58,7 @@ func (jrm *JobRendererMock) RenderJob(j *models.Job) error {
 	return jrm.err
 }
 
-func TestInteractiveCommandExecutionSuccess(t *testing.T) {
+func TestCommandExecutionByClientIDsSuccess(t *testing.T) {
 	jobResp := models.Job{
 		Jid:        "123",
 		Status:     "done",
@@ -94,14 +94,9 @@ func TestInteractiveCommandExecutionSuccess(t *testing.T) {
 		isClosed:     false,
 	}
 
-	pr := &PromptReaderMock{
-		ReadOutputs:         []string{},
-		PasswordReadOutputs: []string{},
-	}
-
 	jr := &JobRendererMock{}
 
-	ic := &InteractiveCommandsController{
+	ic := &CommandsController{
 		ReadWriter:  rw,
 		JobRenderer: jr,
 	}
@@ -117,9 +112,6 @@ func TestInteractiveCommandExecutionSuccess(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, pr.PasswordReadCount, 0)
-	assert.Equal(t, pr.ReadCount, 0)
-
 	assert.Len(t, rw.writtenItems, 1)
 	expectedCommandInput := `{"command":"cmd","client_ids":["1235"],"group_ids":["333"],"timeout_sec":1,"execute_concurrently":true}`
 	assert.Equal(t, expectedCommandInput, rw.writtenItems[0])
@@ -131,7 +123,103 @@ func TestInteractiveCommandExecutionSuccess(t *testing.T) {
 	assert.True(t, rw.isClosed)
 }
 
-func TestInteractiveCommandExecutionWithInvalidResponse(t *testing.T) {
+func TestCommandExecutionByClientNameSuccess(t *testing.T) {
+	jobResp := models.Job{Jid: "987"}
+	jobRespBytes, err := json.Marshal(jobResp)
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	rw := &ReadWriterMock{
+		itemsToRead: []ReadChunk{
+			{
+				Output: jobRespBytes,
+			},
+			{
+				Err: io.EOF,
+			},
+		},
+		writtenItems: []string{},
+		isClosed:     false,
+	}
+
+	jr := &JobRendererMock{}
+
+	searchMock := &ClientSearchMock{
+		clientsToGive: []models.Client{
+			{
+				ID:   "11344",
+				Name: "some client 11344",
+			},
+			{
+				ID:   "11345",
+				Name: "some client 11345",
+			},
+		},
+	}
+
+	ic := &CommandsController{
+		ReadWriter:   rw,
+		JobRenderer:  jr,
+		ClientSearch: searchMock,
+	}
+
+	params := config.FromValues(map[string]string{
+		ClientNameFlag:   "some client 11344,some client 11345",
+		Command:          "cmd",
+		Timeout:          "1",
+		ExecConcurrently: "1",
+	})
+	err = ic.Start(context.Background(), params)
+
+	assert.NoError(t, err)
+
+	assert.Len(t, rw.writtenItems, 1)
+	expectedCommandInput := `{"command":"cmd","client_ids":["11344","11345"],"timeout_sec":1,"execute_concurrently":true}`
+	assert.Equal(t, expectedCommandInput, rw.writtenItems[0])
+}
+
+func TestCommandExecutionClientNotFoundByName(t *testing.T) {
+	rw := &ReadWriterMock{
+		itemsToRead:  []ReadChunk{{Err: io.EOF}},
+		writtenItems: []string{},
+	}
+
+	jr := &JobRendererMock{}
+
+	searchMock := &ClientSearchMock{clientsToGive: []models.Client{}}
+
+	ic := &CommandsController{
+		ReadWriter:   rw,
+		JobRenderer:  jr,
+		ClientSearch: searchMock,
+	}
+
+	params := config.FromValues(map[string]string{
+		ClientNameFlag: "some client 11349",
+		Command:        "cmd",
+	})
+	err := ic.Start(context.Background(), params)
+
+	assert.EqualError(t, err, "unknown client(s) 'some client 11349'")
+}
+
+func TestInvalidInputForCommand(t *testing.T) {
+	cc := &CommandsController{}
+	params := config.FromValues(map[string]string{
+		ClientID:       "",
+		ClientNameFlag: "",
+		Local:          "lohost1:3300",
+		Remote:         "rhost2:3344",
+		Scheme:         "ssh",
+		CheckPort:      "1",
+	})
+	err := cc.Start(context.Background(), params)
+	assert.EqualError(t, err, "no client id nor name provided")
+}
+
+func TestCommandExecutionWithInvalidResponse(t *testing.T) {
 	resp := models.ErrorResp{
 		Errors: []models.Error{
 			{
@@ -161,7 +249,7 @@ func TestInteractiveCommandExecutionWithInvalidResponse(t *testing.T) {
 
 	jr := &JobRendererMock{}
 
-	ic := &InteractiveCommandsController{
+	ic := &CommandsController{
 		ReadWriter:  rw,
 		JobRenderer: jr,
 	}

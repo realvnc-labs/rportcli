@@ -8,6 +8,10 @@ import (
 	"strconv"
 	"syscall"
 
+	options "github.com/breathbath/go_utils/v2/pkg/config"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cache"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/controllers"
@@ -57,14 +61,21 @@ var commandsCmd = &cobra.Command{
 			return err
 		}
 
+		rportAPI := buildRport()
+		clientSearch := &client.Search{
+			DataProvider: rportAPI,
+			Cache:        &cache.ClientsCache{},
+		}
+
 		isFullJobOutput := params.ReadBool(controllers.IsFullOutput, false)
-		cmdExecutor := &controllers.InteractiveCommandsController{
+		cmdExecutor := &controllers.CommandsController{
 			ReadWriter: wsClient,
 			JobRenderer: &output.JobRenderer{
 				Writer:       os.Stdout,
 				Format:       getOutputFormat(),
 				IsFullOutput: isFullJobOutput,
 			},
+			ClientSearch: clientSearch,
 		}
 
 		err = cmdExecutor.Start(ctx, params)
@@ -81,7 +92,15 @@ func getCommandRequirements() []config.ParameterRequirement {
 			Validate:    config.RequiredValidate,
 			Description: "Comma separated client ids for which the command should be executed",
 			ShortName:   "d",
-			IsRequired:  true,
+			IsEnabled: func(providedParams *options.ParameterBag) bool {
+				return providedParams.ReadString(controllers.ClientNameFlag, "") == ""
+			},
+			IsRequired: true,
+		},
+		{
+			Field:       controllers.ClientNameFlag,
+			Description: "Comma separated client names for which the command should be executed",
+			ShortName:   "n",
 		},
 		{
 			Field:       controllers.Command,

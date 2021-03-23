@@ -3,12 +3,15 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+
+	io2 "github.com/breathbath/go_utils/v2/pkg/io"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
@@ -47,15 +50,40 @@ type JobRenderer interface {
 	RenderJob(j *models.Job) error
 }
 
-type InteractiveCommandsController struct {
-	ReadWriter  ReadWriter
-	JobRenderer JobRenderer
+type CommandsController struct {
+	ReadWriter   ReadWriter
+	JobRenderer  JobRenderer
+	ClientSearch ClientSearch
 }
 
-func (icm *InteractiveCommandsController) Start(ctx context.Context, params *options.ParameterBag) error {
-	defer icm.ReadWriter.Close()
+func (icm *CommandsController) Start(ctx context.Context, params *options.ParameterBag) error {
+	defer io2.CloseResourceSecure("read writer", icm.ReadWriter)
 
-	wsCmd := icm.buildCommand(params)
+	clientIDs := params.ReadString(ClientIDs, "")
+	clientName := params.ReadString(ClientNameFlag, "")
+	if clientIDs == "" && clientName == "" {
+		return errors.New("no client id nor name provided")
+	}
+
+	if clientIDs == "" {
+		clients, err := icm.ClientSearch.Search(ctx, clientName)
+		if err != nil {
+			return err
+		}
+
+		if len(clients) == 0 {
+			return fmt.Errorf("unknown client(s) '%s'", clientName)
+		}
+
+		for i := range clients {
+			cl := clients[i]
+			clientIDs += cl.ID + ","
+		}
+
+		clientIDs = strings.Trim(clientIDs, ",")
+	}
+
+	wsCmd := icm.buildCommand(params, clientIDs)
 	err := icm.sendCommand(wsCmd)
 	if err != nil {
 		return err
@@ -66,10 +94,10 @@ func (icm *InteractiveCommandsController) Start(ctx context.Context, params *opt
 	return err
 }
 
-func (icm *InteractiveCommandsController) buildCommand(params *options.ParameterBag) models.WsCommand {
+func (icm *CommandsController) buildCommand(params *options.ParameterBag, clientIDs string) models.WsCommand {
 	wsCmd := models.WsCommand{
 		Command:             params.ReadString(Command, ""),
-		ClientIds:           strings.Split(params.ReadString(ClientIDs, ""), ","),
+		ClientIds:           strings.Split(clientIDs, ","),
 		TimeoutSec:          params.ReadInt(Timeout, DefaultCmdTimeoutSeconds),
 		ExecuteConcurrently: params.ReadBool(ExecConcurrently, false),
 		GroupIds:            nil,
@@ -83,7 +111,7 @@ func (icm *InteractiveCommandsController) buildCommand(params *options.Parameter
 	return wsCmd
 }
 
-func (icm *InteractiveCommandsController) sendCommand(wsCmd models.WsCommand) error {
+func (icm *CommandsController) sendCommand(wsCmd models.WsCommand) error {
 	wsCmdJSON, err := json.Marshal(wsCmd)
 	if err != nil {
 		return err
@@ -98,7 +126,7 @@ func (icm *InteractiveCommandsController) sendCommand(wsCmd models.WsCommand) er
 	return nil
 }
 
-func (icm *InteractiveCommandsController) startReading(ctx context.Context) error {
+func (icm *CommandsController) startReading(ctx context.Context) error {
 	errsChan := make(chan error, 1)
 	msgChan := make(chan []byte, 1)
 	sigs := make(chan os.Signal, 1)
@@ -145,7 +173,7 @@ mainLoop:
 	return nil
 }
 
-func (icm *InteractiveCommandsController) processRawMessage(msg []byte) error {
+func (icm *CommandsController) processRawMessage(msg []byte) error {
 	var job models.Job
 	err := json.Unmarshal(msg, &job)
 	if err != nil || job.Jid == "" {
