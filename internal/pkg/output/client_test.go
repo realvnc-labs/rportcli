@@ -15,7 +15,7 @@ func TestRenderClients(t *testing.T) {
 	}{
 		{
 			Format: FormatHuman,
-			ExpectedOutput: `Clients
+			ExpectedOutput: `GetClients
 ID  NAME          NUM TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL 
 123 SomeName      0                                             
 124 SomeOtherName 0                                             

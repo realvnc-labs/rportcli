@@ -69,7 +69,10 @@ func TestClientsController(t *testing.T) {
 
 	cl := api.New(srv.URL, nil)
 	buf := bytes.Buffer{}
-	clController := ClientController{Rport: cl, ClientRenderer: &ClientRendererMock{Writer: &buf}}
+	clController := ClientController{
+		Rport: cl,
+		ClientRenderer: &ClientRendererMock{Writer: &buf},
+	}
 
 	err := clController.Clients(context.Background())
 	assert.NoError(t, err)
@@ -84,15 +87,19 @@ func TestClientsController(t *testing.T) {
 	)
 }
 
-func TestClientFoundController(t *testing.T) {
+func TestClientFoundByIDController(t *testing.T) {
 	srv := startClientsServer()
 	defer srv.Close()
 
 	cl := api.New(srv.URL, nil)
 	buf := bytes.Buffer{}
-	clController := ClientController{Rport: cl, ClientRenderer: &ClientRendererMock{Writer: &buf}}
 
-	err := clController.Client(context.Background(), "123")
+	clController := ClientController{
+		Rport: cl,
+		ClientRenderer: &ClientRendererMock{Writer: &buf},
+	}
+
+	err := clController.Client(context.Background(), "123", "")
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -103,6 +110,57 @@ func TestClientFoundController(t *testing.T) {
 		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}`,
 		buf.String(),
 	)
+}
+
+func TestClientFoundByNameController(t *testing.T) {
+	srv := startClientsServer()
+	defer srv.Close()
+
+	cl := api.New(srv.URL, nil)
+	buf := bytes.Buffer{}
+
+	clController := ClientController{
+		Rport: cl,
+		ClientRenderer: &ClientRendererMock{Writer: &buf},
+	}
+
+	err := clController.Client(context.Background(), "", "Client 123")
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	assert.Equal(
+		t,
+		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}`,
+		buf.String(),
+	)
+}
+
+func TestClientNotFoundController(t *testing.T) {
+	srv := startClientsServer()
+	defer srv.Close()
+
+	cl := api.New(srv.URL, nil)
+	buf := bytes.Buffer{}
+
+	clController := ClientController{
+		Rport: cl,
+		ClientRenderer: &ClientRendererMock{Writer: &buf},
+	}
+
+	err := clController.Client(context.Background(), "434", "")
+	assert.EqualError(t, err, `client not found by the provided id '434' or name ''`)
+
+	err = clController.Client(context.Background(), "", "some unknown name")
+	assert.EqualError(t, err, `client not found by the provided id '' or name 'some unknown name'`)
+}
+
+func TestInvalidInputForClients(t *testing.T) {
+	clController := ClientController{}
+
+	err := clController.Client(context.Background(), "", "")
+	assert.EqualError(t, err, "no client id nor name provided")
 }
 
 func startClientsServer() *httptest.Server {

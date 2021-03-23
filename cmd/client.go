@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
@@ -15,6 +14,7 @@ import (
 
 func init() {
 	clientsCmd.AddCommand(clientsListCmd)
+	clientCmd.Flags().StringP(controllers.ClientNameFlag, "n", "", "Get client by name")
 	clientsCmd.AddCommand(clientCmd)
 	rootCmd.AddCommand(clientsCmd)
 }
@@ -48,10 +48,18 @@ var clientsListCmd = &cobra.Command{
 var clientCmd = &cobra.Command{
 	Use:   "get <ID>",
 	Short: "get all details about a specific client identified by its id",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var clientName string
+		var clientID string
 		if len(args) == 0 {
-			return fmt.Errorf("client id is not provided")
+			cn, err := cmd.Flags().GetString(controllers.ClientNameFlag)
+			if err != nil {
+				return err
+			}
+			clientName = cn
+		} else {
+			clientID = args[0]
 		}
 
 		rportAPI := buildRport()
@@ -66,6 +74,6 @@ var clientCmd = &cobra.Command{
 			ClientRenderer: cr,
 		}
 
-		return clientsController.Client(context.Background(), args[0])
+		return clientsController.Client(context.Background(), clientID, clientName)
 	},
 }

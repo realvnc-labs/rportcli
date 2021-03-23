@@ -106,3 +106,28 @@ func TestClientsList(t *testing.T) {
 
 	assert.Equal(t, clientsStub, clientsResp.Data)
 }
+
+func TestGetClientsList(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		jsonEnc := json.NewEncoder(rw)
+		e := jsonEnc.Encode(ClientsResponse{Data: clientsStub})
+		assert.NoError(t, e)
+	}))
+	defer srv.Close()
+
+	cl := New(srv.URL, &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1155"
+			pass = "564314"
+			return
+		},
+	})
+	actualClients, err := cl.GetClients(context.Background())
+	assert.NoError(t, err)
+
+	expectedClients := make([]models.Client, 0, len(clientsStub))
+	for _, cp := range clientsStub {
+		expectedClients = append(expectedClients, *cp)
+	}
+	assert.Equal(t, expectedClients, actualClients)
+}

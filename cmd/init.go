@@ -33,7 +33,7 @@ var initCmd = &cobra.Command{
 			SigChan:         sigs,
 			PasswordScanner: utils.ReadPassword,
 		}
-		params, err := config.CollectParams(cmd, getCommandRequirements(), promptReader)
+		params, err := config.CollectParams(cmd, getInitRequirements(), promptReader)
 		if err != nil {
 			return err
 		}

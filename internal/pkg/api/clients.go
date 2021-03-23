@@ -34,3 +34,20 @@ func (rp *Rport) Clients(ctx context.Context) (cr *ClientsResponse, err error) {
 
 	return
 }
+
+func (rp *Rport) GetClients(ctx context.Context) (cls []models.Client, err error) {
+	var cr *ClientsResponse
+	cr, err = rp.Clients(ctx)
+
+	if err != nil {
+		return
+	}
+
+	cls = make([]models.Client, 0, len(cr.Data))
+
+	for _, c := range cr.Data {
+		cls = append(cls, *c)
+	}
+
+	return
+}

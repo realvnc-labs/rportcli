@@ -3,10 +3,14 @@ package controllers
 import (
 	"context"
 	"fmt"
-
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
+	"strings"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
+)
+
+const (
+	ClientNameFlag = "name"
 )
 
 type ClientRenderer interface {
@@ -28,19 +32,24 @@ func (cc *ClientController) Clients(ctx context.Context) error {
 	return cc.ClientRenderer.RenderClients(clResp.Data)
 }
 
-func (cc *ClientController) Client(ctx context.Context, id string) error {
+func (cc *ClientController) Client(ctx context.Context, id, name string) error {
+	if id == "" && name == "" {
+		return fmt.Errorf("no client id nor name provided")
+	}
+
 	clResp, err := cc.Rport.Clients(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, cl := range clResp.Data {
-		if cl.ID == id {
+		if id != "" && cl.ID == id {
+			return cc.ClientRenderer.RenderClient(cl)
+		}
+		if name != "" && strings.HasPrefix(strings.ToLower(cl.Name), strings.ToLower(name)) {
 			return cc.ClientRenderer.RenderClient(cl)
 		}
 	}
 
-	fmt.Println("client not found")
-
-	return nil
+	return fmt.Errorf("client not found by the provided id '%s' or name '%s'", id, name)
 }

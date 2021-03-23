@@ -25,7 +25,7 @@ func (cr *ClientRenderer) RenderClients(clients []*models.Client) error {
 }
 
 func (cr *ClientRenderer) renderClientsToHumanFormat(clients []*models.Client) error {
-	err := RenderHeader(cr.Writer, "Clients")
+	err := RenderHeader(cr.Writer, "GetClients")
 	if err != nil {
 		return err
 	}

@@ -177,4 +177,16 @@ You can also display help for a certain command:
     <td>http://localhost:3000</td>
     <td>RPORT_SERVER_URL=http://localhost:3000 rportcli client list</td>
     </tr>
+    <tr>
+    <td>CACHE_FOLDER</td>
+    <td>folder location where to store cache data</td>
+    <td>current binary location</td>
+    <td>CACHE_FOLDER=/tmp rportcli client get -n mycl</td>
+    </tr>
+    <tr>
+    <td>CACHE_VALIDITY_HOURS</td>
+    <td>cache validity in hours</td>
+    <td>24</td>
+    <td>CACHE_VALIDITY_HOURS=50 rportcli client get -n mycl</td>
+    </tr>
 </table>
