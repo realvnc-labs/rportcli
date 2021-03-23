@@ -23,11 +23,11 @@ type Tunnel struct {
 	ID          string `json:"id"`
 	ClientID    string `json:"client_id" yaml:"client_id"`
 	ClientName  string `json:"client_name" yaml:"client_name"`
-	Lhost       string `json:"local_host" yaml:"local_host"`
-	Lport       string `json:"local_port" yaml:"local_port"`
-	Rhost       string `json:"remote_host" yaml:"remote_host"`
-	Rport       string `json:"remote_port" yaml:"remote_port"`
-	LportRandom bool   `json:"local_port_random" yaml:"local_port_random"`
+	Lhost       string `json:"lhost" yaml:"local_host"`
+	Lport       string `json:"lport" yaml:"local_port"`
+	Rhost       string `json:"rhost" yaml:"remote_host"`
+	Rport       string `json:"rport" yaml:"remote_port"`
+	LportRandom bool   `json:"lport_random" yaml:"local_port_random"`
 	Scheme      string `json:"scheme" yaml:"scheme"`
 	ACL         string `json:"acl" yaml:"acl"`
 }

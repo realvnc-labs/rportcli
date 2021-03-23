@@ -13,8 +13,9 @@ import (
 const (
 	LoginURL                    = "/api/v1/login"
 	MeURL                       = "/api/v1/me"
+	MeIPURL                     = "/api/v1/me/ip"
 	StatusURL                   = "/api/v1/status"
-	DefaultTokenValiditySeconds = 90 * 24 * 60 * 60 // 90 days is max value
+	DefaultTokenValiditySeconds = 20 * 24 * 60 * 60 // 30 days is max value
 )
 
 type LoginResponse struct {
@@ -51,6 +52,10 @@ type UserResponse struct {
 	Data models.User `json:"data"`
 }
 
+type IPResponse struct {
+	Data models.IP `json:"data"`
+}
+
 func (rp *Rport) Me(ctx context.Context) (user UserResponse, err error) {
 	var req *http.Request
 	req, err = http.NewRequestWithContext(
@@ -66,6 +71,32 @@ func (rp *Rport) Me(ctx context.Context) (user UserResponse, err error) {
 	_, err = rp.CallBaseClient(req, &user)
 
 	return
+}
+
+func (rp *Rport) MeIP(ctx context.Context) (ipResp IPResponse, err error) {
+	var req *http.Request
+	req, err = http.NewRequestWithContext(
+		ctx,
+		http.MethodGet,
+		url.JoinURL(rp.BaseURL, MeIPURL),
+		nil,
+	)
+	if err != nil {
+		return
+	}
+
+	_, err = rp.CallBaseClient(req, &ipResp)
+
+	return
+}
+
+func (rp *Rport) GetIP(ctx context.Context) (string, error) {
+	resp, err := rp.MeIP(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	return resp.Data.IP, nil
 }
 
 type StatusResponse struct {

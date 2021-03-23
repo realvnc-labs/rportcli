@@ -60,10 +60,8 @@ var tunnelListCmd = &cobra.Command{
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
-			IPProvider: utils.APIIPProvider{
-				URL: utils.IPCheckerURL,
-			},
-			ClientSearch: clientSearch,
+			IPProvider:     rportAPI,
+			ClientSearch:   clientSearch,
 		}
 
 		return tunnelController.Tunnels(context.Background())
@@ -104,10 +102,8 @@ var tunnelDeleteCmd = &cobra.Command{
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
-			IPProvider: utils.APIIPProvider{
-				URL: utils.IPCheckerURL,
-			},
-			ClientSearch: clientSearch,
+			IPProvider:     rportAPI,
+			ClientSearch:   clientSearch,
 		}
 
 		clientID := params.ReadString(controllers.ClientID, "")
@@ -155,10 +151,8 @@ with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
-			IPProvider: utils.APIIPProvider{
-				URL: utils.IPCheckerURL,
-			},
-			ClientSearch: clientSearch,
+			IPProvider:     rportAPI,
+			ClientSearch:   clientSearch,
 		}
 
 		return tunnelController.Create(context.Background(), params)

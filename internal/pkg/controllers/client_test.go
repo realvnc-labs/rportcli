@@ -82,7 +82,7 @@ func TestClientsController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`[{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","local_host":"","local_port":"","remote_host":"","remote_port":"","local_port_random":false,"scheme":"","acl":""}]}]`,
+		`[{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}]`,
 		buf.String(),
 	)
 }
@@ -107,7 +107,7 @@ func TestClientFoundByIDController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","local_host":"","local_port":"","remote_host":"","remote_port":"","local_port_random":false,"scheme":"","acl":""}]}`,
+		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}`,
 		buf.String(),
 	)
 }
@@ -132,7 +132,7 @@ func TestClientFoundByNameController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","local_host":"","local_port":"","remote_host":"","remote_port":"","local_port_random":false,"scheme":"","acl":""}]}`,
+		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}`,
 		buf.String(),
 	)
 }

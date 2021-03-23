@@ -24,7 +24,7 @@ id22                       lhost      123        rhost       124         false  
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `[{"id":"id22","client_id":"","client_name":"","local_host":"lhost","local_port":"123","remote_host":"rhost","remote_port":"124","local_port_random":false,"scheme":"ssh","acl":"0.0.0.0"}]
+			ExpectedOutput: `[{"id":"id22","client_id":"","client_name":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0"}]
 `,
 			ColCountToGive: 10,
 		},
@@ -35,11 +35,11 @@ id22                       lhost      123        rhost       124         false  
     "id": "id22",
     "client_id": "",
     "client_name": "",
-    "local_host": "lhost",
-    "local_port": "123",
-    "remote_host": "rhost",
-    "remote_port": "124",
-    "local_port_random": false,
+    "lhost": "lhost",
+    "lport": "123",
+    "rhost": "rhost",
+    "rport": "124",
+    "lport_random": false,
     "scheme": "ssh",
     "acl": "0.0.0.0"
   }
@@ -125,7 +125,7 @@ ACL:               0.0.0.0
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"id":"id22","client_id":"","client_name":"","local_host":"lhost","local_port":"123","remote_host":"rhost","remote_port":"124","local_port_random":false,"scheme":"ssh","acl":"0.0.0.0"}
+			ExpectedOutput: `{"id":"id22","client_id":"","client_name":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0"}
 `,
 			ColCountToGive: 10,
 		},
@@ -135,11 +135,11 @@ ACL:               0.0.0.0
   "id": "id22",
   "client_id": "",
   "client_name": "",
-  "local_host": "lhost",
-  "local_port": "123",
-  "remote_host": "rhost",
-  "remote_port": "124",
-  "local_port_random": false,
+  "lhost": "lhost",
+  "lport": "123",
+  "rhost": "rhost",
+  "rport": "124",
+  "lport_random": false,
   "scheme": "ssh",
   "acl": "0.0.0.0"
 }
