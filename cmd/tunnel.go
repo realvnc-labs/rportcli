@@ -7,6 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cache"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
+
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
@@ -48,12 +51,19 @@ var tunnelListCmd = &cobra.Command{
 			Writer:             os.Stdout,
 			Format:             getOutputFormat(),
 		}
+
+		clientSearch := &client.Search{
+			DataProvider: rportAPI,
+			Cache:        &cache.ClientsCache{},
+		}
+
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
 			IPProvider: utils.APIIPProvider{
 				URL: utils.IPCheckerURL,
 			},
+			ClientSearch: clientSearch,
 		}
 
 		return tunnelController.Tunnels(context.Background())
@@ -85,12 +95,19 @@ var tunnelDeleteCmd = &cobra.Command{
 			Writer:             os.Stdout,
 			Format:             getOutputFormat(),
 		}
+
+		clientSearch := &client.Search{
+			DataProvider: rportAPI,
+			Cache:        &cache.ClientsCache{},
+		}
+
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
 			IPProvider: utils.APIIPProvider{
 				URL: utils.IPCheckerURL,
 			},
+			ClientSearch: clientSearch,
 		}
 
 		clientID := params.ReadString(controllers.ClientID, "")
@@ -117,7 +134,7 @@ with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 			SigChan:         sigs,
 			PasswordScanner: utils.ReadPassword,
 		}
-		params, err := config.CollectParams(cmd, getCommandRequirements(), promptReader)
+		params, err := config.CollectParams(cmd, getCreateTunnelRequirements(), promptReader)
 		if err != nil {
 			return err
 		}
@@ -129,12 +146,19 @@ with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 			Writer:             os.Stdout,
 			Format:             getOutputFormat(),
 		}
+
+		clientSearch := &client.Search{
+			DataProvider: rportAPI,
+			Cache:        &cache.ClientsCache{},
+		}
+
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
 			IPProvider: utils.APIIPProvider{
 				URL: utils.IPCheckerURL,
 			},
+			ClientSearch: clientSearch,
 		}
 
 		return tunnelController.Create(context.Background(), params)
@@ -145,11 +169,19 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
 		{
 			Field:       controllers.ClientID,
-			Description: "[required] unique client id retrieved previously",
+			Description: "[conditionally required] client id, if not provided, client name should be given",
 			Validate:    config.RequiredValidate,
 			ShortName:   "d",
 			IsRequired:  true,
-			Help:        "Enter a client ID",
+			IsEnabled: func(providedParams *options.ParameterBag) bool {
+				return providedParams.ReadString(controllers.ClientNameFlag, "") == ""
+			},
+			Help: "Enter a client ID",
+		},
+		{
+			Field:       controllers.ClientNameFlag,
+			Description: `client name, if no client id is provided`,
+			ShortName:   "n",
 		},
 		{
 			Field: controllers.Local,
@@ -202,7 +234,7 @@ func getDeleteTunnelRequirements() []config.ParameterRequirement {
 		},
 		{
 			Field:       controllers.ClientNameFlag,
-			Description: `client name, if no client id is not provided`,
+			Description: `client name, if no client id is provided`,
 			ShortName:   "n",
 		},
 		{

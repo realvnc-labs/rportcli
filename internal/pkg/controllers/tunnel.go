@@ -96,11 +96,32 @@ func (cc *TunnelController) Delete(ctx context.Context, clientID, clientName, tu
 
 func (cc *TunnelController) Create(ctx context.Context, params *options.ParameterBag) error {
 	clientID := params.ReadString(ClientID, "")
+	clientName := params.ReadString(ClientNameFlag, "")
+	if clientID == "" && clientName == "" {
+		return errors.New("no client id nor name provided")
+	}
+
+	if clientID == "" {
+		clients, err := cc.ClientSearch.Search(ctx, clientName)
+		if err != nil {
+			return err
+		}
+
+		if len(clients) == 0 {
+			return fmt.Errorf("unknown client '%s'", clientName)
+		}
+
+		if len(clients) != 1 {
+			return fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", clientName)
+		}
+		clientID = clients[0].ID
+	}
+
 	local := params.ReadString(Local, "")
 	remote := params.ReadString(Remote, "")
 	scheme := params.ReadString(Scheme, "")
 	acl := params.ReadString(ACL, "")
-	if acl == "" || acl == DefaultACL {
+	if (acl == "" || acl == DefaultACL) && cc.IPProvider != nil {
 		ip, e := cc.IPProvider.GetIP(context.Background())
 		if e != nil {
 			logrus.Errorf("failed to fetch IP: %v", e)

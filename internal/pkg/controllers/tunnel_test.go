@@ -207,7 +207,7 @@ func TestInvalidInputForTunnelDelete(t *testing.T) {
 	assert.EqualError(t, err, "no client id nor name provided")
 }
 
-func TestTunnelCreateController(t *testing.T) {
+func TestTunnelCreateWithClientID(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "Basic bG9nMTpwYXNzMQ==", r.Header.Get("Authorization"))
 		assert.Equal(t, http.MethodPut, r.Method)
@@ -257,4 +257,113 @@ func TestTunnelCreateController(t *testing.T) {
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
 	assert.Equal(t, `{"id":"123","client":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6"}`, buf.String())
+}
+
+func TestTunnelCreateWithClientName(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/api/v1/clients/444/tunnels?acl=3.4.5.7&check_port=1&local=lohost2%3A3301&remote=rhost4%3A3345&scheme=ssh", r.URL.String())
+		jsonEnc := json.NewEncoder(rw)
+		e := jsonEnc.Encode(api.TunnelResponse{Data: &models.Tunnel{
+			ID:          "444",
+			Lhost:       "lohost2",
+			Lport:       "3301",
+			Rhost:       "rhost4",
+			Rport:       "3345",
+			LportRandom: true,
+			Scheme:      "ssh",
+			ACL:         "3.4.5.7",
+		}})
+		assert.NoError(t, e)
+	}))
+	defer srv.Close()
+
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) { return "someloggg", "somepaaas", nil },
+	}
+
+	buf := bytes.Buffer{}
+
+	cl := api.New(srv.URL, apiAuth)
+
+	searchMock := &ClientSearchMock{
+		clientsToGive: []models.Client{
+			{
+				ID:   "444",
+				Name: "some client 444",
+			},
+		},
+	}
+
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
+		IPProvider: IPProviderMock{
+			IP: "3.4.5.7",
+		},
+		ClientSearch: searchMock,
+	}
+
+	params := config.FromValues(map[string]string{
+		ClientID:       "",
+		ClientNameFlag: "some client 444",
+		Local:          "lohost2:3301",
+		Remote:         "rhost4:3345",
+		Scheme:         "ssh",
+		CheckPort:      "1",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.NoError(t, err)
+	assert.Equal(t, `{"id":"444","client":"","lhost":"lohost2","lport":"3301","rhost":"rhost4","rport":"3345","lport_random":true,"scheme":"ssh","acl":"3.4.5.7"}`, buf.String())
+}
+
+func TestInvalidInputForTunnelCreate(t *testing.T) {
+	tController := TunnelController{}
+	params := config.FromValues(map[string]string{
+		ClientID:       "",
+		ClientNameFlag: "",
+		Local:          "lohost1:3300",
+		Remote:         "rhost2:3344",
+		Scheme:         "ssh",
+		CheckPort:      "1",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.EqualError(t, err, "no client id nor name provided")
+}
+
+func TestTunnelCreateByAmbiguousClientName(t *testing.T) {
+	searchMock := &ClientSearchMock{
+		clientsToGive: []models.Client{
+			{
+				ID:   "cl1",
+				Name: "some client 1",
+			},
+			{
+				ID:   "cl2",
+				Name: "some client 2",
+			},
+		},
+	}
+	tController := TunnelController{
+		ClientSearch: searchMock,
+	}
+	params := config.FromValues(map[string]string{
+		ClientNameFlag: "some name",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.EqualError(t, err, `client identified by 'some name' is ambiguous, use a more precise name or use the client id`)
+}
+
+func TestTunnelCreateNotFoundClientName(t *testing.T) {
+	searchMock := &ClientSearchMock{
+		clientsToGive: []models.Client{},
+	}
+	tController := TunnelController{
+		ClientSearch: searchMock,
+	}
+
+	params := config.FromValues(map[string]string{
+		ClientNameFlag: "some client",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.EqualError(t, err, `unknown client 'some client'`)
 }
