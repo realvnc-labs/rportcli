@@ -17,14 +17,14 @@ func TestRenderTunnels(t *testing.T) {
 		{
 			Format: FormatHuman,
 			ExpectedOutput: `Tunnels
-ID   CLIENT LHOST LPORT RHOST RPORT LPORTRAND SCHEME ACL     
-id22        lhost 123   rhost 124   false     ssh    0.0.0.0 
+ID   CLIENT ID CLIENT NAME LOCAL HOST LOCAL PORT REMOTE HOST REMOTE PORT LOCAL PORT RAND SCHEME ACL     
+id22                       lhost      123        rhost       124         false           ssh    0.0.0.0 
 `,
 			ColCountToGive: 150,
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `[{"id":"id22","client":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0"}]
+			ExpectedOutput: `[{"id":"id22","client_id":"","client_name":"","local_host":"lhost","local_port":"123","remote_host":"rhost","remote_port":"124","local_port_random":false,"scheme":"ssh","acl":"0.0.0.0"}]
 `,
 			ColCountToGive: 10,
 		},
@@ -33,12 +33,13 @@ id22        lhost 123   rhost 124   false     ssh    0.0.0.0
 			ExpectedOutput: `[
   {
     "id": "id22",
-    "client": "",
-    "lhost": "lhost",
-    "lport": "123",
-    "rhost": "rhost",
-    "rport": "124",
-    "lport_random": false,
+    "client_id": "",
+    "client_name": "",
+    "local_host": "lhost",
+    "local_port": "123",
+    "remote_host": "rhost",
+    "remote_port": "124",
+    "local_port_random": false,
     "scheme": "ssh",
     "acl": "0.0.0.0"
   }
@@ -49,12 +50,13 @@ id22        lhost 123   rhost 124   false     ssh    0.0.0.0
 		{
 			Format: FormatYAML,
 			ExpectedOutput: `- id: id22
-  client: ""
-  lhost: lhost
-  lport: "123"
-  rhost: rhost
-  rport: "124"
-  lportrandom: false
+  client_id: ""
+  client_name: ""
+  local_host: lhost
+  local_port: "123"
+  remote_host: rhost
+  remote_port: "124"
+  local_port_random: false
   scheme: ssh
   acl: 0.0.0.0
 `,
@@ -107,22 +109,23 @@ func TestRenderTunnel(t *testing.T) {
 		{
 			Format: FormatHuman,
 			ExpectedOutput: `Tunnel
-KEY           VALUE   
-ID:           id22    
-CLIENT:               
-LHOST:        lhost   
-LPORT:        123     
-RHOST:        rhost   
-RPORT:        124     
-LPORT RANDOM: false   
-SCHEME:       ssh     
-ACL:          0.0.0.0 
+KEY                VALUE   
+ID:                id22    
+CLIENT_ID:                 
+CLIENT_NAME:               
+LOCAL_HOST:        lhost   
+LOCAL_PORT:        123     
+REMOTE_HOST:       rhost   
+REMOTE_PORT:       124     
+LOCAL_PORT RANDOM: false   
+SCHEME:            ssh     
+ACL:               0.0.0.0 
 `,
 			ColCountToGive: 150,
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"id":"id22","client":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0"}
+			ExpectedOutput: `{"id":"id22","client_id":"","client_name":"","local_host":"lhost","local_port":"123","remote_host":"rhost","remote_port":"124","local_port_random":false,"scheme":"ssh","acl":"0.0.0.0"}
 `,
 			ColCountToGive: 10,
 		},
@@ -130,12 +133,13 @@ ACL:          0.0.0.0
 			Format: FormatJSONPretty,
 			ExpectedOutput: `{
   "id": "id22",
-  "client": "",
-  "lhost": "lhost",
-  "lport": "123",
-  "rhost": "rhost",
-  "rport": "124",
-  "lport_random": false,
+  "client_id": "",
+  "client_name": "",
+  "local_host": "lhost",
+  "local_port": "123",
+  "remote_host": "rhost",
+  "remote_port": "124",
+  "local_port_random": false,
   "scheme": "ssh",
   "acl": "0.0.0.0"
 }
@@ -145,12 +149,13 @@ ACL:          0.0.0.0
 		{
 			Format: FormatYAML,
 			ExpectedOutput: `id: id22
-client: ""
-lhost: lhost
-lport: "123"
-rhost: rhost
-rport: "124"
-lportrandom: false
+client_id: ""
+client_name: ""
+local_host: lhost
+local_port: "123"
+remote_host: rhost
+remote_port: "124"
+local_port_random: false
 scheme: ssh
 acl: 0.0.0.0
 `,

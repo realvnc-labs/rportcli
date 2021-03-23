@@ -21,25 +21,27 @@ func (os *OperationStatus) KeyValues() []testing.KeyValueStr {
 
 type Tunnel struct {
 	ID          string `json:"id"`
-	Client      string `json:"client"`
-	Lhost       string `json:"lhost"`
-	Lport       string `json:"lport"`
-	Rhost       string `json:"rhost"`
-	Rport       string `json:"rport"`
-	LportRandom bool   `json:"lport_random"`
-	Scheme      string `json:"scheme"`
-	ACL         string `json:"acl"`
+	ClientID    string `json:"client_id" yaml:"client_id"`
+	ClientName  string `json:"client_name" yaml:"client_name"`
+	Lhost       string `json:"local_host" yaml:"local_host"`
+	Lport       string `json:"local_port" yaml:"local_port"`
+	Rhost       string `json:"remote_host" yaml:"remote_host"`
+	Rport       string `json:"remote_port" yaml:"remote_port"`
+	LportRandom bool   `json:"local_port_random" yaml:"local_port_random"`
+	Scheme      string `json:"scheme" yaml:"scheme"`
+	ACL         string `json:"acl" yaml:"acl"`
 }
 
 func (t *Tunnel) Headers() []string {
 	return []string{
 		"ID",
-		"CLIENT",
-		"LHOST",
-		"LPORT",
-		"RHOST",
-		"RPORT",
-		"LPORTRAND",
+		"CLIENT_ID",
+		"CLIENT_NAME",
+		"LOCAL_HOST",
+		"LOCAL_PORT",
+		"REMOTE_HOST",
+		"REMOTE_PORT",
+		"LOCAL_PORT_RAND",
 		"SCHEME",
 		"ACL",
 	}
@@ -48,7 +50,8 @@ func (t *Tunnel) Headers() []string {
 func (t *Tunnel) Row() []string {
 	return []string{
 		t.ID,
-		t.Client,
+		t.ClientID,
+		t.ClientName,
 		t.Lhost,
 		t.Lport,
 		t.Rhost,
@@ -66,27 +69,31 @@ func (t *Tunnel) KeyValues() []testing.KeyValueStr {
 			Value: t.ID,
 		},
 		{
-			Key:   "CLIENT",
-			Value: t.Client,
+			Key:   "CLIENT_ID",
+			Value: t.ClientID,
 		},
 		{
-			Key:   "LHOST",
+			Key:   "CLIENT_NAME",
+			Value: t.ClientName,
+		},
+		{
+			Key:   "LOCAL_HOST",
 			Value: t.Lhost,
 		},
 		{
-			Key:   "LPORT",
+			Key:   "LOCAL_PORT",
 			Value: t.Lport,
 		},
 		{
-			Key:   "RHOST",
+			Key:   "REMOTE_HOST",
 			Value: t.Rhost,
 		},
 		{
-			Key:   "RPORT",
+			Key:   "REMOTE_PORT",
 			Value: t.Rport,
 		},
 		{
-			Key:   "LPORT RANDOM",
+			Key:   "LOCAL_PORT RANDOM",
 			Value: fmt.Sprintf("%v", t.LportRandom),
 		},
 		{

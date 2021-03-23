@@ -98,7 +98,7 @@ func TestTunnelsController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`[{"id":"1","client":"123","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]`,
+		`[{"id":"1","client_id":"123","client_name":"Client 123","local_host":"","local_port":"","remote_host":"","remote_port":"","local_port_random":false,"scheme":"","acl":""}]`,
 		buf.String(),
 	)
 }
@@ -256,7 +256,7 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"id":"123","client":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6"}`, buf.String())
+	assert.Equal(t, `{"id":"123","client_id":"","client_name":"","local_host":"lohost1","local_port":"3300","remote_host":"rhost2","remote_port":"3344","local_port_random":true,"scheme":"ssh","acl":"3.4.5.6"}`, buf.String())
 }
 
 func TestTunnelCreateWithClientName(t *testing.T) {
@@ -313,7 +313,7 @@ func TestTunnelCreateWithClientName(t *testing.T) {
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"id":"444","client":"","lhost":"lohost2","lport":"3301","rhost":"rhost4","rport":"3345","lport_random":true,"scheme":"ssh","acl":"3.4.5.7"}`, buf.String())
+	assert.Equal(t, `{"id":"444","client_id":"","client_name":"","local_host":"lohost2","local_port":"3301","remote_host":"rhost4","remote_port":"3345","local_port_random":true,"scheme":"ssh","acl":"3.4.5.7"}`, buf.String())
 }
 
 func TestInvalidInputForTunnelCreate(t *testing.T) {

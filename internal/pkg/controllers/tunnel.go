@@ -52,7 +52,8 @@ func (cc *TunnelController) Tunnels(ctx context.Context) error {
 	tunnels := make([]*models.Tunnel, 0)
 	for _, cl := range clResp.Data {
 		for _, t := range cl.Tunnels {
-			t.Client = cl.ID
+			t.ClientID = cl.ID
+			t.ClientName = cl.Name
 			tunnels = append(tunnels, t)
 		}
 	}
