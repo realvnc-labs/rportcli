@@ -3,6 +3,8 @@ package controllers
 import (
 	"context"
 
+	options "github.com/breathbath/go_utils/v2/pkg/config"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 )
 
@@ -45,7 +47,7 @@ type ClientSearchMock struct {
 	errorToGive     error
 }
 
-func (csm *ClientSearchMock) Search(ctx context.Context, term string) (foundCls []models.Client, err error) {
+func (csm *ClientSearchMock) Search(ctx context.Context, term string, params *options.ParameterBag) (foundCls []models.Client, err error) {
 	csm.searchTermGiven = term
 	return csm.clientsToGive, csm.errorToGive
 }

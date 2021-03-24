@@ -17,7 +17,7 @@ import (
 
 const (
 	defaultPath      = ".config/rportcli/config.json"
-	ServerURL        = "server_url"
+	ServerURL        = "server"
 	Login            = "login"
 	Token            = "token"
 	Password         = "password"
@@ -25,10 +25,21 @@ const (
 )
 
 func LoadParamsFromFileAndEnv() (params *options.ParameterBag, err error) {
+	envMapValues := map[string]interface{}{
+		Password:            env.ReadEnv(PasswordEnvVar, ""),
+		Login:               env.ReadEnv(LoginEnvVar, ""),
+		ServerURL:           env.ReadEnv(ServerURLEnvVar, ""),
+		PathForConfigEnvVar: env.ReadEnv(PathForConfigEnvVar, ""),
+		CacheValidityEnvVar: env.ReadEnv(CacheValidityEnvVar, ""),
+		CacheFolderEnvVar:   env.ReadEnv(CacheFolderEnvVar, ""),
+	}
+
+	envValuesProvider := options.NewMapValuesProvider(envMapValues)
+
 	configFilePath := getConfigLocation()
 	if !fs.FileExists(configFilePath) {
 		logrus.Debugf("config file %s doesn't exist", configFilePath)
-		return nil, nil
+		return options.New(envValuesProvider), nil
 	}
 
 	f, err := os.Open(configFilePath)
@@ -40,16 +51,6 @@ func LoadParamsFromFileAndEnv() (params *options.ParameterBag, err error) {
 	if err != nil {
 		return nil, err
 	}
-
-	envMapValues := map[string]interface{}{
-		Password:                     env.ReadEnv(PasswordEnvVar, ""),
-		Login:                        env.ReadEnv(LoginEnvVar, ""),
-		ServerURL:                    env.ReadEnv(ServerURLEnvVar, ""),
-		PathForConfigEnvVar:          env.ReadEnv(PathForConfigEnvVar, ""),
-		SessionValiditySecondsEnvVar: env.ReadEnv(SessionValiditySecondsEnvVar, ""),
-	}
-
-	envValuesProvider := options.NewMapValuesProvider(envMapValues)
 
 	valuesProvider := options.NewValuesProviderComposite(jvp, envValuesProvider)
 

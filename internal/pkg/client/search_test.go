@@ -5,6 +5,8 @@ import (
 	"errors"
 	"testing"
 
+	options "github.com/breathbath/go_utils/v2/pkg/config"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
@@ -41,16 +43,16 @@ type CacheMock struct {
 	loadClientsErr  error
 }
 
-func (cm *CacheMock) Store(ctx context.Context, cls []models.Client) error {
+func (cm *CacheMock) Store(ctx context.Context, cls []models.Client, params *options.ParameterBag) error {
 	cm.clientsToStore = cls
 	return cm.storeErrToGive
 }
 
-func (cm *CacheMock) Exists(ctx context.Context) (bool, error) {
+func (cm *CacheMock) Exists(ctx context.Context, params *options.ParameterBag) (bool, error) {
 	return len(cm.clientsToLoad) > 1, cm.existsErrToGive
 }
 
-func (cm *CacheMock) Load(ctx context.Context, cls *[]models.Client) error {
+func (cm *CacheMock) Load(ctx context.Context, cls *[]models.Client, params *options.ParameterBag) error {
 	*cls = append(*cls, cm.clientsToLoad...)
 	return cm.loadClientsErr
 }
@@ -67,7 +69,7 @@ func TestFindClientsFromDataProvider(t *testing.T) {
 		Cache: cacheMock,
 	}
 
-	foundCls, err := search.Search(context.Background(), "my tiny")
+	foundCls, err := search.Search(context.Background(), "my tiny", &options.ParameterBag{})
 	assert.NoError(t, err)
 	assert.Len(t, foundCls, 2)
 	assert.Equal(t, foundCls, []models.Client{
@@ -95,7 +97,7 @@ func TestFindClientsFromCache(t *testing.T) {
 		Cache: cacheMock,
 	}
 
-	foundCls, err := search.Search(context.Background(), "$100")
+	foundCls, err := search.Search(context.Background(), "$100", &options.ParameterBag{})
 	assert.NoError(t, err)
 	assert.Len(t, foundCls, 1)
 	assert.Equal(t, foundCls, []models.Client{
@@ -119,7 +121,7 @@ func TestDataProviderError(t *testing.T) {
 		},
 	}
 
-	_, err := search.Search(context.Background(), "$100")
+	_, err := search.Search(context.Background(), "$100", &options.ParameterBag{})
 	assert.EqualError(t, err, "some load error")
 }
 
@@ -135,7 +137,7 @@ func TestCacheStoreError(t *testing.T) {
 		},
 	}
 
-	_, err := search.Search(context.Background(), "$100")
+	_, err := search.Search(context.Background(), "$100", &options.ParameterBag{})
 	assert.EqualError(t, err, "some store err")
 }
 
@@ -151,7 +153,7 @@ func TestCacheExistsError(t *testing.T) {
 		},
 	}
 
-	_, err := search.Search(context.Background(), "$100")
+	_, err := search.Search(context.Background(), "$100", &options.ParameterBag{})
 	assert.EqualError(t, err, "some exists err")
 }
 
@@ -167,6 +169,6 @@ func TestLoadCacheError(t *testing.T) {
 		},
 	}
 
-	_, err := search.Search(context.Background(), "$100")
+	_, err := search.Search(context.Background(), "$100", &options.ParameterBag{})
 	assert.EqualError(t, err, "some cache load err")
 }

@@ -79,7 +79,7 @@ func TestLoadConfigFromFile(t *testing.T) {
 }
 
 func TestLoadConfigFromEnvOrFile(t *testing.T) {
-	rawJSON := []byte(`{"server_url":"https://10.10.10.11:3000"}`)
+	rawJSON := []byte(`{"server":"https://10.10.10.11:3000"}`)
 	filePath := "config123.json"
 
 	err := ioutil.WriteFile(filePath, rawJSON, 0600)
@@ -189,5 +189,5 @@ func TestWriteConfig(t *testing.T) {
 	if err != nil {
 		return
 	}
-	assert.Equal(t, `{"server_url":"http://localhost:3000","token":"123"}`+"\n", string(fileContents))
+	assert.Equal(t, `{"server":"http://localhost:3000","token":"123"}`+"\n", string(fileContents))
 }

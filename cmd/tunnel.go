@@ -78,43 +78,14 @@ var tunnelDeleteCmd = &cobra.Command{
 	Short: "terminates the specified tunnel of the specified client",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		promptReader := &utils.PromptReader{
-			Sc:              bufio.NewScanner(os.Stdin),
-			SigChan:         sigs,
-			PasswordScanner: utils.ReadPassword,
-		}
-		params, err := config.LoadAllParams(cmd, getDeleteTunnelRequirements(), promptReader)
+		params, err := readParams(cmd, getDeleteTunnelRequirements())
 		if err != nil {
 			return err
 		}
 
-		rportAPI := buildRport(params)
+		tunnelController := createTunnelController(params)
 
-		tr := &output.TunnelRenderer{
-			ColCountCalculator: utils.CalcTerminalColumnsCount,
-			Writer:             os.Stdout,
-			Format:             getOutputFormat(),
-		}
-
-		clientSearch := &client.Search{
-			DataProvider: rportAPI,
-			Cache:        &cache.ClientsCache{},
-		}
-
-		tunnelController := &controllers.TunnelController{
-			Rport:          rportAPI,
-			TunnelRenderer: tr,
-			IPProvider:     rportAPI,
-			ClientSearch:   clientSearch,
-		}
-
-		clientID := params.ReadString(controllers.ClientID, "")
-		tunnelID := params.ReadString(controllers.TunnelID, "")
-		clientName := params.ReadString(controllers.ClientNameFlag, "")
-		return tunnelController.Delete(context.Background(), clientID, clientName, tunnelID)
+		return tunnelController.Delete(context.Background(), params)
 	},
 }
 
@@ -127,39 +98,12 @@ with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 `,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		promptReader := &utils.PromptReader{
-			Sc:              bufio.NewScanner(os.Stdin),
-			SigChan:         sigs,
-			PasswordScanner: utils.ReadPassword,
-		}
-
-		params, err := config.LoadAllParams(cmd, getCreateTunnelRequirements(), promptReader)
+		params, err := readParams(cmd, getCreateTunnelRequirements())
 		if err != nil {
 			return err
 		}
 
-		rportAPI := buildRport(params)
-
-		tr := &output.TunnelRenderer{
-			ColCountCalculator: utils.CalcTerminalColumnsCount,
-			Writer:             os.Stdout,
-			Format:             getOutputFormat(),
-		}
-
-		clientSearch := &client.Search{
-			DataProvider: rportAPI,
-			Cache:        &cache.ClientsCache{},
-		}
-
-		tunnelController := &controllers.TunnelController{
-			Rport:          rportAPI,
-			TunnelRenderer: tr,
-			IPProvider:     rportAPI,
-			ClientSearch:   clientSearch,
-		}
+		tunnelController := createTunnelController(params)
 
 		return tunnelController.Create(context.Background(), params)
 	},
@@ -255,4 +199,39 @@ func getDeleteTunnelRequirements() []config.ParameterRequirement {
 			Help:        "Enter a tunnel id",
 		},
 	}
+}
+
+func createTunnelController(params *options.ParameterBag) *controllers.TunnelController {
+	rportAPI := buildRport(params)
+
+	tr := &output.TunnelRenderer{
+		ColCountCalculator: utils.CalcTerminalColumnsCount,
+		Writer:             os.Stdout,
+		Format:             getOutputFormat(),
+	}
+
+	clientSearch := &client.Search{
+		DataProvider: rportAPI,
+		Cache:        &cache.ClientsCache{},
+	}
+
+	return &controllers.TunnelController{
+		Rport:          rportAPI,
+		TunnelRenderer: tr,
+		IPProvider:     rportAPI,
+		ClientSearch:   clientSearch,
+	}
+}
+
+func readParams(cmd *cobra.Command, reqs []config.ParameterRequirement) (*options.ParameterBag, error) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	promptReader := &utils.PromptReader{
+		Sc:              bufio.NewScanner(os.Stdin),
+		SigChan:         sigs,
+		PasswordScanner: utils.ReadPassword,
+	}
+
+	return config.LoadAllParams(cmd, reqs, promptReader)
 }

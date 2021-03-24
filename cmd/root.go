@@ -94,8 +94,11 @@ func buildRport(params *options.ParameterBag) *api.Rport {
 			},
 		},
 	}
-
-	rportAPI := api.New(params.ReadString(config.ServerURL, config.DefaultServerURL), auth)
+	serverURL := params.ReadString(config.ServerURL, config.DefaultServerURL)
+	if serverURL == "" {
+		serverURL = config.DefaultServerURL
+	}
+	rportAPI := api.New(serverURL, auth)
 
 	return rportAPI
 }

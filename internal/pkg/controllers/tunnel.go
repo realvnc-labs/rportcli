@@ -66,13 +66,17 @@ func (tc *TunnelController) Tunnels(ctx context.Context) error {
 	return tc.TunnelRenderer.RenderTunnels(tunnels)
 }
 
-func (tc *TunnelController) Delete(ctx context.Context, clientID, clientName, tunnelID string) error {
+func (tc *TunnelController) Delete(ctx context.Context, params *options.ParameterBag) error {
+	clientID := params.ReadString(ClientID, "")
+	tunnelID := params.ReadString(TunnelID, "")
+	clientName := params.ReadString(ClientNameFlag, "")
+
 	if clientID == "" && clientName == "" {
 		return errors.New("no client id nor name provided")
 	}
 
 	if clientID == "" {
-		clients, err := tc.ClientSearch.Search(ctx, clientName)
+		clients, err := tc.ClientSearch.Search(ctx, clientName, params)
 		if err != nil {
 			return err
 		}
@@ -109,7 +113,7 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	}
 
 	if clientID == "" {
-		clientID, err = tc.findClientID(ctx, clientName)
+		clientID, err = tc.findClientID(ctx, clientName, params)
 		if err != nil {
 			return err
 		}
@@ -170,8 +174,8 @@ func (tc *TunnelController) generateUsage(tunnelCreated *models.TunnelCreated, p
 	return fmt.Sprintf("ssh %s -l ${USER}", rportHost)
 }
 
-func (tc *TunnelController) findClientID(ctx context.Context, clientName string) (string, error) {
-	clients, err := tc.ClientSearch.Search(ctx, clientName)
+func (tc *TunnelController) findClientID(ctx context.Context, clientName string, params *options.ParameterBag) (string, error) {
+	clients, err := tc.ClientSearch.Search(ctx, clientName, params)
 	if err != nil {
 		return "", err
 	}

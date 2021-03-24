@@ -9,6 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	options "github.com/breathbath/go_utils/v2/pkg/config"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
@@ -127,7 +129,12 @@ func TestTunnelDeleteByClientIDController(t *testing.T) {
 		ClientSearch:   &ClientSearchMock{},
 	}
 
-	err := tController.Delete(context.Background(), "cl1", "", "tun2")
+	params := options.New(options.NewMapValuesProvider(map[string]interface{}{
+		ClientID:       "cl1",
+		TunnelID:       "tun2",
+		ClientNameFlag: "",
+	}))
+	err := tController.Delete(context.Background(), params)
 	assert.NoError(t, err)
 	assert.Equal(t, `{"status":"OK"}`, buf.String())
 }
@@ -163,7 +170,13 @@ func TestTunnelDeleteByClientNameController(t *testing.T) {
 		ClientSearch:   searchMock,
 	}
 
-	err := tController.Delete(context.Background(), "", "some client", "tun4")
+	params := options.New(options.NewMapValuesProvider(map[string]interface{}{
+		ClientID:       "",
+		TunnelID:       "tun4",
+		ClientNameFlag: "some client",
+	}))
+
+	err := tController.Delete(context.Background(), params)
 	assert.NoError(t, err)
 	assert.Equal(t, `{"status":"OK"}`, buf.String())
 }
@@ -185,7 +198,13 @@ func TestTunnelDeleteByAmbiguousClientName(t *testing.T) {
 		ClientSearch: searchMock,
 	}
 
-	err := tController.Delete(context.Background(), "", "some client", "tun3")
+	params := options.New(options.NewMapValuesProvider(map[string]interface{}{
+		ClientID:       "",
+		TunnelID:       "tun3",
+		ClientNameFlag: "some client",
+	}))
+
+	err := tController.Delete(context.Background(), params)
 	assert.EqualError(t, err, `client identified by 'some client' is ambiguous, use a more precise name or use the client id`)
 }
 
@@ -197,13 +216,24 @@ func TestTunnelDeleteNotFoundClientName(t *testing.T) {
 		ClientSearch: searchMock,
 	}
 
-	err := tController.Delete(context.Background(), "", "some client", "tun5")
+	params := options.New(options.NewMapValuesProvider(map[string]interface{}{
+		ClientID:       "",
+		TunnelID:       "tun5",
+		ClientNameFlag: "some client",
+	}))
+
+	err := tController.Delete(context.Background(), params)
 	assert.EqualError(t, err, `unknown client 'some client'`)
 }
 
 func TestInvalidInputForTunnelDelete(t *testing.T) {
 	tController := TunnelController{}
-	err := tController.Delete(context.Background(), "", "", "tunnel11")
+	params := options.New(options.NewMapValuesProvider(map[string]interface{}{
+		ClientID:       "",
+		TunnelID:       "tunnel11",
+		ClientNameFlag: "",
+	}))
+	err := tController.Delete(context.Background(), params)
 	assert.EqualError(t, err, "no client id nor name provided")
 }
 

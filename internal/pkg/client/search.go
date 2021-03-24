@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	options "github.com/breathbath/go_utils/v2/pkg/config"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 )
 
@@ -12,9 +14,9 @@ type DataProvider interface {
 }
 
 type Cache interface {
-	Store(ctx context.Context, cls []models.Client) error
-	Exists(ctx context.Context) (bool, error)
-	Load(ctx context.Context, cls *[]models.Client) error
+	Store(ctx context.Context, cls []models.Client, params *options.ParameterBag) error
+	Exists(ctx context.Context, params *options.ParameterBag) (bool, error)
+	Load(ctx context.Context, cls *[]models.Client, params *options.ParameterBag) error
 }
 
 type Search struct {
@@ -22,8 +24,8 @@ type Search struct {
 	Cache        Cache
 }
 
-func (s *Search) Search(ctx context.Context, term string) (foundCls []models.Client, err error) {
-	cls, err := s.getClientsList(ctx)
+func (s *Search) Search(ctx context.Context, term string, params *options.ParameterBag) (foundCls []models.Client, err error) {
+	cls, err := s.getClientsList(ctx, params)
 	if err != nil {
 		return foundCls, err
 	}
@@ -32,8 +34,8 @@ func (s *Search) Search(ctx context.Context, term string) (foundCls []models.Cli
 	return
 }
 
-func (s *Search) getClientsList(ctx context.Context) (cls []models.Client, err error) {
-	cacheExists, err := s.Cache.Exists(ctx)
+func (s *Search) getClientsList(ctx context.Context, params *options.ParameterBag) (cls []models.Client, err error) {
+	cacheExists, err := s.Cache.Exists(ctx, params)
 	if err != nil {
 		return cls, err
 	}
@@ -44,12 +46,12 @@ func (s *Search) getClientsList(ctx context.Context) (cls []models.Client, err e
 			return
 		}
 
-		err = s.Cache.Store(ctx, cls)
+		err = s.Cache.Store(ctx, cls, params)
 		return
 	}
 
 	cls = []models.Client{}
-	err = s.Cache.Load(ctx, &cls)
+	err = s.Cache.Load(ctx, &cls, params)
 	return
 }
 

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/breathbath/go_utils/v2/pkg/url"
@@ -25,6 +26,11 @@ func (wup *WsCommandURLProvider) BuildWsURL(ctx context.Context) (wsURL string, 
 	token, err := wup.TokenProvider()
 	if err != nil {
 		return "", err
+	}
+
+	if token == "" {
+		err = fmt.Errorf("no auth data stored to use this command, please call init to login")
+		return
 	}
 
 	wsURL = wup.buildWsURL(token, wup.BaseURL)

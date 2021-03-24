@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	options "github.com/breathbath/go_utils/v2/pkg/config"
+
 	"github.com/breathbath/go_utils/v2/pkg/io"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/stretchr/testify/assert"
@@ -30,11 +32,11 @@ func assertStoreAndLoad(t *testing.T) {
 			Name: "client 2",
 		},
 	}
-	err := cc.Store(context.Background(), providedClients)
+	err := cc.Store(context.Background(), providedClients, &options.ParameterBag{})
 	assert.NoError(t, err)
 
 	actualClients := []models.Client{}
-	err = cc.Load(context.Background(), &actualClients)
+	err = cc.Load(context.Background(), &actualClients, &options.ParameterBag{})
 	assert.NoError(t, err)
 	assert.Equal(t, providedClients, actualClients)
 
@@ -45,7 +47,7 @@ func assertStoreAndLoad(t *testing.T) {
 func assertExists(t *testing.T) {
 	cc := &ClientsCache{}
 
-	exists, err := cc.Exists(context.Background())
+	exists, err := cc.Exists(context.Background(), &options.ParameterBag{})
 	assert.NoError(t, err)
 	assert.False(t, exists)
 
@@ -55,7 +57,7 @@ func assertExists(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	exists, err = cc.Exists(context.Background())
+	exists, err = cc.Exists(context.Background(), &options.ParameterBag{})
 	assert.NoError(t, err)
 	assert.False(t, exists)
 
@@ -68,7 +70,7 @@ func assertExists(t *testing.T) {
 		ValidTill: time.Now().UTC().Add(time.Hour),
 	})
 	assert.NoError(t, err)
-	exists, err = cc.Exists(context.Background())
+	exists, err = cc.Exists(context.Background(), &options.ParameterBag{})
 	assert.NoError(t, err)
 	assert.True(t, exists)
 

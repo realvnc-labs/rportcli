@@ -66,7 +66,7 @@ func (icm *CommandsController) Start(ctx context.Context, params *options.Parame
 	}
 
 	if clientIDs == "" {
-		clients, err := icm.ClientSearch.Search(ctx, clientName)
+		clients, err := icm.ClientSearch.Search(ctx, clientName, params)
 		if err != nil {
 			return err
 		}
