@@ -61,7 +61,7 @@ func getInitRequirements() []config.ParameterRequirement {
 			Field:       config.Login,
 			Help:        "Enter a valid login value",
 			Validate:    config.RequiredValidate,
-			Description: "GetToken to the rport server",
+			Description: "Login to the rport server",
 			ShortName:   "l",
 		},
 		{
