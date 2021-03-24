@@ -44,7 +44,12 @@ var tunnelListCmd = &cobra.Command{
 	Short: "list all active tunnels created with rport",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		rportAPI := buildRport()
+		params, err := config.LoadParamsFromFileAndEnv()
+		if err != nil {
+			return err
+		}
+
+		rportAPI := buildRport(params)
 
 		tr := &output.TunnelRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,
@@ -81,12 +86,12 @@ var tunnelDeleteCmd = &cobra.Command{
 			SigChan:         sigs,
 			PasswordScanner: utils.ReadPassword,
 		}
-		params, err := config.CollectParams(cmd, getDeleteTunnelRequirements(), promptReader)
+		params, err := config.LoadAllParams(cmd, getDeleteTunnelRequirements(), promptReader)
 		if err != nil {
 			return err
 		}
 
-		rportAPI := buildRport()
+		rportAPI := buildRport(params)
 
 		tr := &output.TunnelRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,
@@ -130,12 +135,13 @@ with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 			SigChan:         sigs,
 			PasswordScanner: utils.ReadPassword,
 		}
-		params, err := config.CollectParams(cmd, getCreateTunnelRequirements(), promptReader)
+
+		params, err := config.LoadAllParams(cmd, getCreateTunnelRequirements(), promptReader)
 		if err != nil {
 			return err
 		}
 
-		rportAPI := buildRport()
+		rportAPI := buildRport(params)
 
 		tr := &output.TunnelRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,

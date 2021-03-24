@@ -20,10 +20,14 @@ type TunnelResponse struct {
 	Data *models.Tunnel
 }
 
+type TunnelCreatedResponse struct {
+	Data *models.TunnelCreated
+}
+
 func (rp *Rport) CreateTunnel(
 	ctx context.Context,
 	clientID, local, remote, scheme, acl, checkPort string,
-) (tunResp *TunnelResponse, err error) {
+) (tunResp *TunnelCreatedResponse, err error) {
 	var req *http.Request
 	u := strings.Replace(CreateTunnelURL, "{client_id}", clientID, 1)
 	req, err = http.NewRequestWithContext(
@@ -44,7 +48,7 @@ func (rp *Rport) CreateTunnel(
 	q.Add("check_port", checkPort)
 	req.URL.RawQuery = q.Encode()
 
-	tunResp = &TunnelResponse{}
+	tunResp = &TunnelCreatedResponse{}
 	_, err = rp.CallBaseClient(req, tunResp)
 
 	return tunResp, err

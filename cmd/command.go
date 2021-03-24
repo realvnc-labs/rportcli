@@ -35,10 +35,23 @@ var commandsCmd = &cobra.Command{
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		baseRportURL := config.Params.ReadString(config.ServerURL, config.DefaultServerURL)
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+		promptReader := &utils.PromptReader{
+			Sc:              bufio.NewScanner(os.Stdin),
+			SigChan:         sigs,
+			PasswordScanner: utils.ReadPassword,
+		}
+
+		params, err := config.LoadAllParams(cmd, getCommandRequirements(), promptReader)
+		if err != nil {
+			return err
+		}
+
+		baseRportURL := params.ReadString(config.ServerURL, config.DefaultServerURL)
 		wsURLBuilder := &api.WsCommandURLProvider{
 			TokenProvider: func() (token string, err error) {
-				token = config.Params.ReadString(config.Token, "")
+				token = params.ReadString(config.Token, "")
 				return
 			},
 			BaseURL: baseRportURL,
@@ -48,20 +61,7 @@ var commandsCmd = &cobra.Command{
 			return err
 		}
 
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		promptReader := &utils.PromptReader{
-			Sc:              bufio.NewScanner(os.Stdin),
-			SigChan:         sigs,
-			PasswordScanner: utils.ReadPassword,
-		}
-		params, err := config.CollectParams(cmd, getCommandRequirements(), promptReader)
-		if err != nil {
-			return err
-		}
-
-		rportAPI := buildRport()
+		rportAPI := buildRport(params)
 		clientSearch := &client.Search{
 			DataProvider: rportAPI,
 			Cache:        &cache.ClientsCache{},

@@ -52,7 +52,7 @@ func (trm *TunnelRendererMock) RenderDelete(s output.KvProvider) error {
 	return nil
 }
 
-func (trm *TunnelRendererMock) RenderTunnel(t *models.Tunnel) error {
+func (trm *TunnelRendererMock) RenderTunnel(t output.KvProvider) error {
 	jsonBytes, err := json.Marshal(t)
 	if err != nil {
 		return err
@@ -248,15 +248,16 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID:  "334",
-		Local:     "lohost1:3300",
-		Remote:    "rhost2:3344",
-		Scheme:    "ssh",
-		CheckPort: "1",
+		ClientID:         "334",
+		Local:            "lohost1:3300",
+		Remote:           "rhost2:3344",
+		Scheme:           "ssh",
+		CheckPort:        "1",
+		config.ServerURL: "https://localhost.com:34",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"id":"123","client_id":"","client_name":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6"}`, buf.String())
+	assert.Equal(t, `{"id":"123","client_id":"","client_name":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6","usage":"ssh -p 3300 localhost.com -l ${USER}"}`, buf.String())
 }
 
 func TestTunnelCreateWithClientName(t *testing.T) {
@@ -304,16 +305,17 @@ func TestTunnelCreateWithClientName(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID:       "",
-		ClientNameFlag: "some client 444",
-		Local:          "lohost2:3301",
-		Remote:         "rhost4:3345",
-		Scheme:         "ssh",
-		CheckPort:      "1",
+		ClientID:         "",
+		ClientNameFlag:   "some client 444",
+		Local:            "lohost2:3301",
+		Remote:           "rhost4:3345",
+		Scheme:           "ssh",
+		CheckPort:        "1",
+		config.ServerURL: "http://11.11.11.11:33",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"id":"444","client_id":"","client_name":"","lhost":"lohost2","lport":"3301","rhost":"rhost4","rport":"3345","lport_random":true,"scheme":"ssh","acl":"3.4.5.7"}`, buf.String())
+	assert.Equal(t, `{"id":"444","client_id":"","client_name":"","lhost":"lohost2","lport":"3301","rhost":"rhost4","rport":"3345","lport_random":true,"scheme":"ssh","acl":"3.4.5.7","usage":"ssh -p 3301 11.11.11.11 -l ${USER}"}`, buf.String())
 }
 
 func TestInvalidInputForTunnelCreate(t *testing.T) {
@@ -401,15 +403,16 @@ func TestTunnelCreateWithSchemeDiscovery(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID: "32312",
-		Local:    "lohost33:3301",
-		Remote:   "rhost5:22",
+		ClientID:         "32312",
+		Local:            "lohost33:3301",
+		Remote:           "rhost5:22",
+		config.ServerURL: "http://ya.ru",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
-		`{"id":"444","client_id":"32312","client_name":"","lhost":"lohost33","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}`,
+		`{"id":"444","client_id":"32312","client_name":"","lhost":"lohost33","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh ya.ru -l ${USER}"}`,
 		buf.String(),
 	)
 }
@@ -418,7 +421,7 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/api/v1/clients/1313/tunnels?acl=3.4.5.9&check_port=&local=lohost44%3A3302&remote=22&scheme=ssh", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(api.TunnelResponse{Data: &models.Tunnel{
+		e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
 			ID:       "777",
 			Lhost:    "lohost44",
 			ClientID: "1313",
@@ -447,15 +450,16 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID: "1313",
-		Local:    "lohost44:3302",
-		Scheme:   "ssh",
+		ClientID:         "1313",
+		Local:            "lohost44:3302",
+		Scheme:           "ssh",
+		config.ServerURL: "http://some.com",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
-		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}`,
+		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh some.com -l ${USER}"}`,
 		buf.String(),
 	)
 }

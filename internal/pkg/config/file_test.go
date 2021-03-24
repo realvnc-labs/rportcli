@@ -6,6 +6,8 @@ import (
 	"os"
 	"testing"
 
+	options "github.com/breathbath/go_utils/v2/pkg/config"
+
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
@@ -66,7 +68,7 @@ func TestLoadConfigFromFile(t *testing.T) {
 		}
 	}()
 
-	cfg, err := LoadConfig()
+	cfg, err := LoadParamsFromFileAndEnv()
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -115,7 +117,7 @@ func TestLoadConfigFromEnvOrFile(t *testing.T) {
 		}
 	}()
 
-	cfg, err := LoadConfig()
+	cfg, err := LoadParamsFromFileAndEnv()
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -140,21 +142,23 @@ func TestLoadConfigFromFileError(t *testing.T) {
 		}
 	}()
 
-	_, err = LoadConfig()
+	_, err = LoadParamsFromFileAndEnv()
 	assert.NoError(t, err)
 }
 
-func TestGetDefaultConfig(t *testing.T) {
-	config := GetDefaultConfig()
-	assert.Equal(t, DefaultServerURL, config.ReadString(ServerURL, ""))
-	assert.Equal(t, "", config.ReadString(Login, ""))
-	assert.Equal(t, "", config.ReadString(Password, ""))
-}
-
 func TestWriteConfig(t *testing.T) {
-	config := GetDefaultConfig()
-
 	err := os.Setenv(PathForConfigEnvVar, "configToCheckAfter.json")
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	params := &options.ParameterBag{
+		BaseValuesProvider: options.NewMapValuesProvider(map[string]interface{}{
+			ServerURL: "http://localhost:3000",
+			Token:     "123",
+		}),
+	}
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -167,7 +171,7 @@ func TestWriteConfig(t *testing.T) {
 		}
 	}()
 
-	err = WriteConfig(config)
+	err = WriteConfig(params)
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -185,5 +189,5 @@ func TestWriteConfig(t *testing.T) {
 	if err != nil {
 		return
 	}
-	assert.Equal(t, `{"server_url":"http://localhost:3000","token":""}`+"\n", string(fileContents))
+	assert.Equal(t, `{"server_url":"http://localhost:3000","token":"123"}`+"\n", string(fileContents))
 }

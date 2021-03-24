@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
@@ -30,7 +32,11 @@ var clientsListCmd = &cobra.Command{
 	Short: "list all connected and disconnected rport clients",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		rportAPI := buildRport()
+		params, err := config.LoadParamsFromFileAndEnv()
+		if err != nil {
+			return err
+		}
+		rportAPI := buildRport(params)
 		cr := &output.ClientRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,
 			Writer:             os.Stdout,
@@ -62,7 +68,11 @@ var clientCmd = &cobra.Command{
 			clientID = args[0]
 		}
 
-		rportAPI := buildRport()
+		params, err := config.LoadParamsFromFileAndEnv()
+		if err != nil {
+			return err
+		}
+		rportAPI := buildRport(params)
 
 		cr := &output.ClientRenderer{
 			ColCountCalculator: utils.CalcTerminalColumnsCount,

@@ -3,7 +3,7 @@ module github.com/cloudradar-monitoring/rportcli
 go 1.15
 
 require (
-	github.com/breathbath/go_utils/v2 v2.0.1-0.20210322192155-ff9e74d04771
+	github.com/breathbath/go_utils/v2 v2.0.1
 	github.com/fatih/color v1.10.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/magiconair/properties v1.8.4

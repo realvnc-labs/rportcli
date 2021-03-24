@@ -41,7 +41,7 @@ func (tr *TunnelRenderer) renderTunnelsInHumanFormat(tunnels []*models.Tunnel) e
 	return RenderTable(tr.Writer, &models.Tunnel{}, rowProviders, tr.ColCountCalculator)
 }
 
-func (tr *TunnelRenderer) RenderTunnel(t *models.Tunnel) error {
+func (tr *TunnelRenderer) RenderTunnel(t KvProvider) error {
 	return RenderByFormat(
 		tr.Format,
 		tr.Writer,
@@ -52,8 +52,8 @@ func (tr *TunnelRenderer) RenderTunnel(t *models.Tunnel) error {
 	)
 }
 
-func (tr *TunnelRenderer) renderTunnelInHumanFormat(t *models.Tunnel) error {
-	if t == nil {
+func (tr *TunnelRenderer) renderTunnelInHumanFormat(tunnelCreated KvProvider) error {
+	if tunnelCreated == nil {
 		return nil
 	}
 
@@ -62,7 +62,7 @@ func (tr *TunnelRenderer) renderTunnelInHumanFormat(t *models.Tunnel) error {
 		return err
 	}
 
-	RenderKeyValues(tr.Writer, t)
+	RenderKeyValues(tr.Writer, tunnelCreated)
 
 	return nil
 }

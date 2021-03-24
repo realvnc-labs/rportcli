@@ -121,6 +121,7 @@ func RenderHeader(rw io.Writer, header string) error {
 func RenderKeyValues(rw io.Writer, kvP KvProvider) {
 	tableClient := buildTable(rw)
 	tableClient.SetHeader([]string{"KEY", "VALUE"})
+	tableClient.SetAutoWrapText(false)
 
 	for _, kv := range kvP.KeyValues() {
 		tableClient.Append([]string{kv.Key + ":", kv.Value})

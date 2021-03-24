@@ -84,7 +84,7 @@ func TestCollectParams(t *testing.T) {
 	cmd := &cobra.Command{}
 	DefineCommandInputs(cmd, reqs)
 
-	params, err := CollectParams(cmd, reqs, prm)
+	params, err := CollectParamsFromCommandAndPrompt(cmd, reqs, prm)
 	assert.NoError(t, err)
 	if err != nil {
 		return

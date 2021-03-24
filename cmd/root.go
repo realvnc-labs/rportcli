@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	options "github.com/breathbath/go_utils/v2/pkg/config"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/applog"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
@@ -77,23 +79,23 @@ func Execute() error {
 	return nil
 }
 
-func buildRport() *api.Rport {
+func buildRport(params *options.ParameterBag) *api.Rport {
 	auth := &utils.FallbackAuth{
 		PrimaryAuth: &utils.StorageBasicAuth{
 			AuthProvider: func() (login, pass string, err error) {
-				login = config.Params.ReadString(config.Login, "")
-				pass = config.Params.ReadString(config.Password, "")
+				login = params.ReadString(config.Login, "")
+				pass = params.ReadString(config.Password, "")
 				return
 			},
 		},
 		FallbackAuth: &utils.BearerAuth{
 			TokenProvider: func() (string, error) {
-				return config.Params.ReadString(config.Token, ""), nil
+				return params.ReadString(config.Token, ""), nil
 			},
 		},
 	}
 
-	rportAPI := api.New(config.Params.ReadString(config.ServerURL, config.DefaultServerURL), auth)
+	rportAPI := api.New(params.ReadString(config.ServerURL, config.DefaultServerURL), auth)
 
 	return rportAPI
 }

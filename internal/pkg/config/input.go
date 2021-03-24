@@ -21,7 +21,26 @@ func DefineCommandInputs(c *cobra.Command, reqs []ParameterRequirement) {
 	}
 }
 
-func CollectParams(
+func LoadAllParams(
+	c *cobra.Command,
+	reqs []ParameterRequirement,
+	promptReader PromptReader,
+) (params *options.ParameterBag, err error) {
+	configFromFile, err := LoadParamsFromFileAndEnv()
+	if err != nil {
+		return params, err
+	}
+	configFromCommandAndPrompt, err := CollectParamsFromCommandAndPrompt(c, reqs, promptReader)
+	if err != nil {
+		return params, err
+	}
+
+	configFromFile.MergeParameterBag(configFromCommandAndPrompt)
+
+	return configFromFile, nil
+}
+
+func CollectParamsFromCommandAndPrompt(
 	c *cobra.Command,
 	reqs []ParameterRequirement,
 	promptReader PromptReader,

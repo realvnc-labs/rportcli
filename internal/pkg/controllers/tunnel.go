@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"strconv"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
@@ -30,7 +33,7 @@ const (
 
 type TunnelRenderer interface {
 	RenderTunnels(tunnels []*models.Tunnel) error
-	RenderTunnel(t *models.Tunnel) error
+	RenderTunnel(t output.KvProvider) error
 	RenderDelete(s output.KvProvider) error
 }
 
@@ -45,8 +48,8 @@ type TunnelController struct {
 	ClientSearch   ClientSearch
 }
 
-func (cc *TunnelController) Tunnels(ctx context.Context) error {
-	clResp, err := cc.Rport.Clients(ctx)
+func (tc *TunnelController) Tunnels(ctx context.Context) error {
+	clResp, err := tc.Rport.Clients(ctx)
 	if err != nil {
 		return err
 	}
@@ -60,16 +63,16 @@ func (cc *TunnelController) Tunnels(ctx context.Context) error {
 		}
 	}
 
-	return cc.TunnelRenderer.RenderTunnels(tunnels)
+	return tc.TunnelRenderer.RenderTunnels(tunnels)
 }
 
-func (cc *TunnelController) Delete(ctx context.Context, clientID, clientName, tunnelID string) error {
+func (tc *TunnelController) Delete(ctx context.Context, clientID, clientName, tunnelID string) error {
 	if clientID == "" && clientName == "" {
 		return errors.New("no client id nor name provided")
 	}
 
 	if clientID == "" {
-		clients, err := cc.ClientSearch.Search(ctx, clientName)
+		clients, err := tc.ClientSearch.Search(ctx, clientName)
 		if err != nil {
 			return err
 		}
@@ -84,12 +87,12 @@ func (cc *TunnelController) Delete(ctx context.Context, clientID, clientName, tu
 		clientID = clients[0].ID
 	}
 
-	err := cc.Rport.DeleteTunnel(ctx, clientID, tunnelID)
+	err := tc.Rport.DeleteTunnel(ctx, clientID, tunnelID)
 	if err != nil {
 		return err
 	}
 
-	err = cc.TunnelRenderer.RenderDelete(&models.OperationStatus{Status: "OK"})
+	err = tc.TunnelRenderer.RenderDelete(&models.OperationStatus{Status: "OK"})
 	if err != nil {
 		return err
 	}
@@ -97,7 +100,8 @@ func (cc *TunnelController) Delete(ctx context.Context, clientID, clientName, tu
 	return nil
 }
 
-func (cc *TunnelController) Create(ctx context.Context, params *options.ParameterBag) error {
+func (tc *TunnelController) Create(ctx context.Context, params *options.ParameterBag) error {
+	var err error
 	clientID := params.ReadString(ClientID, "")
 	clientName := params.ReadString(ClientNameFlag, "")
 	if clientID == "" && clientName == "" {
@@ -105,19 +109,10 @@ func (cc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	}
 
 	if clientID == "" {
-		clients, err := cc.ClientSearch.Search(ctx, clientName)
+		clientID, err = tc.findClientID(ctx, clientName)
 		if err != nil {
 			return err
 		}
-
-		if len(clients) == 0 {
-			return fmt.Errorf("unknown client '%s'", clientName)
-		}
-
-		if len(clients) != 1 {
-			return fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", clientName)
-		}
-		clientID = clients[0].ID
 	}
 
 	local := params.ReadString(Local, "")
@@ -135,8 +130,8 @@ func (cc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	}
 
 	acl := params.ReadString(ACL, "")
-	if (acl == "" || acl == DefaultACL) && cc.IPProvider != nil {
-		ip, e := cc.IPProvider.GetIP(context.Background())
+	if (acl == "" || acl == DefaultACL) && tc.IPProvider != nil {
+		ip, e := tc.IPProvider.GetIP(context.Background())
 		if e != nil {
 			logrus.Errorf("failed to fetch IP: %v", e)
 		} else {
@@ -145,10 +140,48 @@ func (cc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	}
 
 	checkPort := params.ReadString(CheckPort, "")
-	tun, err := cc.Rport.CreateTunnel(ctx, clientID, local, remote, scheme, acl, checkPort)
+	tunResp, err := tc.Rport.CreateTunnel(ctx, clientID, local, remote, scheme, acl, checkPort)
 	if err != nil {
 		return err
 	}
+	tunnelCreated := tunResp.Data
+	tunnelCreated.Usage = tc.generateUsage(tunnelCreated, params)
 
-	return cc.TunnelRenderer.RenderTunnel(tun.Data)
+	return tc.TunnelRenderer.RenderTunnel(tunnelCreated)
+}
+
+func (tc *TunnelController) generateUsage(tunnelCreated *models.TunnelCreated, params *options.ParameterBag) string {
+	rportHost := params.ReadString(config.ServerURL, "")
+	if rportHost == "" {
+		return ""
+	}
+
+	rportURL, err := url.Parse(rportHost)
+	if err != nil {
+		logrus.Error(err)
+	} else {
+		rportHost = rportURL.Hostname()
+	}
+
+	if tunnelCreated.Lport != "" {
+		return fmt.Sprintf("ssh -p %s %s -l ${USER}", tunnelCreated.Lport, rportHost)
+	}
+
+	return fmt.Sprintf("ssh %s -l ${USER}", rportHost)
+}
+
+func (tc *TunnelController) findClientID(ctx context.Context, clientName string) (string, error) {
+	clients, err := tc.ClientSearch.Search(ctx, clientName)
+	if err != nil {
+		return "", err
+	}
+
+	if len(clients) == 0 {
+		return "", fmt.Errorf("unknown client '%s'", clientName)
+	}
+
+	if len(clients) != 1 {
+		return "", fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", clientName)
+	}
+	return clients[0].ID, nil
 }

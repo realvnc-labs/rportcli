@@ -109,23 +109,24 @@ func TestRenderTunnel(t *testing.T) {
 		{
 			Format: FormatHuman,
 			ExpectedOutput: `Tunnel
-KEY                VALUE   
-ID:                id22    
-CLIENT_ID:                 
-CLIENT_NAME:               
-LOCAL_HOST:        lhost   
-LOCAL_PORT:        123     
-REMOTE_HOST:       rhost   
-REMOTE_PORT:       124     
-LOCAL_PORT RANDOM: false   
-SCHEME:            ssh     
-ACL:               0.0.0.0 
+KEY                VALUE                           
+ID:                id22                            
+CLIENT_ID:                                         
+CLIENT_NAME:                                       
+LOCAL_HOST:        lhost                           
+LOCAL_PORT:        123                             
+REMOTE_HOST:       rhost                           
+REMOTE_PORT:       124                             
+LOCAL_PORT RANDOM: false                           
+SCHEME:            ssh                             
+ACL:               0.0.0.0                         
+USAGE:             ssh -p 123 123.22.22.33 -l root 
 `,
 			ColCountToGive: 150,
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"id":"id22","client_id":"","client_name":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0"}
+			ExpectedOutput: `{"id":"id22","client_id":"","client_name":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0","usage":"ssh -p 123 123.22.22.33 -l root"}
 `,
 			ColCountToGive: 10,
 		},
@@ -141,7 +142,8 @@ ACL:               0.0.0.0
   "rport": "124",
   "lport_random": false,
   "scheme": "ssh",
-  "acl": "0.0.0.0"
+  "acl": "0.0.0.0",
+  "usage": "ssh -p 123 123.22.22.33 -l root"
 }
 `,
 			ColCountToGive: 10,
@@ -158,11 +160,12 @@ remote_port: "124"
 local_port_random: false
 scheme: ssh
 acl: 0.0.0.0
+usage: ssh -p 123 123.22.22.33 -l root
 `,
 			ColCountToGive: 10,
 		},
 	}
-	tunnel := &models.Tunnel{
+	tunnel := &models.TunnelCreated{
 		ID:          "id22",
 		Lhost:       "lhost",
 		Lport:       "123",
@@ -171,6 +174,7 @@ acl: 0.0.0.0
 		LportRandom: false,
 		Scheme:      "ssh",
 		ACL:         "0.0.0.0",
+		Usage:       "ssh -p 123 123.22.22.33 -l root",
 	}
 
 	for _, testCase := range testCases {
