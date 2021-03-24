@@ -23,12 +23,19 @@ import (
 )
 
 func init() {
-	config.DefineCommandInputs(commandsCmd, getCommandRequirements())
-	rootCmd.AddCommand(commandsCmd)
+	config.DefineCommandInputs(executeCmd, getCommandRequirements())
+	commandCmd.AddCommand(executeCmd)
+	rootCmd.AddCommand(commandCmd)
 }
 
-var commandsCmd = &cobra.Command{
+var commandCmd = &cobra.Command{
 	Use:   "command",
+	Short: "command management",
+	Args:  cobra.ArbitraryArgs,
+}
+
+var executeCmd = &cobra.Command{
+	Use:   "execute",
 	Short: "executes remote command on rport client",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
