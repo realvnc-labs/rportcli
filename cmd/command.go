@@ -97,7 +97,7 @@ func getCommandRequirements() []config.ParameterRequirement {
 			Field:       controllers.ClientIDs,
 			Help:        "Enter comma separated client IDs",
 			Validate:    config.RequiredValidate,
-			Description: "Comma separated client ids for which the command should be executed",
+			Description: "[required] Comma separated client ids for which the command should be executed",
 			ShortName:   "d",
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
 				return providedParams.ReadString(controllers.ClientNameFlag, "") == ""
@@ -113,7 +113,7 @@ func getCommandRequirements() []config.ParameterRequirement {
 			Field:       controllers.Command,
 			Help:        "Enter command",
 			Validate:    config.RequiredValidate,
-			Description: "Command which should be executed on the clients",
+			Description: "[required] Command which should be executed on the clients",
 			ShortName:   "c",
 			IsRequired:  true,
 		},
