@@ -50,7 +50,7 @@ var executeCmd = &cobra.Command{
 			PasswordScanner: utils.ReadPassword,
 		}
 
-		params, err := config.LoadAllParams(cmd, getCommandRequirements(), promptReader)
+		params, err := config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, getCommandRequirements(), promptReader)
 		if err != nil {
 			return err
 		}

@@ -81,13 +81,10 @@ func CheckRequirementsError(params *options.ParameterBag, requirementsToCheck []
 	return errors.New(strings.Join(errorStrs, "\n"))
 }
 
-// FromValues creates a parameter bag from provided values
-func FromValues(inputParams map[string]string) (params *options.ParameterBag) {
+func FromValues(inputParams map[string]string) (vp *options.ParameterBag) {
 	inputParamsI := map[string]interface{}{}
 	for k, v := range inputParams {
 		inputParamsI[k] = v
 	}
-	vp := options.NewMapValuesProvider(inputParamsI)
-
-	return &options.ParameterBag{BaseValuesProvider: vp}
+	return options.New(options.NewMapValuesProvider(inputParamsI))
 }

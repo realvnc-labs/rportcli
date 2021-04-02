@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -68,7 +69,7 @@ func TestLoadConfigFromFile(t *testing.T) {
 		}
 	}()
 
-	cfg, err := LoadParamsFromFileAndEnv()
+	cfg := LoadParamsFromFileAndEnv()
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -117,11 +118,7 @@ func TestLoadConfigFromEnvOrFile(t *testing.T) {
 		}
 	}()
 
-	cfg, err := LoadParamsFromFileAndEnv()
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
+	cfg := LoadParamsFromFileAndEnv()
 
 	assert.Equal(t, "somepass", cfg.ReadString(Password, ""))
 	assert.Equal(t, "log1", cfg.ReadString(Login, ""))
@@ -142,8 +139,8 @@ func TestLoadConfigFromFileError(t *testing.T) {
 		}
 	}()
 
-	_, err = LoadParamsFromFileAndEnv()
-	assert.NoError(t, err)
+	params := LoadParamsFromFileAndEnv()
+	assert.Equal(t, "", params.ReadString(Token, ""))
 }
 
 func TestWriteConfig(t *testing.T) {
@@ -191,3 +188,98 @@ func TestWriteConfig(t *testing.T) {
 	}
 	assert.Equal(t, `{"server":"http://localhost:3000","token":"123"}`+"\n", string(fileContents))
 }
+
+
+func TestCommandPopulation(t *testing.T) {
+	reqs := []ParameterRequirement{
+		{
+			Field:       "color",
+			ShortName:   "c",
+			Help:        "shows color",
+			Default:     "red",
+			Description: "shows color me",
+			IsSecure:    false,
+			IsRequired:  false,
+			Type:        StringRequirementType,
+		},
+		{
+			Field:       "verbose",
+			ShortName:   "v",
+			Help:        "shows verbose output",
+			Default:     "1",
+			Description: "shows verbose output",
+			IsSecure:    false,
+			IsRequired:  false,
+			Type:        BoolRequirementType,
+		},
+	}
+
+	cmd := &cobra.Command{}
+	DefineCommandInputs(cmd, reqs)
+
+	_, err1 := cmd.Flags().GetBool("verbose")
+	assert.NoError(t, err1)
+
+	_, err2 := cmd.Flags().GetString("color")
+	assert.NoError(t, err2)
+}
+
+func TestCollectParams(t *testing.T) {
+	prm := &PromptReaderMock{
+		Inputs: []string{},
+		ReadOutputs: []string{
+			"127.1.1.1",
+		},
+		PasswordReadOutputs: []string{
+			"123",
+		},
+	}
+
+	reqs := []ParameterRequirement{
+		{
+			Field:      "host",
+			ShortName:  "h",
+			IsSecure:   false,
+			IsRequired: true,
+			Type:       StringRequirementType,
+			Validate:   RequiredValidate,
+		},
+		{
+			Field:      "https",
+			ShortName:  "s",
+			Help:       "uses https protocol",
+			Default:    "0",
+			IsSecure:   false,
+			IsRequired: false,
+			Type:       BoolRequirementType,
+		},
+		{
+			Field:      "password",
+			ShortName:  "p",
+			Help:       "provides password",
+			IsSecure:   true,
+			IsRequired: true,
+			Type:       StringRequirementType,
+			Validate:   RequiredValidate,
+		},
+	}
+
+	cmd := &cobra.Command{}
+	DefineCommandInputs(cmd, reqs)
+
+	params, err := CollectParamsFromCommandAndPrompt(cmd, reqs, prm)
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	actualHost, _ := params.Read("host")
+	assert.Equal(t, "127.1.1.1", actualHost)
+
+	actualHttpsParam, _ := params.Read("https")
+	assert.Equal(t, "false", actualHttpsParam)
+
+	actualPassword, _ := params.Read("password")
+	assert.Equal(t, "123", actualPassword)
+}
+

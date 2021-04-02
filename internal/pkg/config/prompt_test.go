@@ -69,7 +69,7 @@ func TestPromptRequiredValues(t *testing.T) {
 		},
 	}
 
-	actualKV := map[string]string{}
+	actualKV := map[string]interface{}{}
 	err := PromptRequiredValues(requirements, actualKV, readerMock)
 	assert.NoError(t, err)
 	if err != nil {
@@ -78,7 +78,7 @@ func TestPromptRequiredValues(t *testing.T) {
 
 	assert.Equal(
 		t,
-		map[string]string{
+		map[string]interface{}{
 			"one":   "server",
 			"three": "pass1",
 			"two":   "log1",
@@ -102,7 +102,7 @@ func TestPromptPassword(t *testing.T) {
 		},
 	}
 
-	actualKV := map[string]string{}
+	actualKV := map[string]interface{}{}
 	err := PromptRequiredValues(requirements, actualKV, readerMock)
 	assert.NoError(t, err)
 	if err != nil {
@@ -111,7 +111,7 @@ func TestPromptPassword(t *testing.T) {
 
 	assert.Equal(
 		t,
-		map[string]string{
+		map[string]interface{}{
 			"password": "123",
 		},
 		actualKV,

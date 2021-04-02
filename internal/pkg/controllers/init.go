@@ -36,14 +36,14 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 		return fmt.Errorf("empty token received from rport")
 	}
 
-	paramsToSave := config.FromValues(map[string]string{
+	valuesProvider := options.NewMapValuesProvider(map[string]interface{}{
 		config.ServerURL: params.ReadString(config.ServerURL, ""),
 		config.Token:     loginResp.Data.Token,
 	})
 
-	err = ic.ConfigWriter(paramsToSave)
+	err = ic.ConfigWriter(options.New(valuesProvider))
 	if err != nil {
-		return err
+	return err
 	}
 
 	return nil

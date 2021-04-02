@@ -17,10 +17,9 @@ type PromptReader interface {
 	Output(text string)
 }
 
-// PromptRequiredValues will ask user for the list of required values
 func PromptRequiredValues(
 	missedRequirements []ParameterRequirement,
-	targetKV map[string]string,
+	targetKV map[string]interface{},
 	promptReader PromptReader,
 ) error {
 	var err error
