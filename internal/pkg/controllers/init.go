@@ -43,7 +43,7 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 
 	err = ic.ConfigWriter(options.New(valuesProvider))
 	if err != nil {
-	return err
+		return err
 	}
 
 	return nil

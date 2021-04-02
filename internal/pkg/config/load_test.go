@@ -2,10 +2,11 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/spf13/cobra"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
@@ -189,7 +190,6 @@ func TestWriteConfig(t *testing.T) {
 	assert.Equal(t, `{"server":"http://localhost:3000","token":"123"}`+"\n", string(fileContents))
 }
 
-
 func TestCommandPopulation(t *testing.T) {
 	reqs := []ParameterRequirement{
 		{
@@ -276,10 +276,9 @@ func TestCollectParams(t *testing.T) {
 	actualHost, _ := params.Read("host")
 	assert.Equal(t, "127.1.1.1", actualHost)
 
-	actualHttpsParam, _ := params.Read("https")
-	assert.Equal(t, "false", actualHttpsParam)
+	actualHTTPSParam, _ := params.Read("https")
+	assert.Equal(t, "false", actualHTTPSParam)
 
 	actualPassword, _ := params.Read("password")
 	assert.Equal(t, "123", actualPassword)
 }
-

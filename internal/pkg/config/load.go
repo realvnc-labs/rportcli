@@ -3,11 +3,12 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/breathbath/go_utils/v2/pkg/fs"
 
@@ -51,7 +52,7 @@ func CreateEnvValuesProvider() options.ValuesProvider {
 	}
 
 	envMapValues := map[string]interface{}{}
-	for paramName,envVarName := range envsToRead {
+	for paramName, envVarName := range envsToRead {
 		envVarValue := env.ReadEnv(envVarName, "")
 		if envVarValue != "" {
 			envMapValues[paramName] = envVarValue
@@ -129,7 +130,6 @@ func getConfigLocation() (configPath string) {
 	configPath = filepath.Join(pathParts...)
 	return
 }
-
 
 func DefineCommandInputs(c *cobra.Command, reqs []ParameterRequirement) {
 	for _, req := range reqs {

@@ -64,6 +64,7 @@ var tunnelListCmd = &cobra.Command{
 			TunnelRenderer: tr,
 			IPProvider:     rportAPI,
 			ClientSearch:   clientSearch,
+			SSHFunc:        utils.RunSSH,
 		}
 
 		return tunnelController.Tunnels(context.Background())
@@ -166,6 +167,13 @@ If local is not specified, a random server port will be assigned automatically`,
 			Type:        config.BoolRequirementType,
 			Default:     "0",
 		},
+		{
+			Field: controllers.LaunchSSH,
+			Description: `Start the ssh client after the tunnel is established and close tunnel on ssh exit. 
+Any parameter passed are append to the ssh command. i.e. -b "-l root"`,
+			ShortName: "b",
+			Type:      config.StringRequirementType,
+		},
 	}
 }
 
@@ -217,6 +225,7 @@ func createTunnelController(params *options.ParameterBag) *controllers.TunnelCon
 		TunnelRenderer: tr,
 		IPProvider:     rportAPI,
 		ClientSearch:   clientSearch,
+		SSHFunc:        utils.RunSSH,
 	}
 }
 

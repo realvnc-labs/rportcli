@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
@@ -28,6 +29,7 @@ const (
 	Scheme     = "scheme"
 	ACL        = "acl"
 	CheckPort  = "checkp"
+	LaunchSSH  = "launch-ssh"
 	DefaultACL = "<<YOU CURRENT PUBLIC IP>>"
 )
 
@@ -46,6 +48,7 @@ type TunnelController struct {
 	TunnelRenderer TunnelRenderer
 	IPProvider     IPProvider
 	ClientSearch   ClientSearch
+	SSHFunc        func(sshParams []string) error
 }
 
 func (tc *TunnelController) Tunnels(ctx context.Context) error {
@@ -151,27 +154,103 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	tunnelCreated := tunResp.Data
 	tunnelCreated.Usage = tc.generateUsage(tunnelCreated, params)
 
-	return tc.TunnelRenderer.RenderTunnel(tunnelCreated)
+	err = tc.TunnelRenderer.RenderTunnel(tunnelCreated)
+	if err != nil {
+		return err
+	}
+
+	shouldLaunchSSH := params.ReadString(LaunchSSH, "")
+	if shouldLaunchSSH == "" {
+		return nil
+	}
+
+	return tc.startSSHFlow(ctx, tunnelCreated, params, clientID)
+}
+
+func (tc *TunnelController) startSSHFlow(
+	ctx context.Context,
+	tunnelCreated *models.TunnelCreated,
+	params *options.ParameterBag,
+	clientID string,
+) error {
+	sshParamsFlat := params.ReadString(LaunchSSH, "")
+	logrus.Debugf("ssh arguments are provided: '%s', will start an ssh session", sshParamsFlat)
+	port, host, err := tc.getSSHPortAndHost(tunnelCreated, params)
+	if err != nil {
+		return fmt.Errorf("failed to parse rport URL '%s': %v", params.ReadString(config.ServerURL, ""), err)
+	}
+	if host == "" {
+		return errors.New("failed to retrieve rport URL")
+	}
+	sshStr := host
+
+	if port != "" && !strings.Contains(sshParamsFlat, "-p") {
+		sshStr += " -p " + port
+	}
+	sshStr += " " + strings.TrimSpace(sshParamsFlat)
+	sshParams := strings.Split(sshStr, " ")
+
+	logrus.Debugf("will execute ssh %s", sshStr)
+	err = tc.SSHFunc(sshParams)
+	if err != nil {
+		return err
+	}
+
+	logrus.Debug("ssh execution finished, will delete the tunnel")
+
+	deleteTunnelParamsMap := map[string]interface{}{
+		ClientID: clientID,
+		TunnelID: tunnelCreated.ID,
+	}
+	deleteTunnelParams := options.New(options.NewMapValuesProvider(deleteTunnelParamsMap))
+	err = tc.TunnelRenderer.RenderDelete(&models.OperationStatus{Status: "Deletion Status"})
+	if err != nil {
+		return err
+	}
+
+	return tc.Delete(ctx, deleteTunnelParams)
 }
 
 func (tc *TunnelController) generateUsage(tunnelCreated *models.TunnelCreated, params *options.ParameterBag) string {
-	rportHost := params.ReadString(config.ServerURL, "")
-	if rportHost == "" {
+	port, host, err := tc.getSSHPortAndHost(tunnelCreated, params)
+	if err != nil {
+		logrus.Error(err)
 		return ""
 	}
 
-	rportURL, err := url.Parse(rportHost)
-	if err != nil {
-		logrus.Error(err)
-	} else {
-		rportHost = rportURL.Hostname()
+	if host == "" {
+		return ""
 	}
+
+	if port != "" {
+		return fmt.Sprintf("ssh -p %s %s -l ${USER}", port, host)
+	}
+
+	return fmt.Sprintf("ssh %s -l ${USER}", host)
+}
+
+func (tc *TunnelController) getSSHPortAndHost(
+	tunnelCreated *models.TunnelCreated,
+	params *options.ParameterBag,
+) (port, host string, err error) {
+	rportHost := params.ReadString(config.ServerURL, "")
+	if rportHost == "" {
+		return
+	}
+
+	var rportURL *url.URL
+	rportURL, err = url.Parse(rportHost)
+	if err != nil {
+		return
+	}
+
+	host = rportURL.Hostname()
 
 	if tunnelCreated.Lport != "" {
-		return fmt.Sprintf("ssh -p %s %s -l ${USER}", tunnelCreated.Lport, rportHost)
+		port = tunnelCreated.Lport
 	}
 
-	return fmt.Sprintf("ssh %s -l ${USER}", rportHost)
+	return
 }
 
 func (tc *TunnelController) findClientID(ctx context.Context, clientName string, params *options.ParameterBag) (string, error) {
