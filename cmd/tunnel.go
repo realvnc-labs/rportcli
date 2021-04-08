@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/rdp"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cache"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
 
@@ -174,6 +176,39 @@ Any parameter passed are append to the ssh command. i.e. -b "-l root"`,
 			ShortName: "b",
 			Type:      config.StringRequirementType,
 		},
+		{
+			Field: controllers.LaunchRDP,
+			Description: `Start the default RDP client after the tunnel is established. 
+Optionally pass the rdp-width and rdp-height params of the session.`,
+			ShortName: "d",
+			Type:      config.BoolRequirementType,
+			Default:   "0",
+		},
+		{
+			Field:       controllers.RDPWidth,
+			Description: `RDP window width, 1024 is the default`,
+			ShortName:   "w",
+			Type:        config.StringRequirementType,
+			Default:     "1024",
+		},
+		{
+			Field:       controllers.RDPHeight,
+			Description: `RDP window height, 768 is the default`,
+			ShortName:   "i",
+			Type:        config.StringRequirementType,
+			Default:     "768",
+		},
+		{
+			Field:       controllers.RDPUser,
+			Description: `[required] username for a RDP session`,
+			ShortName:   "u",
+			Type:        config.StringRequirementType,
+			Validate:    config.RequiredValidate,
+			Help:        "Enter a RDP user name",
+			IsEnabled: func(providedParams *options.ParameterBag) bool {
+				return IsRDPUserRequired
+			},
+		},
 	}
 }
 
@@ -220,12 +255,21 @@ func createTunnelController(params *options.ParameterBag) *controllers.TunnelCon
 		Cache:        &cache.ClientsCache{},
 	}
 
+	rdpExecutor := &rdp.Executor{
+		CommandProvider: rdp.CommandProvider,
+		StdOut:          os.Stdout,
+		Stdin:           os.Stdin,
+		StdErr:          os.Stderr,
+	}
+
 	return &controllers.TunnelController{
 		Rport:          rportAPI,
 		TunnelRenderer: tr,
 		IPProvider:     rportAPI,
 		ClientSearch:   clientSearch,
 		SSHFunc:        utils.RunSSH,
+		RDPWriter:      rdp.WriteRdpFile,
+		RDPExecutor:    rdpExecutor,
 	}
 }
 

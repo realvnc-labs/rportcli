@@ -4,9 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+
+	io2 "github.com/breathbath/go_utils/v2/pkg/io"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/rdp"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
@@ -30,6 +37,10 @@ const (
 	ACL        = "acl"
 	CheckPort  = "checkp"
 	LaunchSSH  = "launch-ssh"
+	LaunchRDP  = "launch-rdp"
+	RDPWidth   = "rdp-width"
+	RDPHeight  = "rdp-height"
+	RDPUser    = "rdp-user"
 	DefaultACL = "<<YOU CURRENT PUBLIC IP>>"
 )
 
@@ -49,6 +60,8 @@ type TunnelController struct {
 	IPProvider     IPProvider
 	ClientSearch   ClientSearch
 	SSHFunc        func(sshParams []string) error
+	RDPWriter      func(fi rdp.FileInput, w io.Writer) error
+	RDPExecutor    *rdp.Executor
 }
 
 func (tc *TunnelController) Tunnels(ctx context.Context) error {
@@ -159,12 +172,15 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 		return err
 	}
 
-	shouldLaunchSSH := params.ReadString(LaunchSSH, "")
-	if shouldLaunchSSH == "" {
-		return nil
+	if params.ReadString(LaunchSSH, "") != "" {
+		return tc.startSSHFlow(ctx, tunnelCreated, params, clientID)
 	}
 
-	return tc.startSSHFlow(ctx, tunnelCreated, params, clientID)
+	if params.ReadString(LaunchRDP, "") != "" {
+		return tc.startRDPFlow(tunnelCreated, params)
+	}
+
+	return nil
 }
 
 func (tc *TunnelController) startSSHFlow(
@@ -175,7 +191,7 @@ func (tc *TunnelController) startSSHFlow(
 ) error {
 	sshParamsFlat := params.ReadString(LaunchSSH, "")
 	logrus.Debugf("ssh arguments are provided: '%s', will start an ssh session", sshParamsFlat)
-	port, host, err := tc.getSSHPortAndHost(tunnelCreated, params)
+	port, host, err := tc.extractPortAndHost(tunnelCreated, params)
 	if err != nil {
 		return fmt.Errorf("failed to parse rport URL '%s': %v", params.ReadString(config.ServerURL, ""), err)
 	}
@@ -212,7 +228,7 @@ func (tc *TunnelController) startSSHFlow(
 }
 
 func (tc *TunnelController) generateUsage(tunnelCreated *models.TunnelCreated, params *options.ParameterBag) string {
-	port, host, err := tc.getSSHPortAndHost(tunnelCreated, params)
+	port, host, err := tc.extractPortAndHost(tunnelCreated, params)
 	if err != nil {
 		logrus.Error(err)
 		return ""
@@ -229,7 +245,7 @@ func (tc *TunnelController) generateUsage(tunnelCreated *models.TunnelCreated, p
 	return fmt.Sprintf("ssh %s -l ${USER}", host)
 }
 
-func (tc *TunnelController) getSSHPortAndHost(
+func (tc *TunnelController) extractPortAndHost(
 	tunnelCreated *models.TunnelCreated,
 	params *options.ParameterBag,
 ) (port, host string, err error) {
@@ -267,4 +283,36 @@ func (tc *TunnelController) findClientID(ctx context.Context, clientName string,
 		return "", fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", clientName)
 	}
 	return clients[0].ID, nil
+}
+
+func (tc *TunnelController) startRDPFlow(
+	tunnelCreated *models.TunnelCreated,
+	params *options.ParameterBag,
+) error {
+	port, host, err := tc.extractPortAndHost(tunnelCreated, params)
+	if err != nil {
+		return err
+	}
+
+	rdpFileInput := rdp.FileInput{
+		Address:      fmt.Sprintf("%s:%s", host, port),
+		ScreenHeight: params.ReadInt(RDPHeight, 0),
+		ScreenWidth:  params.ReadInt(RDPWidth, 0),
+		UserName:     params.ReadString(RDPUser, ""),
+	}
+	file, err := ioutil.TempFile("", "rport-*.rdp")
+	if err != nil {
+		return err
+	}
+	defer io2.CloseResourceSecure("temp file", file)
+
+	logrus.Debugf("will write an rdp file %s", file.Name())
+	err = tc.RDPWriter(rdpFileInput, file)
+	if err != nil {
+		return err
+	}
+
+	rdpFileLocation := filepath.Join(os.TempDir(), file.Name())
+	logrus.Debugf("written rdp file to %s", rdpFileLocation)
+	return tc.RDPExecutor.StartRdp(rdpFileLocation)
 }

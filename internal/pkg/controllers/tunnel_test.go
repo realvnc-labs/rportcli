@@ -10,6 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/rdp"
+
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
@@ -653,4 +655,80 @@ func TestTunnelCreateWithSSHFailure(t *testing.T) {
 	})
 	err := tController.Create(context.Background(), params)
 	assert.EqualError(t, err, "ssh failure")
+}
+
+func TestTunnelCreateWithRDP(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		jsonEnc := json.NewEncoder(rw)
+		e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
+			ID:       "777",
+			Lhost:    "lohost77",
+			ClientID: "1314",
+			Lport:    "3344",
+			Scheme:   "ssh",
+		}})
+		assert.NoError(t, e)
+	}))
+	defer srv.Close()
+
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) { return "dfasf", "34123", nil },
+	}
+
+	renderBuf := bytes.Buffer{}
+	cmdOutput := bytes.Buffer{}
+
+	cl := api.New(srv.URL, apiAuth)
+
+	isRDPCalled := false
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &renderBuf},
+		IPProvider: IPProviderMock{
+			IP: "3.4.5.166",
+		},
+		ClientSearch: &ClientSearchMock{clientsToGive: []models.Client{}},
+		RDPWriter: func(fi rdp.FileInput, w io.Writer) error {
+			isRDPCalled = true
+			assert.Equal(
+				t,
+				rdp.FileInput{
+					Address:      "rport-url123.com:3344",
+					ScreenHeight: 990,
+					ScreenWidth:  1090,
+					UserName:     "Administrator",
+				},
+				fi,
+			)
+			return nil
+		},
+		RDPExecutor: &rdp.Executor{
+			CommandProvider: func(filePath string) (cmd string, args []string) {
+				assert.Contains(t, filePath, ".rdp")
+				return "echo", []string{"rdp executed"}
+			},
+			StdOut: &cmdOutput,
+		},
+	}
+
+	params := config.FromValues(map[string]string{
+		ClientID:         "1315",
+		Local:            "lohost88:3304",
+		Scheme:           "rdp",
+		config.ServerURL: "http://rport-url123.com",
+		LaunchRDP:        "1",
+		RDPUser:          "Administrator",
+		RDPWidth:         "1090",
+		RDPHeight:        "990",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		`rdp executed
+`,
+		cmdOutput.String(),
+	)
+
+	assert.True(t, isRDPCalled)
 }
