@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -300,7 +299,7 @@ func (tc *TunnelController) startRDPFlow(
 		ScreenWidth:  params.ReadInt(RDPWidth, 0),
 		UserName:     params.ReadString(RDPUser, ""),
 	}
-	file, err := ioutil.TempFile("", "rport-*.rdp")
+	file, err := ioutil.TempFile(os.TempDir(), "rport-*.rdp")
 	if err != nil {
 		return err
 	}
@@ -312,7 +311,6 @@ func (tc *TunnelController) startRDPFlow(
 		return err
 	}
 
-	rdpFileLocation := filepath.Join(os.TempDir(), file.Name())
-	logrus.Debugf("written rdp file to %s", rdpFileLocation)
-	return tc.RDPExecutor.StartRdp(rdpFileLocation)
+	logrus.Infof("written rdp file to %s", file.Name())
+	return tc.RDPExecutor.StartRdp(file.Name())
 }
