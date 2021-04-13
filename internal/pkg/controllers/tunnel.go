@@ -175,7 +175,7 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 		return tc.startSSHFlow(ctx, tunnelCreated, params, clientID)
 	}
 
-	if params.ReadString(LaunchRDP, "") != "" {
+	if params.ReadBool(LaunchRDP, false) {
 		return tc.startRDPFlow(tunnelCreated, params)
 	}
 

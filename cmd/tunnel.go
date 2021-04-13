@@ -136,7 +136,8 @@ If local is not specified, a random server port will be assigned automatically`,
 		{
 			Field: controllers.Remote,
 			Description: "[required] the ports are defined from the servers' perspective. " +
-				"'Remote' refers to the ports and interfaces of the client., e.g. '3389'",
+				"'Remote' refers to the ports and interfaces of the client., e.g. '3389'" +
+				"It's required unless -s uses a well-known scheme (SSH, RDP, VNC, HTTP, HTTPS).",
 			ShortName:  "r",
 			IsRequired: true,
 			Validate:   config.RequiredValidate,
