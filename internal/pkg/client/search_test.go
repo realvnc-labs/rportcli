@@ -83,6 +83,19 @@ func TestFindClientsFromDataProvider(t *testing.T) {
 		},
 	})
 	assert.Equal(t, clientsList, cacheMock.clientsToStore)
+
+	foundCls2, err2 := search.Search(context.Background(), "my tiny client,$100 usd client", &options.ParameterBag{})
+	assert.NoError(t, err2)
+	assert.Equal(t, foundCls2, []models.Client{
+		{
+			ID:   "1",
+			Name: "my tiny client",
+		},
+		{
+			ID:   "3",
+			Name: "$100 usd client",
+		},
+	})
 }
 
 func TestFindClientsFromCache(t *testing.T) {
