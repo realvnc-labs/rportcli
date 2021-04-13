@@ -184,7 +184,6 @@ func (icm *CommandsController) processRawMessage(msg []byte) error {
 			e := fmt.Errorf("cannot recognize command output message: %s, reason: %v", string(msg), err)
 			return e
 		}
-		logrus.Error(errResp)
 		return errResp
 	}
 
