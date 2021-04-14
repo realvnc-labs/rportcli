@@ -94,12 +94,12 @@ var executeCmd = &cobra.Command{
 func getCommandRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
 		{
-			Field:       controllers.ClientIDs,
-			Help:        "Enter comma separated client IDs",
-			Validate:    config.RequiredValidate,
+			Field:    controllers.ClientIDs,
+			Help:     "Enter comma separated client IDs",
+			Validate: config.RequiredValidate,
 			Description: "[required] Comma separated client ids for which the command should be executed. " +
 				"Alternatively use -n to execute a command by client name(s)",
-			ShortName:   "d",
+			ShortName: "d",
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
 				return providedParams.ReadString(controllers.ClientNameFlag, "") == ""
 			},

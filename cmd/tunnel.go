@@ -89,13 +89,28 @@ var tunnelDeleteCmd = &cobra.Command{
 	},
 }
 
-var tunnelCreateCmd = &cobra.Command{
-	Use: "create",
-	Long: `creates a new tunnel, e.g.
+const (
+	createTunnelRemoteParamDescr = "[required] the ports are defined from the servers' perspective. " +
+		"'Remote' refers to the ports and interfaces of the client., e.g. '3389'" +
+		"It's required unless -s uses a well-known scheme (SSH, RDP, VNC, HTTP, HTTPS)." +
+		"Additionally if -b or -d parameters are provided and port is not provided, " +
+		"a default corresponding value will be used 22 for ssh and 3389 for rdp"
+
+	createTunnelLong = `creates a new tunnel, e.g.
 rportcli tunnel create -l 0.0.0.0:22 -r 3394 -d bc0b705d-b5fb-4df5-84e3-82dba437bbef -s ssh --acl 10.1.2.3
 this example opens port 3394 on the rport server and forwards to port 22 of the client bc0b705d-b5fb-4df5-84e3-82dba437bbef
 with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
-`,
+`
+	createTunnelLocalDescr = `refers to the ports of the rport server address to use for a new tunnel, e.g. '3390' or '0.0.0.0:3390'. 
+If local is not specified, a random server port will be assigned automatically`
+
+	createTunnelLaunchSSHDescr = `Start the ssh client after the tunnel is established and close tunnel on ssh exit. 
+Any parameter passed are append to the ssh command. i.e. -b "-l root"`
+)
+
+var tunnelCreateCmd = &cobra.Command{
+	Use:  "create",
+	Long: createTunnelLong,
 	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		params, err := readParams(cmd, getCreateTunnelRequirements())
@@ -128,28 +143,30 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 			ShortName:   "n",
 		},
 		{
-			Field: controllers.Local,
-			Description: `refers to the ports of the rport server address to use for a new tunnel, e.g. '3390' or '0.0.0.0:3390'. 
-If local is not specified, a random server port will be assigned automatically`,
-			ShortName: "l",
+			Field:       controllers.Local,
+			Description: createTunnelLocalDescr,
+			ShortName:   "l",
 		},
 		{
-			Field: controllers.Remote,
-			Description: "[required] the ports are defined from the servers' perspective. " +
-				"'Remote' refers to the ports and interfaces of the client., e.g. '3389'" +
-				"It's required unless -s uses a well-known scheme (SSH, RDP, VNC, HTTP, HTTPS).",
-			ShortName:  "r",
-			IsRequired: true,
-			Validate:   config.RequiredValidate,
-			Help:       "Enter a remote port value",
+			Field:       controllers.Remote,
+			Description: createTunnelRemoteParamDescr,
+			ShortName:   "r",
+			IsRequired:  true,
+			Validate:    config.RequiredValidate,
+			Help:        "Enter a remote port value",
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
 				scheme := providedParams.ReadString(controllers.Scheme, "")
-				if scheme == "" {
-					return true
+				if scheme != "" && utils.GetPortByScheme(scheme) > 0 {
+					return false
 				}
 
-				port := utils.GetPortByScheme(scheme)
-				return port == 0
+				launchSSH := providedParams.ReadString(controllers.LaunchSSH, "")
+				if launchSSH != "" {
+					return false
+				}
+
+				launchRDP := providedParams.ReadBool(controllers.LaunchRDP, false)
+				return !launchRDP
 			},
 		},
 		{
@@ -171,15 +188,14 @@ If local is not specified, a random server port will be assigned automatically`,
 			Default:     "0",
 		},
 		{
-			Field: controllers.LaunchSSH,
-			Description: `Start the ssh client after the tunnel is established and close tunnel on ssh exit. 
-Any parameter passed are append to the ssh command. i.e. -b "-l root"`,
-			ShortName: "b",
-			Type:      config.StringRequirementType,
+			Field:       controllers.LaunchSSH,
+			Description: createTunnelLaunchSSHDescr,
+			ShortName:   "b",
+			Type:        config.StringRequirementType,
 		},
 		{
 			Field: controllers.LaunchRDP,
-			Description: `Start the default RDP client after the tunnel is established. 
+			Description: `Start the default RDP client after the tunnel is established, e.g. -d 1 
 Optionally pass the rdp-width and rdp-height params for RDP window size`,
 			ShortName: "d",
 			Type:      config.BoolRequirementType,
@@ -206,9 +222,7 @@ Optionally pass the rdp-width and rdp-height params for RDP window size`,
 			Type:        config.StringRequirementType,
 			Validate:    config.RequiredValidate,
 			Help:        "Enter a RDP user name",
-			IsEnabled: func(providedParams *options.ParameterBag) bool {
-				return IsRDPUserRequired
-			},
+			IsEnabled:   func(providedParams *options.ParameterBag) bool { return IsRDPUserRequired },
 		},
 	}
 }

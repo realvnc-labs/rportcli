@@ -28,7 +28,7 @@ func TestCreateTunnel(t *testing.T) {
 			Rhost:       "rhost2",
 			Rport:       "3344",
 			LportRandom: true,
-			Scheme:      "ssh",
+			Scheme:      utils.SSH,
 			ACL:         "127.0.0.1",
 		}})
 		assert.NoError(t, e)
@@ -50,7 +50,7 @@ func TestCreateTunnel(t *testing.T) {
 		"334",
 		"lohost1:3300",
 		"rhost2:3344",
-		"ssh",
+		utils.SSH,
 		"127.0.0.1",
 		"1",
 	)
@@ -65,7 +65,7 @@ func TestCreateTunnel(t *testing.T) {
 	assert.Equal(t, "3300", actualTunnel.Lport)
 	assert.Equal(t, "rhost2", actualTunnel.Rhost)
 	assert.Equal(t, "3344", actualTunnel.Rport)
-	assert.Equal(t, "ssh", actualTunnel.Scheme)
+	assert.Equal(t, utils.SSH, actualTunnel.Scheme)
 	assert.Equal(t, "127.0.0.1", actualTunnel.ACL)
 }
 

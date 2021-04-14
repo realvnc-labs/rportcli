@@ -114,6 +114,7 @@ issues:
         - gocyclo
         - dupl
         - lll
+        - goconst
 run:
   skip-dirs: []
 

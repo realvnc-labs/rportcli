@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
@@ -212,7 +214,7 @@ func TestInvalidInputForCommand(t *testing.T) {
 		ClientNameFlag: "",
 		Local:          "lohost1:3300",
 		Remote:         "rhost2:3344",
-		Scheme:         "ssh",
+		Scheme:         utils.SSH,
 		CheckPort:      "1",
 	})
 	err := cc.Start(context.Background(), params)

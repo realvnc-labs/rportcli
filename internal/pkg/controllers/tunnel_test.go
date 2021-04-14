@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -155,7 +156,7 @@ func TestTunnelDeleteByClientIDController(t *testing.T) {
 	}))
 	err := tController.Delete(context.Background(), params)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"status":"OK"}`, buf.String())
+	assert.Equal(t, `{"status":"Tunnel successfully deleted"}`, buf.String())
 }
 
 func TestTunnelDeleteByClientNameController(t *testing.T) {
@@ -200,7 +201,7 @@ func TestTunnelDeleteByClientNameController(t *testing.T) {
 
 	err := tController.Delete(context.Background(), params)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"status":"OK"}`, buf.String())
+	assert.Equal(t, `{"status":"Tunnel successfully deleted"}`, buf.String())
 }
 
 func TestTunnelDeleteByAmbiguousClientName(t *testing.T) {
@@ -279,7 +280,7 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 			Rhost:       "rhost2",
 			Rport:       "3344",
 			LportRandom: true,
-			Scheme:      "ssh",
+			Scheme:      utils.SSH,
 			ACL:         "3.4.5.6",
 		}})
 		assert.NoError(t, e)
@@ -315,7 +316,7 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 		ClientID:         "334",
 		Local:            "lohost1:3300",
 		Remote:           "rhost2:3344",
-		Scheme:           "ssh",
+		Scheme:           utils.SSH,
 		CheckPort:        "1",
 		config.ServerURL: "https://localhost.com:34",
 	})
@@ -335,7 +336,7 @@ func TestTunnelCreateWithClientName(t *testing.T) {
 			Rhost:       "rhost4",
 			Rport:       "3345",
 			LportRandom: true,
-			Scheme:      "ssh",
+			Scheme:      utils.SSH,
 			ACL:         "3.4.5.7",
 		}})
 		assert.NoError(t, e)
@@ -379,7 +380,7 @@ func TestTunnelCreateWithClientName(t *testing.T) {
 		ClientNameFlag:   "some client 444",
 		Local:            "lohost2:3301",
 		Remote:           "rhost4:3345",
-		Scheme:           "ssh",
+		Scheme:           utils.SSH,
 		CheckPort:        "1",
 		config.ServerURL: "http://11.11.11.11:33",
 	})
@@ -395,7 +396,7 @@ func TestInvalidInputForTunnelCreate(t *testing.T) {
 		ClientNameFlag: "",
 		Local:          "lohost1:3300",
 		Remote:         "rhost2:3344",
-		Scheme:         "ssh",
+		Scheme:         utils.SSH,
 		CheckPort:      "1",
 	})
 	err := tController.Create(context.Background(), params)
@@ -442,14 +443,19 @@ func TestTunnelCreateNotFoundClientName(t *testing.T) {
 
 func TestTunnelCreateWithSchemeDiscovery(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/api/v1/clients/32312/tunnels?acl=3.4.5.8&check_port=&local=lohost33%3A3301&remote=rhost5%3A22&scheme=ssh", r.URL.String())
-		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(api.TunnelResponse{Data: &models.Tunnel{
-			ID:       "444",
-			Lhost:    "lohost33",
-			ClientID: "32312",
-		}})
-		assert.NoError(t, e)
+		if r.Method == http.MethodPut {
+			assert.Equal(t, "/api/v1/clients/32312/tunnels?acl=3.4.5.8&check_port=&local=lohost33%3A3301&remote=rhost5%3A22&scheme=ssh", r.URL.String())
+			jsonEnc := json.NewEncoder(rw)
+			e := jsonEnc.Encode(api.TunnelResponse{Data: &models.Tunnel{
+				ID:       "444",
+				Lhost:    "lohost33",
+				ClientID: "32312",
+			}})
+			assert.NoError(t, e)
+		}
+		if r.Method == http.MethodDelete {
+			rw.WriteHeader(http.StatusNoContent)
+		}
 	}))
 	defer srv.Close()
 
@@ -475,13 +481,13 @@ func TestTunnelCreateWithSchemeDiscovery(t *testing.T) {
 		},
 	}
 
-	params := config.FromValues(map[string]string{
+	params := map[string]string{
 		ClientID:         "32312",
 		Local:            "lohost33:3301",
 		Remote:           "rhost5:22",
 		config.ServerURL: "http://ya.ru",
-	})
-	err := tController.Create(context.Background(), params)
+	}
+	err := tController.Create(context.Background(), config.FromValues(params))
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
@@ -492,14 +498,21 @@ func TestTunnelCreateWithSchemeDiscovery(t *testing.T) {
 
 func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/api/v1/clients/1313/tunnels?acl=3.4.5.9&check_port=&local=lohost44%3A3302&remote=22&scheme=ssh", r.URL.String())
-		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
-			ID:       "777",
-			Lhost:    "lohost44",
-			ClientID: "1313",
-		}})
-		assert.NoError(t, e)
+		if r.Method == http.MethodPut {
+			assert.Equal(t, "/api/v1/clients/1313/tunnels?acl=3.4.5.9&check_port=&local=lohost44%3A3302&remote=22&scheme=ssh", r.URL.String())
+			jsonEnc := json.NewEncoder(rw)
+			e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
+				ID:       "777",
+				Lhost:    "lohost44",
+				ClientID: "1313",
+			}})
+			assert.NoError(t, e)
+		}
+		if r.Method == http.MethodDelete {
+			assert.Equal(t, "/api/v1/clients/1313/tunnels/777", r.URL.String())
+			rw.WriteHeader(http.StatusNoContent)
+			return
+		}
 	}))
 	defer srv.Close()
 
@@ -525,22 +538,34 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 		},
 	}
 
-	params := config.FromValues(map[string]string{
+	params := map[string]string{
 		ClientID:         "1313",
 		Local:            "lohost44:3302",
-		Scheme:           "ssh",
+		Scheme:           utils.SSH,
 		config.ServerURL: "http://some.com",
-	})
-	err := tController.Create(context.Background(), params)
+	}
+	err := tController.Create(context.Background(), config.FromValues(params))
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
 		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh some.com -l ${USER}"}`,
 		buf.String(),
 	)
+	buf = bytes.Buffer{}
+
+	delete(params, Scheme)
+	params[LaunchSSH] = "-l root"
+	err = tController.Create(context.Background(), config.FromValues(params))
+	assert.NoError(t, err)
+	assert.Equal(
+		t,
+		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh some.com -l ${USER}"}{"status":"Tunnel successfully deleted"}`,
+		buf.String(),
+	)
 }
 
 func TestTunnelCreateWithSSH(t *testing.T) {
+	isTunnelDeleted := false
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		jsonEnc := json.NewEncoder(rw)
 		if r.Method == http.MethodPut {
@@ -550,12 +575,13 @@ func TestTunnelCreateWithSSH(t *testing.T) {
 				Lhost:    "lohost77",
 				ClientID: "1314",
 				Lport:    "22",
-				Scheme:   "ssh",
+				Scheme:   utils.SSH,
 			}})
 			assert.NoError(t, e)
 			return
 		}
 		if r.Method == http.MethodDelete {
+			isTunnelDeleted = true
 			assert.Equal(t, "/api/v1/clients/1314/tunnels/777", r.URL.String())
 			rw.WriteHeader(http.StatusNoContent)
 			return
@@ -593,7 +619,7 @@ func TestTunnelCreateWithSSH(t *testing.T) {
 	params := config.FromValues(map[string]string{
 		ClientID:         "1314",
 		Local:            "lohost77:3303",
-		Scheme:           "ssh",
+		Scheme:           utils.SSH,
 		config.ServerURL: "http://rport-url.com",
 		LaunchSSH:        "-l root -i somefile",
 	})
@@ -601,14 +627,16 @@ func TestTunnelCreateWithSSH(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
-		`{"id":"777","client_id":"1314","client_name":"","lhost":"lohost77","lport":"22","rhost":"","rport":"","lport_random":false,"scheme":"ssh","acl":"","usage":"ssh -p 22 rport-url.com -l ${USER}"}{"status":"Deletion Status"}{"status":"OK"}`,
+		`{"id":"777","client_id":"1314","client_name":"","lhost":"lohost77","lport":"22","rhost":"","rport":"","lport_random":false,"scheme":"ssh","acl":"","usage":"ssh -p 22 rport-url.com -l ${USER}"}{"status":"Tunnel successfully deleted"}`,
 		buf.String(),
 	)
 
 	assert.True(t, isSSHCalled)
+	assert.True(t, isTunnelDeleted)
 }
 
 func TestTunnelCreateWithSSHFailure(t *testing.T) {
+	isTunnelDeleted := false
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		jsonEnc := json.NewEncoder(rw)
 		if r.Method == http.MethodPut {
@@ -619,6 +647,12 @@ func TestTunnelCreateWithSSHFailure(t *testing.T) {
 				ClientID: "1316",
 			}})
 			assert.NoError(t, e)
+			return
+		}
+		if r.Method == http.MethodDelete {
+			isTunnelDeleted = true
+			assert.Equal(t, "/api/v1/clients/1316/tunnels/6666", r.URL.String())
+			rw.WriteHeader(http.StatusNoContent)
 			return
 		}
 
@@ -649,25 +683,28 @@ func TestTunnelCreateWithSSHFailure(t *testing.T) {
 	params := config.FromValues(map[string]string{
 		ClientID:         "1316",
 		Local:            "lohost776:3306",
-		Scheme:           "ssh",
 		config.ServerURL: "http://rport-url2.com",
 		LaunchSSH:        "-l root",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.EqualError(t, err, "ssh failure")
+	assert.True(t, isTunnelDeleted)
 }
 
 func TestTunnelCreateWithRDP(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
-			ID:       "777",
-			Lhost:    "lohost77",
-			ClientID: "1314",
-			Lport:    "3344",
-			Scheme:   "ssh",
-		}})
-		assert.NoError(t, e)
+		if r.Method == http.MethodPut {
+			jsonEnc := json.NewEncoder(rw)
+			e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
+				ID:       "777",
+				Lhost:    "lohost77",
+				ClientID: "1314",
+				Lport:    "3344",
+				Scheme:   utils.SSH,
+			}})
+			assert.NoError(t, e)
+		}
+		rw.WriteHeader(http.StatusMethodNotAllowed)
 	}))
 	defer srv.Close()
 
@@ -712,9 +749,9 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID:         "1315",
+		ClientID:         "1314",
 		Local:            "lohost88:3304",
-		Scheme:           "rdp",
+		Scheme:           utils.RDP,
 		config.ServerURL: "http://rport-url123.com",
 		LaunchRDP:        "1",
 		RDPUser:          "Administrator",
@@ -731,4 +768,78 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 	)
 
 	assert.True(t, isRDPCalled)
+}
+
+func TestTunnelCreateWithRDPIncompatibleFlags(t *testing.T) {
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) { return "dfasf", "34123", nil },
+	}
+
+	renderBuf := bytes.Buffer{}
+	cmdOutput := bytes.Buffer{}
+
+	cl := api.New("localhost", apiAuth)
+
+	isRDPCalled := false
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &renderBuf},
+		IPProvider:     IPProviderMock{},
+		ClientSearch:   &ClientSearchMock{clientsToGive: []models.Client{}},
+		RDPWriter: func(fi rdp.FileInput, w io.Writer) error {
+			isRDPCalled = true
+			return nil
+		},
+		RDPExecutor: &rdp.Executor{
+			CommandProvider: func(filePath string) (cmd string, args []string) {
+				return
+			},
+			StdOut: &cmdOutput,
+		},
+	}
+
+	params := config.FromValues(map[string]string{
+		ClientID:         "1319",
+		Local:            "lohost88:3305",
+		Scheme:           utils.RDP,
+		config.ServerURL: "http://rport-url123.com",
+		LaunchSSH:        "-l root",
+		ACL:              "0.0.0.0",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.EqualError(t, err, fmt.Sprintf("scheme rdp is not compatible with the %s option", LaunchSSH))
+	assert.False(t, isRDPCalled)
+}
+
+func TestTunnelCreateWithSSHIncompatibleFlags(t *testing.T) {
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) { return "2123", "34124", nil },
+	}
+
+	renderBuf := bytes.Buffer{}
+
+	cl := api.New("localhost", apiAuth)
+
+	isSSHCalled := false
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &renderBuf},
+		IPProvider:     IPProviderMock{},
+		ClientSearch:   &ClientSearchMock{clientsToGive: []models.Client{}},
+		SSHFunc: func(sshParams []string) error {
+			isSSHCalled = true
+			return nil
+		},
+	}
+
+	params := config.FromValues(map[string]string{
+		ClientID:         "1320",
+		Local:            "lohost88:3309",
+		Scheme:           utils.SSH,
+		config.ServerURL: "http://rport-url125.com",
+		LaunchRDP:        "1",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.EqualError(t, err, fmt.Sprintf("scheme ssh is not compatible with the %s option", LaunchRDP))
+	assert.False(t, isSSHCalled)
 }

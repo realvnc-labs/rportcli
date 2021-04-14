@@ -10,26 +10,34 @@ type PortScheme struct {
 	Scheme string
 }
 
+const (
+	SSH   = "ssh"
+	RDP   = "rdp"
+	VNC   = "vnc"
+	HTTP  = "http"
+	HTTPS = "https"
+)
+
 var PortSchemesMap = []PortScheme{
 	{
 		Port:   22,
-		Scheme: "ssh",
+		Scheme: SSH,
 	},
 	{
 		Port:   3389,
-		Scheme: "rdp",
+		Scheme: RDP,
 	},
 	{
 		Port:   5900,
-		Scheme: "vnc",
+		Scheme: VNC,
 	},
 	{
 		Port:   80,
-		Scheme: "http",
+		Scheme: HTTP,
 	},
 	{
 		Port:   443,
-		Scheme: "https",
+		Scheme: HTTPS,
 	},
 }
 

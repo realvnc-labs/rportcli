@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/stretchr/testify/assert"
 )
@@ -72,7 +74,7 @@ id22                       lhost      123        rhost       124         false  
 			Rhost:       "rhost",
 			Rport:       "124",
 			LportRandom: false,
-			Scheme:      "ssh",
+			Scheme:      utils.SSH,
 			ACL:         "0.0.0.0",
 		},
 	}
@@ -172,7 +174,7 @@ usage: ssh -p 123 123.22.22.33 -l root
 		Rhost:       "rhost",
 		Rport:       "124",
 		LportRandom: false,
-		Scheme:      "ssh",
+		Scheme:      utils.SSH,
 		ACL:         "0.0.0.0",
 		Usage:       "ssh -p 123 123.22.22.33 -l root",
 	}
