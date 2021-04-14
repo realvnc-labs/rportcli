@@ -1,24 +1,43 @@
 package rdp
 
 import (
-	"bytes"
+	"io/ioutil"
+	"os"
 	"testing"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
+	"github.com/sirupsen/logrus"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteRdpFile(t *testing.T) {
-	fileInput := FileInput{
+	fileInput := models.FileInput{
 		Address:      "node1.rport.io:63231",
 		ScreenHeight: 600,
 		ScreenWidth:  800,
 		UserName:     "Monster",
 	}
 
-	buf := &bytes.Buffer{}
+	writer := &FileWriter{}
 
-	err := WriteRdpFile(fileInput, buf)
+	filePath, err := writer.WriteRDPFile(fileInput)
 	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+	defer func() {
+		e := os.Remove(filePath)
+		if e != nil {
+			logrus.Error(e)
+		}
+	}()
+
+	fileContents, err := ioutil.ReadFile(filePath)
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
 
 	expectedContent := `screen mode id:i:1
 use multimon:i:0
@@ -69,5 +88,5 @@ rdgiskdcproxy:i:0
 kdcproxyname:s:
 username:s:Monster
 `
-	assert.Equal(t, expectedContent, buf.String())
+	assert.Equal(t, expectedContent, string(fileContents))
 }

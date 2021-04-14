@@ -67,6 +67,11 @@ var tunnelListCmd = &cobra.Command{
 			IPProvider:     rportAPI,
 			ClientSearch:   clientSearch,
 			SSHFunc:        utils.RunSSH,
+			RDPWriter:      &rdp.FileWriter{},
+			RDPExecutor: &rdp.Executor{
+				CommandProvider: rdp.CommandProvider,
+				StdErr:          os.Stderr,
+			},
 		}
 
 		return tunnelController.Tunnels(context.Background())
@@ -272,8 +277,6 @@ func createTunnelController(params *options.ParameterBag) *controllers.TunnelCon
 
 	rdpExecutor := &rdp.Executor{
 		CommandProvider: rdp.CommandProvider,
-		StdOut:          os.Stdout,
-		Stdin:           os.Stdin,
 		StdErr:          os.Stderr,
 	}
 
@@ -283,7 +286,7 @@ func createTunnelController(params *options.ParameterBag) *controllers.TunnelCon
 		IPProvider:     rportAPI,
 		ClientSearch:   clientSearch,
 		SSHFunc:        utils.RunSSH,
-		RDPWriter:      rdp.WriteRdpFile,
+		RDPWriter:      &rdp.FileWriter{},
 		RDPExecutor:    rdpExecutor,
 	}
 }

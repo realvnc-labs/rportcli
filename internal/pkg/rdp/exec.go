@@ -18,6 +18,8 @@ func (re *Executor) StartRdp(filePath string) error {
 	rdpCmd, args := re.CommandProvider(filePath)
 	c := exec.Command(rdpCmd, args...)
 
+	c.Stdout = re.StdOut
+	c.Stdin = re.Stdin
 	c.Stderr = re.StdErr
 
 	err := c.Run()

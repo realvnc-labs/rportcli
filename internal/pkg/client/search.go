@@ -65,10 +65,13 @@ func (s *Search) findInClientsList(cls []models.Client, term string) (foundCls [
 	for i := range cls {
 		cl := cls[i]
 		curClientName := strings.ToLower(cl.Name)
+		curClientID := strings.ToLower(cl.ID)
 
 		for i := range terms {
 			curTerm := terms[i]
 			if strings.HasPrefix(curClientName, curTerm) {
+				foundCls = append(foundCls, cl)
+			} else if strings.HasPrefix(curClientID, curTerm) {
 				foundCls = append(foundCls, cl)
 			}
 		}

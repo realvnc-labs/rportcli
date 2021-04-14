@@ -4,14 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
+	"time"
 
-	io2 "github.com/breathbath/go_utils/v2/pkg/io"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/rdp"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
@@ -53,13 +50,17 @@ type IPProvider interface {
 	GetIP(ctx context.Context) (string, error)
 }
 
+type RDPFileWriter interface {
+	WriteRDPFile(fi models.FileInput) (filePath string, err error)
+}
+
 type TunnelController struct {
 	Rport          *api.Rport
 	TunnelRenderer TunnelRenderer
 	IPProvider     IPProvider
 	ClientSearch   ClientSearch
 	SSHFunc        func(sshParams []string) error
-	RDPWriter      func(fi rdp.FileInput, w io.Writer) error
+	RDPWriter      RDPFileWriter
 	RDPExecutor    *rdp.Executor
 }
 
@@ -119,19 +120,33 @@ func (tc *TunnelController) Delete(ctx context.Context, params *options.Paramete
 	return nil
 }
 
-func (tc *TunnelController) Create(ctx context.Context, params *options.ParameterBag) error {
-	var err error
-	clientID := params.ReadString(ClientID, "")
-	clientName := params.ReadString(ClientNameFlag, "")
+func (tc *TunnelController) getClientIDAndClientName(
+	ctx context.Context,
+	params *options.ParameterBag,
+) (clientID, clientName string, err error) {
+	clientID = params.ReadString(ClientID, "")
+	clientName = params.ReadString(ClientNameFlag, "")
 	if clientID == "" && clientName == "" {
-		return errors.New("no client id nor name provided")
+		err = errors.New("no client id nor name provided")
+		return
 	}
 
-	if clientID == "" {
-		clientID, err = tc.findClientID(ctx, clientName, params)
-		if err != nil {
-			return err
-		}
+	if clientID != "" {
+		return
+	}
+
+	clientID, err = tc.findClient(ctx, clientName, params)
+	if err != nil {
+		return
+	}
+
+	return clientID, clientName, nil
+}
+
+func (tc *TunnelController) Create(ctx context.Context, params *options.ParameterBag) error {
+	clientID, clientName, err := tc.getClientIDAndClientName(ctx, params)
+	if err != nil {
+		return err
 	}
 
 	acl := params.ReadString(ACL, "")
@@ -155,6 +170,7 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	if err != nil {
 		return err
 	}
+
 	tunnelCreated := tunResp.Data
 	tunnelCreated.Usage = tc.generateUsage(tunnelCreated, params)
 	if tunnelCreated.ClientID == "" {
@@ -162,6 +178,10 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	}
 	if tunnelCreated.ClientName == "" && clientName != "" {
 		tunnelCreated.ClientID = clientName
+	}
+
+	if clientName == "" && tunnelCreated.ClientName != "" {
+		clientName = tunnelCreated.ClientName
 	}
 
 	err = tc.TunnelRenderer.RenderTunnel(tunnelCreated)
@@ -172,7 +192,7 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	launchSSHStr := params.ReadString(LaunchSSH, "")
 	shouldLaunchRDP := params.ReadBool(LaunchRDP, false)
 
-	return tc.launchHelperFlowIfNeeded(ctx, launchSSHStr, clientID, shouldLaunchRDP, tunnelCreated, params)
+	return tc.launchHelperFlowIfNeeded(ctx, launchSSHStr, clientID, clientName, shouldLaunchRDP, tunnelCreated, params)
 }
 
 func (tc *TunnelController) resolveRemoteAddrAndScheme(params *options.ParameterBag) (remotePortAndHostStr, scheme string, err error) {
@@ -225,7 +245,7 @@ func (tc *TunnelController) resolveRemoteAddrAndScheme(params *options.Parameter
 
 func (tc *TunnelController) launchHelperFlowIfNeeded(
 	ctx context.Context,
-	launchSSHStr, clientID string,
+	launchSSHStr, clientID, clientName string,
 	shouldLaunchRDP bool,
 	tunnelCreated *models.TunnelCreated,
 	params *options.ParameterBag,
@@ -242,7 +262,7 @@ func (tc *TunnelController) launchHelperFlowIfNeeded(
 		return tc.startSSHFlow(ctx, tunnelCreated, params, deleteTunnelParams)
 	}
 
-	return tc.startRDPFlow(tunnelCreated, params)
+	return tc.startRDPFlow(ctx, tunnelCreated, params, clientName, clientID)
 }
 
 func (tc *TunnelController) finishSSHFlow(ctx context.Context, deleteTunnelParams *options.ParameterBag, prevErr error) error {
@@ -331,49 +351,60 @@ func (tc *TunnelController) extractPortAndHost(
 	return
 }
 
-func (tc *TunnelController) findClientID(ctx context.Context, clientName string, params *options.ParameterBag) (string, error) {
-	clients, err := tc.ClientSearch.Search(ctx, clientName, params)
+func (tc *TunnelController) findClient(ctx context.Context, searchTerm string, params *options.ParameterBag) (string, error) {
+	clients, err := tc.ClientSearch.Search(ctx, searchTerm, params)
 	if err != nil {
 		return "", err
 	}
 
 	if len(clients) == 0 {
-		return "", fmt.Errorf("unknown client '%s'", clientName)
+		return "", fmt.Errorf("unknown client '%s'", searchTerm)
 	}
 
 	if len(clients) != 1 {
-		return "", fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", clientName)
+		return "", fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", searchTerm)
 	}
 	return clients[0].ID, nil
 }
 
 func (tc *TunnelController) startRDPFlow(
+	ctx context.Context,
 	tunnelCreated *models.TunnelCreated,
 	params *options.ParameterBag,
+	clientName, clientID string,
 ) error {
 	port, host, err := tc.extractPortAndHost(tunnelCreated, params)
 	if err != nil {
 		return err
 	}
 
-	rdpFileInput := rdp.FileInput{
+	if clientName == "" {
+		logrus.Debug("since client name is not provided, will try to find a client by id " + clientID)
+		clients, e := tc.ClientSearch.Search(ctx, clientID, params)
+		if e != nil {
+			return e
+		}
+		if len(clients) == 0 || clients[0].Name == "" {
+			clientName = fmt.Sprint(time.Now().Unix())
+		} else {
+			clientName = clients[0].Name
+		}
+
+		logrus.Debugf("found client name %s", clientName)
+	}
+
+	rdpFileInput := models.FileInput{
 		Address:      fmt.Sprintf("%s:%s", host, port),
 		ScreenHeight: params.ReadInt(RDPHeight, 0),
 		ScreenWidth:  params.ReadInt(RDPWidth, 0),
 		UserName:     params.ReadString(RDPUser, ""),
+		FileName:     fmt.Sprintf("%s.rdp", clientName),
 	}
-	file, err := ioutil.TempFile(os.TempDir(), "rport-*.rdp")
-	if err != nil {
-		return err
-	}
-	defer io2.CloseResourceSecure("temp file", file)
 
-	logrus.Debugf("will write an rdp file %s", file.Name())
-	err = tc.RDPWriter(rdpFileInput, file)
+	filePath, err := tc.RDPWriter.WriteRDPFile(rdpFileInput)
 	if err != nil {
 		return err
 	}
 
-	logrus.Infof("written rdp file to %s", file.Name())
-	return tc.RDPExecutor.StartRdp(file.Name())
+	return tc.RDPExecutor.StartRdp(filePath)
 }

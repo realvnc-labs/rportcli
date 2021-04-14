@@ -80,6 +80,17 @@ func (ipm IPProviderMock) GetIP(ctx context.Context) (string, error) {
 	return ipm.IP, nil
 }
 
+type RDPWriterMock struct {
+	FileInput      models.FileInput
+	filePathToGive string
+	errorToGive    error
+}
+
+func (rwm *RDPWriterMock) WriteRDPFile(fi models.FileInput) (filePath string, err error) {
+	rwm.FileInput = fi
+	return rwm.filePathToGive, rwm.errorToGive
+}
+
 func TestTunnelsController(t *testing.T) {
 	srv := startClientsServer()
 	defer srv.Close()
@@ -322,7 +333,7 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"id":"123","client_id":"","client_name":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6","usage":"ssh -p 3300 localhost.com -l ${USER}"}`, buf.String())
+	assert.Equal(t, `{"id":"123","client_id":"334","client_name":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6","usage":"ssh -p 3300 localhost.com -l ${USER}"}`, buf.String())
 }
 
 func TestTunnelCreateWithClientName(t *testing.T) {
@@ -386,7 +397,7 @@ func TestTunnelCreateWithClientName(t *testing.T) {
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"id":"444","client_id":"","client_name":"","lhost":"lohost2","lport":"3301","rhost":"rhost4","rport":"3345","lport_random":true,"scheme":"ssh","acl":"3.4.5.7","usage":"ssh -p 3301 11.11.11.11 -l ${USER}"}`, buf.String())
+	assert.Equal(t, `{"id":"444","client_id":"some client 444","client_name":"","lhost":"lohost2","lport":"3301","rhost":"rhost4","rport":"3345","lport_random":true,"scheme":"ssh","acl":"3.4.5.7","usage":"ssh -p 3301 11.11.11.11 -l ${USER}"}`, buf.String())
 }
 
 func TestInvalidInputForTunnelCreate(t *testing.T) {
@@ -717,6 +728,11 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 
 	cl := api.New(srv.URL, apiAuth)
 
+	const filePathGiven = "/tmp/somefile.rdp"
+	fileWriter := &RDPWriterMock{
+		filePathToGive: filePathGiven,
+		errorToGive:    nil,
+	}
 	isRDPCalled := false
 	tController := TunnelController{
 		Rport:          cl,
@@ -725,23 +741,11 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 			IP: "3.4.5.166",
 		},
 		ClientSearch: &ClientSearchMock{clientsToGive: []models.Client{}},
-		RDPWriter: func(fi rdp.FileInput, w io.Writer) error {
-			isRDPCalled = true
-			assert.Equal(
-				t,
-				rdp.FileInput{
-					Address:      "rport-url123.com:3344",
-					ScreenHeight: 990,
-					ScreenWidth:  1090,
-					UserName:     "Administrator",
-				},
-				fi,
-			)
-			return nil
-		},
+		RDPWriter:    fileWriter,
 		RDPExecutor: &rdp.Executor{
 			CommandProvider: func(filePath string) (cmd string, args []string) {
-				assert.Contains(t, filePath, ".rdp")
+				isRDPCalled = true
+				assert.Equal(t, filePathGiven, filePath)
 				return "echo", []string{"rdp executed"}
 			},
 			StdOut: &cmdOutput,
@@ -759,6 +763,16 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 		RDPHeight:        "990",
 	})
 	err := tController.Create(context.Background(), params)
+	expectedFileInput := models.FileInput{
+		Address:      "rport-url123.com:3344",
+		ScreenHeight: 990,
+		ScreenWidth:  1090,
+		UserName:     "Administrator",
+	}
+	assert.Equal(t, expectedFileInput.Address, fileWriter.FileInput.Address)
+	assert.Equal(t, expectedFileInput.ScreenHeight, fileWriter.FileInput.ScreenHeight)
+	assert.Equal(t, expectedFileInput.ScreenWidth, fileWriter.FileInput.ScreenWidth)
+	assert.Equal(t, expectedFileInput.UserName, fileWriter.FileInput.UserName)
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
@@ -786,10 +800,7 @@ func TestTunnelCreateWithRDPIncompatibleFlags(t *testing.T) {
 		TunnelRenderer: &TunnelRendererMock{Writer: &renderBuf},
 		IPProvider:     IPProviderMock{},
 		ClientSearch:   &ClientSearchMock{clientsToGive: []models.Client{}},
-		RDPWriter: func(fi rdp.FileInput, w io.Writer) error {
-			isRDPCalled = true
-			return nil
-		},
+		RDPWriter:      nil,
 		RDPExecutor: &rdp.Executor{
 			CommandProvider: func(filePath string) (cmd string, args []string) {
 				return

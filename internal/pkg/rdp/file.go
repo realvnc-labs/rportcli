@@ -1,9 +1,15 @@
 package rdp
 
 import (
-	"io"
+	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
+
+	io2 "github.com/breathbath/go_utils/v2/pkg/io"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 
 	"github.com/sirupsen/logrus"
 )
@@ -67,20 +73,19 @@ kdcproxyname:s:
 username:s:{{USER_NAME}}
 `
 
-type FileInput struct {
-	Address      string
-	ScreenHeight int
-	ScreenWidth  int
-	UserName     string
-}
+type FileWriter struct{}
 
-func WriteRdpFile(fi FileInput, w io.Writer) error {
+func (rfw *FileWriter) WriteRDPFile(fi models.FileInput) (filePath string, err error) {
 	if fi.ScreenWidth == 0 {
 		fi.ScreenWidth = defaultScreenWidth
 	}
 
 	if fi.ScreenHeight == 0 {
 		fi.ScreenHeight = defaultScreenHeight
+	}
+
+	if fi.FileName == "" {
+		fi.FileName = fmt.Sprint(time.Now().Unix())
 	}
 
 	placeholderValues := map[string]string{
@@ -95,13 +100,22 @@ func WriteRdpFile(fi FileInput, w io.Writer) error {
 		content = strings.ReplaceAll(content, "{{"+k+"}}", v)
 	}
 
-	logrus.Debugf("created a rdp file")
-	logrus.Debug(content)
+	filePath = filepath.Join(os.TempDir(), fi.FileName)
 
-	_, err := w.Write([]byte(content))
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	defer io2.CloseResourceSecure("temp file", file)
+
+	logrus.Debugf("will write an rdp file %s", file.Name())
+
+	_, err = file.Write([]byte(content))
+	if err != nil {
+		return "", err
+	}
+
+	logrus.Debugf("Written %s file", file.Name())
+	return filePath, nil
 }
