@@ -92,6 +92,7 @@ func TestDeleteTunnel(t *testing.T) {
 		context.Background(),
 		"123",
 		"345",
+		false,
 	)
 	assert.NoError(t, err)
 	if err != nil {

@@ -54,7 +54,7 @@ func (rp *Rport) CreateTunnel(
 	return tunResp, err
 }
 
-func (rp *Rport) DeleteTunnel(ctx context.Context, clientID, tunnelID string) (err error) {
+func (rp *Rport) DeleteTunnel(ctx context.Context, clientID, tunnelID string, force bool) (err error) {
 	var req *http.Request
 	u := strings.Replace(TunnelsURL, "{client_id}", clientID, 1)
 	u = strings.Replace(u, "{tunnel_id}", tunnelID, 1)
@@ -66,6 +66,11 @@ func (rp *Rport) DeleteTunnel(ctx context.Context, clientID, tunnelID string) (e
 	)
 	if err != nil {
 		return
+	}
+	if force {
+		q := req.URL.Query()
+		q.Add("force", "1")
+		req.URL.RawQuery = q.Encode()
 	}
 
 	resp, err := rp.CallBaseClient(req, nil)

@@ -133,7 +133,7 @@ func TestTunnelDeleteByClientIDController(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "Basic bG9nMTU1OnBhc3MxNTU=", r.Header.Get("Authorization"))
 		assert.Equal(t, http.MethodDelete, r.Method)
-		assert.Equal(t, "/api/v1/clients/cl1/tunnels/tun2", r.URL.String())
+		assert.Equal(t, "/api/v1/clients/cl1/tunnels/tun2?force=1", r.URL.String())
 		rw.WriteHeader(http.StatusNoContent)
 	}))
 	defer srv.Close()
@@ -164,6 +164,7 @@ func TestTunnelDeleteByClientIDController(t *testing.T) {
 		ClientID:       "cl1",
 		TunnelID:       "tun2",
 		ClientNameFlag: "",
+		ForceDeletion:  "1",
 	}))
 	err := tController.Delete(context.Background(), params)
 	assert.NoError(t, err)
@@ -803,6 +804,7 @@ func TestTunnelCreateWithRDPIncompatibleFlags(t *testing.T) {
 		RDPWriter:      nil,
 		RDPExecutor: &rdp.Executor{
 			CommandProvider: func(filePath string) (cmd string, args []string) {
+				isRDPCalled = true
 				return
 			},
 			StdOut: &cmdOutput,
@@ -853,4 +855,48 @@ func TestTunnelCreateWithSSHIncompatibleFlags(t *testing.T) {
 	err := tController.Create(context.Background(), params)
 	assert.EqualError(t, err, fmt.Sprintf("scheme ssh is not compatible with the %s option", LaunchRDP))
 	assert.False(t, isSSHCalled)
+}
+
+func TestTunnelDeleteFailureWithActiveConnections(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.WriteHeader(http.StatusInternalServerError)
+		assert.Equal(t, http.MethodDelete, r.Method)
+		errs := models.ErrorResp{
+			Errors: []models.Error{
+				{
+					Code:  "123",
+					Title: "tunnel is still active: it has 1 active connection(s)",
+				},
+			},
+		}
+		jsonEnc := json.NewEncoder(rw)
+		e := jsonEnc.Encode(errs)
+		assert.NoError(t, e)
+	}))
+	defer srv.Close()
+
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "342314"
+			pass = "gfgdgafd"
+			return
+		},
+	}
+	cl := api.New(srv.URL, apiAuth)
+	buf := bytes.Buffer{}
+
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
+		ClientSearch:   &ClientSearchMock{},
+		SSHFunc: func(sshParams []string) error {
+			return nil
+		},
+	}
+	params := options.New(options.NewMapValuesProvider(map[string]interface{}{
+		ClientID: "cl1",
+		TunnelID: "tun2",
+	}))
+	err := tController.Delete(context.Background(), params)
+	assert.EqualError(t, err, "tunnel is still active: it has 1 active connection(s), code: 123, details: , use -f to delete it anyway")
 }

@@ -251,6 +251,13 @@ func getDeleteTunnelRequirements() []config.ParameterRequirement {
 			ShortName:   "n",
 		},
 		{
+			Field:       controllers.ForceDeletion,
+			ShortName:   "f",
+			Default:     "0",
+			Description: `force tunnel deletion if it has active connections`,
+			Type:        config.BoolRequirementType,
+		},
+		{
 			Field:       controllers.TunnelID,
 			Description: "[required]  tunnel id to delete",
 			ShortName:   "t",

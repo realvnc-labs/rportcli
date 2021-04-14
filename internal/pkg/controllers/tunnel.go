@@ -25,19 +25,20 @@ import (
 )
 
 const (
-	ClientID   = "client"
-	TunnelID   = "tunnel"
-	Local      = "local"
-	Remote     = "remote"
-	Scheme     = "scheme"
-	ACL        = "acl"
-	CheckPort  = "checkp"
-	LaunchSSH  = "launch-ssh"
-	LaunchRDP  = "launch-rdp"
-	RDPWidth   = "rdp-width"
-	RDPHeight  = "rdp-height"
-	RDPUser    = "rdp-user"
-	DefaultACL = "<<YOU CURRENT PUBLIC IP>>"
+	ClientID      = "client"
+	TunnelID      = "tunnel"
+	Local         = "local"
+	Remote        = "remote"
+	Scheme        = "scheme"
+	ACL           = "acl"
+	CheckPort     = "checkp"
+	LaunchSSH     = "launch-ssh"
+	LaunchRDP     = "launch-rdp"
+	RDPWidth      = "rdp-width"
+	RDPHeight     = "rdp-height"
+	RDPUser       = "rdp-user"
+	DefaultACL    = "<<YOU CURRENT PUBLIC IP>>"
+	ForceDeletion = "force"
 )
 
 type TunnelRenderer interface {
@@ -107,8 +108,11 @@ func (tc *TunnelController) Delete(ctx context.Context, params *options.Paramete
 		clientID = clients[0].ID
 	}
 
-	err := tc.Rport.DeleteTunnel(ctx, clientID, tunnelID)
+	err := tc.Rport.DeleteTunnel(ctx, clientID, tunnelID, params.ReadBool(ForceDeletion, false))
 	if err != nil {
+		if strings.Contains(err.Error(), "tunnel is still active") {
+			return fmt.Errorf("%v, use -f to delete it anyway", err)
+		}
 		return err
 	}
 
