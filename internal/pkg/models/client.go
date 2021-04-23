@@ -29,7 +29,7 @@ func (c *Client) Headers() []string {
 	return []string{
 		"ID",
 		"NAME",
-		"NUM_TUNNELS",
+		"TUNNELS",
 		"REMOTE ADDRESS",
 		"HOSTNAME",
 		"OS_KERNEL",
