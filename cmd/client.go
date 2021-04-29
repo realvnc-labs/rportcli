@@ -4,6 +4,9 @@ import (
 	"context"
 	"os"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cache"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
@@ -40,9 +43,16 @@ var clientsListCmd = &cobra.Command{
 			Writer:             os.Stdout,
 			Format:             getOutputFormat(),
 		}
+
+		clientSearch := &client.Search{
+			DataProvider: rportAPI,
+			Cache:        &cache.ClientsCache{},
+		}
+
 		clientsController := &controllers.ClientController{
 			Rport:          rportAPI,
 			ClientRenderer: cr,
+			ClientSearch:   clientSearch,
 		}
 
 		return clientsController.Clients(context.Background())
@@ -74,11 +84,16 @@ var clientCmd = &cobra.Command{
 			Writer:             os.Stdout,
 			Format:             getOutputFormat(),
 		}
+		clientSearch := &client.Search{
+			DataProvider: rportAPI,
+			Cache:        &cache.ClientsCache{},
+		}
 		clientsController := &controllers.ClientController{
 			Rport:          rportAPI,
 			ClientRenderer: cr,
+			ClientSearch:   clientSearch,
 		}
 
-		return clientsController.Client(context.Background(), clientID, clientName)
+		return clientsController.Client(context.Background(), params, clientID, clientName)
 	},
 }

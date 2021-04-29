@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
@@ -32,6 +33,23 @@ func (s *Search) Search(ctx context.Context, term string, params *options.Parame
 
 	foundCls = s.findInClientsList(cls, term)
 	return
+}
+
+func (s *Search) FindOne(ctx context.Context, searchTerm string, params *options.ParameterBag) (models.Client, error) {
+	clients, err := s.Search(ctx, searchTerm, params)
+	if err != nil {
+		return models.Client{}, err
+	}
+
+	if len(clients) == 0 {
+		return models.Client{}, fmt.Errorf("unknown client '%s'", searchTerm)
+	}
+
+	if len(clients) == 1 {
+		return clients[0], nil
+	}
+
+	return models.Client{}, fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", searchTerm)
 }
 
 func (s *Search) getClientsList(ctx context.Context, params *options.ParameterBag) (cls []models.Client, err error) {

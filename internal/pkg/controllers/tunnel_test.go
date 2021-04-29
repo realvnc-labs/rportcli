@@ -415,32 +415,9 @@ func TestInvalidInputForTunnelCreate(t *testing.T) {
 	assert.EqualError(t, err, "no client id nor name provided")
 }
 
-func TestTunnelCreateByAmbiguousClientName(t *testing.T) {
-	searchMock := &ClientSearchMock{
-		clientsToGive: []models.Client{
-			{
-				ID:   "cl1",
-				Name: "some client 1",
-			},
-			{
-				ID:   "cl2",
-				Name: "some client 2",
-			},
-		},
-	}
-	tController := TunnelController{
-		ClientSearch: searchMock,
-	}
-	params := config.FromValues(map[string]string{
-		ClientNameFlag: "some name",
-	})
-	err := tController.Create(context.Background(), params)
-	assert.EqualError(t, err, `client identified by 'some name' is ambiguous, use a more precise name or use the client id`)
-}
-
 func TestTunnelCreateNotFoundClientName(t *testing.T) {
 	searchMock := &ClientSearchMock{
-		clientsToGive: []models.Client{},
+		errorToGive: errors.New("unknown client 'some client'"),
 	}
 	tController := TunnelController{
 		ClientSearch: searchMock,

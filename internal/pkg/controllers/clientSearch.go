@@ -10,4 +10,5 @@ import (
 
 type ClientSearch interface {
 	Search(ctx context.Context, term string, params *options.ParameterBag) (foundCls []models.Client, err error)
+	FindOne(ctx context.Context, searchTerm string, params *options.ParameterBag) (models.Client, error)
 }

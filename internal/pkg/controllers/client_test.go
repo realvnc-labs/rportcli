@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	options "github.com/breathbath/go_utils/v2/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
@@ -100,7 +103,7 @@ func TestClientFoundByIDController(t *testing.T) {
 		ClientRenderer: &ClientRendererMock{Writer: &buf},
 	}
 
-	err := clController.Client(context.Background(), "123", "")
+	err := clController.Client(context.Background(), &options.ParameterBag{}, "123", "")
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -120,12 +123,18 @@ func TestClientFoundByNameController(t *testing.T) {
 	cl := api.New(srv.URL, nil)
 	buf := bytes.Buffer{}
 
+	clSearch := &ClientSearchMock{
+		searchTermGiven: "",
+		clientsToGive:   []models.Client{*clientStub},
+		errorToGive:     nil,
+	}
 	clController := ClientController{
 		Rport:          cl,
 		ClientRenderer: &ClientRendererMock{Writer: &buf},
+		ClientSearch:   clSearch,
 	}
 
-	err := clController.Client(context.Background(), "", "Client 123")
+	err := clController.Client(context.Background(), &options.ParameterBag{}, "", "Client 123")
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -148,19 +157,22 @@ func TestClientNotFoundController(t *testing.T) {
 	clController := ClientController{
 		Rport:          cl,
 		ClientRenderer: &ClientRendererMock{Writer: &buf},
+		ClientSearch: &ClientSearchMock{
+			errorToGive: errors.New("client not found by the provided id '434' or name ''"),
+		},
 	}
 
-	err := clController.Client(context.Background(), "434", "")
+	err := clController.Client(context.Background(), &options.ParameterBag{}, "434", "")
 	assert.EqualError(t, err, `client not found by the provided id '434' or name ''`)
 
-	err = clController.Client(context.Background(), "", "some unknown name")
-	assert.EqualError(t, err, `client not found by the provided id '' or name 'some unknown name'`)
+	err = clController.Client(context.Background(), &options.ParameterBag{}, "", "some unknown name")
+	assert.EqualError(t, err, `client not found by the provided id '434' or name ''`)
 }
 
 func TestInvalidInputForClients(t *testing.T) {
 	clController := ClientController{}
 
-	err := clController.Client(context.Background(), "", "")
+	err := clController.Client(context.Background(), &options.ParameterBag{}, "", "")
 	assert.EqualError(t, err, "no client id nor name provided")
 }
 

@@ -185,3 +185,19 @@ func TestLoadCacheError(t *testing.T) {
 	_, err := search.Search(context.Background(), "$100", &options.ParameterBag{})
 	assert.EqualError(t, err, "some cache load err")
 }
+
+func TestFindByAmbiguousClientName(t *testing.T) {
+	cacheMock := &CacheMock{
+		clientsToStore: []models.Client{},
+		clientsToLoad:  []models.Client{},
+	}
+	search := Search{
+		DataProvider: &DataProviderMock{
+			clientsToGive: clientsList,
+		},
+		Cache: cacheMock,
+	}
+
+	_, err := search.FindOne(context.Background(), "my tiny", &options.ParameterBag{})
+	assert.EqualError(t, err, `client identified by 'my tiny' is ambiguous, use a more precise name or use the client id`)
+}

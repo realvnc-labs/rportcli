@@ -139,12 +139,12 @@ func (tc *TunnelController) getClientIDAndClientName(
 		return
 	}
 
-	clientID, err = tc.findClient(ctx, clientName, params)
+	client, err := tc.ClientSearch.FindOne(ctx, clientName, params)
 	if err != nil {
 		return
 	}
 
-	return clientID, clientName, nil
+	return client.ID, clientName, nil
 }
 
 func (tc *TunnelController) Create(ctx context.Context, params *options.ParameterBag) error {
@@ -353,22 +353,6 @@ func (tc *TunnelController) extractPortAndHost(
 	}
 
 	return
-}
-
-func (tc *TunnelController) findClient(ctx context.Context, searchTerm string, params *options.ParameterBag) (string, error) {
-	clients, err := tc.ClientSearch.Search(ctx, searchTerm, params)
-	if err != nil {
-		return "", err
-	}
-
-	if len(clients) == 0 {
-		return "", fmt.Errorf("unknown client '%s'", searchTerm)
-	}
-
-	if len(clients) != 1 {
-		return "", fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", searchTerm)
-	}
-	return clients[0].ID, nil
 }
 
 func (tc *TunnelController) startRDPFlow(

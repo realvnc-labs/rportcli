@@ -51,3 +51,11 @@ func (csm *ClientSearchMock) Search(ctx context.Context, term string, params *op
 	csm.searchTermGiven = term
 	return csm.clientsToGive, csm.errorToGive
 }
+
+func (csm *ClientSearchMock) FindOne(ctx context.Context, searchTerm string, params *options.ParameterBag) (models.Client, error) {
+	csm.searchTermGiven = searchTerm
+	if len(csm.clientsToGive) > 0 {
+		return csm.clientsToGive[0], csm.errorToGive
+	}
+	return models.Client{}, csm.errorToGive
+}
