@@ -10,19 +10,22 @@ import (
 )
 
 type Client struct {
-	ID       string   `json:"id"`
-	Name     string   `json:"name"`
-	Os       string   `json:"os"`
-	OsArch   string   `json:"os_arch"`
-	OsFamily string   `json:"os_family"`
-	OsKernel string   `json:"os_kernel"`
-	Hostname string   `json:"hostname"`
-	Ipv4     []string `json:"ipv4"`
-	Ipv6     []string `json:"ipv6"`
-	Tags     []string `json:"tags"`
-	Version  string   `json:"version"`
-	Address  string   `json:"address"`
-	Tunnels  []*Tunnel
+	ID             string   `json:"id"`
+	Name           string   `json:"name"`
+	Os             string   `json:"os"`
+	OsArch         string   `json:"os_arch"`
+	OsFamily       string   `json:"os_family"`
+	OsKernel       string   `json:"os_kernel"`
+	Hostname       string   `json:"hostname"`
+	ConnState      string   `json:"connection_state"`
+	DisconnectedAt string   `json:"disconnected_at"`
+	ClientAuthID   string   `json:"client_auth_id"`
+	Ipv4           []string `json:"ipv4"`
+	Ipv6           []string `json:"ipv6"`
+	Tags           []string `json:"tags"`
+	Version        string   `json:"version"`
+	Address        string   `json:"address"`
+	Tunnels        []*Tunnel
 }
 
 func (c *Client) Headers() []string {
@@ -33,6 +36,7 @@ func (c *Client) Headers() []string {
 		"REMOTE ADDRESS",
 		"HOSTNAME",
 		"OS_KERNEL",
+		"S",
 	}
 }
 
@@ -44,6 +48,7 @@ func (c *Client) Row() []string {
 		utils.RemovePortFromURL(c.Address),
 		c.Hostname,
 		c.OsKernel,
+		c.ConnState[0:1],
 	}
 }
 
@@ -97,6 +102,18 @@ func (c *Client) KeyValues() []testing.KeyValueStr {
 		{
 			Key:   "Address",
 			Value: c.Address,
+		},
+		{
+			Key:   "Connection State",
+			Value: c.ConnState,
+		},
+		{
+			Key:   "Disconnected At",
+			Value: c.DisconnectedAt,
+		},
+		{
+			Key:   "Client Auth ID",
+			Value: c.ClientAuthID,
 		},
 	}
 }
