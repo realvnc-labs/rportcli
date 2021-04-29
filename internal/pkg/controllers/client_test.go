@@ -33,6 +33,7 @@ var clientStub = &models.Client{
 			ID: "1",
 		},
 	},
+	ConnState: "connected",
 }
 
 func (crm *ClientRendererMock) RenderClients(clients []*models.Client) error {
@@ -82,7 +83,7 @@ func TestClientsController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`[{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}]`,
+		`[{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}]`,
 		buf.String(),
 	)
 }
@@ -107,7 +108,7 @@ func TestClientFoundByIDController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}`,
+		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}`,
 		buf.String(),
 	)
 }
@@ -132,7 +133,7 @@ func TestClientFoundByNameController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}`,
+		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}`,
 		buf.String(),
 	)
 }

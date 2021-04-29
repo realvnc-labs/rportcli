@@ -16,14 +16,14 @@ func TestRenderClients(t *testing.T) {
 		{
 			Format: FormatHuman,
 			ExpectedOutput: `GetClients
-ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL 
-123 SomeName      0                                         
-124 SomeOtherName 0                                         
+ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL S 
+123 SomeName      0                                         c 
+124 SomeOtherName 0                                         c 
 `,
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `[{"id":"123","name":"SomeName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","Tunnels":null},{"id":"124","name":"SomeOtherName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","Tunnels":null}]
+			ExpectedOutput: `[{"id":"123","name":"SomeName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","Tunnels":null},{"id":"124","name":"SomeOtherName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","Tunnels":null}]
 `,
 		},
 		{
@@ -37,6 +37,9 @@ ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL
     "os_family": "",
     "os_kernel": "",
     "hostname": "",
+    "connection_state": "connected",
+    "disconnected_at": "",
+    "client_auth_id": "",
     "ipv4": null,
     "ipv6": null,
     "tags": null,
@@ -52,6 +55,9 @@ ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL
     "os_family": "",
     "os_kernel": "",
     "hostname": "",
+    "connection_state": "connected",
+    "disconnected_at": "",
+    "client_auth_id": "",
     "ipv4": null,
     "ipv6": null,
     "tags": null,
@@ -71,6 +77,9 @@ ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL
   osfamily: ""
   oskernel: ""
   hostname: ""
+  connstate: connected
+  disconnectedat: ""
+  clientauthid: ""
   ipv4: []
   ipv6: []
   tags: []
@@ -84,6 +93,9 @@ ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL
   osfamily: ""
   oskernel: ""
   hostname: ""
+  connstate: connected
+  disconnectedat: ""
+  clientauthid: ""
   ipv4: []
   ipv6: []
   tags: []
@@ -96,12 +108,14 @@ ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL
 
 	clients := []*models.Client{
 		{
-			ID:   "123",
-			Name: "SomeName",
+			ID:        "123",
+			Name:      "SomeName",
+			ConnState: "connected",
 		},
 		{
-			ID:   "124",
-			Name: "SomeOtherName",
+			ID:        "124",
+			Name:      "SomeOtherName",
+			ConnState: "connected",
 		},
 	}
 
@@ -138,24 +152,27 @@ func TestRenderClient(t *testing.T) {
 			Format: FormatHuman,
 			ExpectedOutput: `Client [123]
 
-KEY       VALUE    
-ID:       123      
-Name:     SomeName 
-Os:                
-OsArch:            
-OsFamily:          
-OsKernel:          
-Hostname:          
-Ipv4:              
-Ipv6:              
-Tags:              
-Version:           
-Address:           
+KEY               VALUE     
+ID:               123       
+Name:             SomeName  
+Os:                         
+OsArch:                     
+OsFamily:                   
+OsKernel:                   
+Hostname:                   
+Ipv4:                       
+Ipv6:                       
+Tags:                       
+Version:                    
+Address:                    
+Connection State: connected 
+Disconnected At:            
+Client Auth ID:             
 `,
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"id":"123","name":"SomeName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","Tunnels":null}
+			ExpectedOutput: `{"id":"123","name":"SomeName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","Tunnels":null}
 `,
 		},
 		{
@@ -168,6 +185,9 @@ Address:
   "os_family": "",
   "os_kernel": "",
   "hostname": "",
+  "connection_state": "connected",
+  "disconnected_at": "",
+  "client_auth_id": "",
   "ipv4": null,
   "ipv6": null,
   "tags": null,
@@ -186,6 +206,9 @@ osarch: ""
 osfamily: ""
 oskernel: ""
 hostname: ""
+connstate: connected
+disconnectedat: ""
+clientauthid: ""
 ipv4: []
 ipv6: []
 tags: []
@@ -196,8 +219,9 @@ tunnels: []
 		},
 	}
 	client := &models.Client{
-		ID:   "123",
-		Name: "SomeName",
+		ID:        "123",
+		Name:      "SomeName",
+		ConnState: "connected",
 	}
 
 	for _, testCase := range testCases {

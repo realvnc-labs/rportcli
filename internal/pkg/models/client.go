@@ -41,6 +41,10 @@ func (c *Client) Headers() []string {
 }
 
 func (c *Client) Row() []string {
+	connState := ""
+	if len(c.ConnState) > 0 {
+		connState = c.ConnState[0:1]
+	}
 	return []string{
 		c.ID,
 		c.Name,
@@ -48,7 +52,7 @@ func (c *Client) Row() []string {
 		utils.RemovePortFromURL(c.Address),
 		c.Hostname,
 		c.OsKernel,
-		c.ConnState[0:1],
+		connState,
 	}
 }
 
