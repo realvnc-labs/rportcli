@@ -43,7 +43,7 @@ func (c *Client) Headers() []string {
 func (c *Client) Row() []string {
 	connState := ""
 	if len(c.ConnState) > 0 {
-		connState = c.ConnState[0:1]
+		connState = strings.ToUpper(c.ConnState[0:1])
 	}
 	return []string{
 		c.ID,
