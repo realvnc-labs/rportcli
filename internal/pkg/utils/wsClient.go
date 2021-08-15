@@ -39,6 +39,7 @@ func NewWsClient(ctx context.Context, wsURLBuilder WsURLBuilder) (wsc *WsClient,
 
 func (wc *WsClient) Close() error {
 	if wc.Conn != nil {
+		logrus.Debugf("closing connection to  the rportd server: %s", wc.Conn.RemoteAddr().String())
 		err := wc.Conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 		if err != nil {
 			logrus.Warnf("failed to write close message: %v", err)
@@ -50,12 +51,12 @@ func (wc *WsClient) Close() error {
 }
 
 func (wc *WsClient) Read() (msg []byte, err error) {
-	_, msg, e := wc.Conn.ReadMessage()
-	if e != nil {
-		if _, ok := e.(*websocket.CloseError); ok {
+	_, msg, err = wc.Conn.ReadMessage()
+	if err != nil {
+		if _, ok := err.(*websocket.CloseError); ok {
 			err = io.EOF
 		}
-		return
+		return msg, err
 	}
 
 	return msg, nil
