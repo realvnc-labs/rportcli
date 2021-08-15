@@ -99,8 +99,10 @@ func TestCommandExecutionByClientIDsSuccess(t *testing.T) {
 	jr := &JobRendererMock{}
 
 	ic := &CommandsController{
-		ReadWriter:  rw,
-		JobRenderer: jr,
+		ExecutionHelper: &ExecutionHelper{
+			ReadWriter:  rw,
+			JobRenderer: jr,
+		},
 	}
 
 	params := config.FromValues(map[string]string{
@@ -112,13 +114,14 @@ func TestCommandExecutionByClientIDsSuccess(t *testing.T) {
 		Cwd:              "here",
 		IsSudo:           "1",
 		AbortOnError:     "1",
+		Interpreter:      "bash",
 	})
 	err = ic.Start(context.Background(), params)
 
 	assert.NoError(t, err)
 
 	assert.Len(t, rw.writtenItems, 1)
-	expectedCommandInput := `{"client_ids":["1235"],"group_ids":["333"],"execute_concurrently":true,"abort_on_error":true,"sudo":true,"timeout_sec":1,"cwd":"here","command":"cmd"}`
+	const expectedCommandInput = `{"client_ids":["1235"],"group_ids":["333"],"is_sudo":true,"execute_concurrently":true,"abort_on_error":true,"timeout_sec":1,"command":"cmd","script":"","cwd":"here","interpreter":"bash"}`
 	assert.Equal(t, expectedCommandInput, rw.writtenItems[0])
 
 	assert.NotNil(t, jr.jobToRender)
@@ -165,9 +168,11 @@ func TestCommandExecutionByClientNameSuccess(t *testing.T) {
 	}
 
 	ic := &CommandsController{
-		ReadWriter:   rw,
-		JobRenderer:  jr,
-		ClientSearch: searchMock,
+		ExecutionHelper: &ExecutionHelper{
+			ReadWriter:   rw,
+			JobRenderer:  jr,
+			ClientSearch: searchMock,
+		},
 	}
 
 	params := config.FromValues(map[string]string{
@@ -175,13 +180,14 @@ func TestCommandExecutionByClientNameSuccess(t *testing.T) {
 		Command:          "cmd",
 		Timeout:          "1",
 		ExecConcurrently: "1",
+		Interpreter:      "cmd",
 	})
 	err = ic.Start(context.Background(), params)
 
 	assert.NoError(t, err)
 
 	assert.Len(t, rw.writtenItems, 1)
-	expectedCommandInput := `{"client_ids":["11344","11345"],"execute_concurrently":true,"abort_on_error":false,"sudo":false,"timeout_sec":1,"cwd":"","command":"cmd"}`
+	expectedCommandInput := `{"client_ids":["11344","11345"],"is_sudo":false,"execute_concurrently":true,"abort_on_error":false,"timeout_sec":1,"command":"cmd","script":"","cwd":"","interpreter":"cmd"}`
 	assert.Equal(t, expectedCommandInput, rw.writtenItems[0])
 }
 
@@ -196,9 +202,11 @@ func TestCommandExecutionClientNotFoundByName(t *testing.T) {
 	searchMock := &ClientSearchMock{clientsToGive: []models.Client{}}
 
 	ic := &CommandsController{
-		ReadWriter:   rw,
-		JobRenderer:  jr,
-		ClientSearch: searchMock,
+		ExecutionHelper: &ExecutionHelper{
+			ReadWriter:   rw,
+			JobRenderer:  jr,
+			ClientSearch: searchMock,
+		},
 	}
 
 	params := config.FromValues(map[string]string{
@@ -211,7 +219,9 @@ func TestCommandExecutionClientNotFoundByName(t *testing.T) {
 }
 
 func TestInvalidInputForCommand(t *testing.T) {
-	cc := &CommandsController{}
+	cc := &CommandsController{
+		ExecutionHelper: &ExecutionHelper{},
+	}
 	params := config.FromValues(map[string]string{
 		ClientID:       "",
 		ClientNameFlag: "",
@@ -255,8 +265,10 @@ func TestCommandExecutionWithInvalidResponse(t *testing.T) {
 	jr := &JobRendererMock{}
 
 	ic := &CommandsController{
-		ReadWriter:  rw,
-		JobRenderer: jr,
+		ExecutionHelper: &ExecutionHelper{
+			ReadWriter:  rw,
+			JobRenderer: jr,
+		},
 	}
 
 	params := config.FromValues(map[string]string{

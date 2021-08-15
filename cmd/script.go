@@ -25,25 +25,22 @@ import (
 )
 
 func init() {
-	config.DefineCommandInputs(executeCmd, getCommandRequirements())
-	commandCmd.AddCommand(executeCmd)
-	rootCmd.AddCommand(commandCmd)
+	config.DefineCommandInputs(executeScript, getScriptRequirements())
+	scriptCmd.AddCommand(executeScript)
+	rootCmd.AddCommand(scriptCmd)
 }
 
-var commandCmd = &cobra.Command{
-	Use:   "command",
-	Short: "command management",
+var scriptCmd = &cobra.Command{
+	Use:   "script",
+	Short: "scripts management",
 	Args:  cobra.ArbitraryArgs,
 }
 
-var executeCmd = &cobra.Command{
+var executeScript = &cobra.Command{
 	Use:   "execute",
-	Short: "executes a remote command on an rport client(s)",
+	Short: "executes a remote script on rport client(s)",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		promptReader := &utils.PromptReader{
@@ -52,24 +49,27 @@ var executeCmd = &cobra.Command{
 			PasswordScanner: utils.ReadPassword,
 		}
 
-		params, err := config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, getCommandRequirements(), promptReader)
+		params, err := config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, getScriptRequirements(), promptReader)
 		if err != nil {
 			return err
 		}
 
-		tokenValidity := env.ReadEnvInt(config.SessionValiditySecondsEnvVar, api.DefaultTokenValiditySeconds)
-
 		baseRportURL := params.ReadString(config.ServerURL, config.DefaultServerURL)
-		wsURLBuilder := &api.WsCommandURLProvider{
+		tokenValidity := env.ReadEnvInt(config.SessionValiditySecondsEnvVar, api.DefaultTokenValiditySeconds)
+		wsURLBuilder := &api.WsScriptsURLProvider{
 			WsURLProvider: &api.WsURLProvider{
+				BaseURL: baseRportURL,
 				TokenProvider: func() (token string, err error) {
 					token = params.ReadString(config.Token, "")
 					return
 				},
-				BaseURL:              baseRportURL,
 				TokenValiditySeconds: tokenValidity,
 			},
 		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
 		wsClient, err := utils.NewWsClient(ctx, wsURLBuilder.BuildWsURL)
 		if err != nil {
 			return err
@@ -82,7 +82,7 @@ var executeCmd = &cobra.Command{
 		}
 
 		isFullJobOutput := params.ReadBool(controllers.IsFullOutput, false)
-		cmdExecutor := &controllers.CommandsController{
+		cmdExecutor := &controllers.ScriptsController{
 			ExecutionHelper: &controllers.ExecutionHelper{
 				ReadWriter: wsClient,
 				JobRenderer: &output.JobRenderer{
@@ -100,14 +100,14 @@ var executeCmd = &cobra.Command{
 	},
 }
 
-func getCommandRequirements() []config.ParameterRequirement {
+func getScriptRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
 		{
 			Field:    controllers.ClientIDs,
 			Help:     "Enter comma separated client IDs",
 			Validate: config.RequiredValidate,
-			Description: "[required] Comma separated client ids for which the command should be executed. " +
-				"Alternatively use -n to execute a command by client name(s)",
+			Description: "[required] Comma separated client ids on which the script should be executed. " +
+				"Alternatively use -n to execute a script by client name(s)",
 			ShortName: "d",
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
 				return providedParams.ReadString(controllers.ClientNameFlag, "") == ""
@@ -116,21 +116,21 @@ func getCommandRequirements() []config.ParameterRequirement {
 		},
 		{
 			Field:       controllers.ClientNameFlag,
-			Description: "Comma separated client names for which the command should be executed",
+			Description: "Comma separated client names on which the script should be executed",
 			ShortName:   "n",
 		},
 		{
-			Field:       controllers.Command,
-			Help:        "Enter command",
+			Field:       controllers.Script,
+			Help:        "Enter script path",
 			Validate:    config.RequiredValidate,
-			Description: "[required] Command which should be executed on the clients",
-			ShortName:   "c",
+			Description: "[required] Path to the script file",
+			ShortName:   "s",
 			IsRequired:  true,
 		},
 		{
 			Field:       controllers.Timeout,
 			Help:        "Enter timeout in seconds",
-			Description: "timeout in seconds that was used to observe the command execution",
+			Description: "timeout in seconds that was used to observe the script execution",
 			Default:     strconv.Itoa(controllers.DefaultCmdTimeoutSeconds),
 			ShortName:   "t",
 		},
@@ -142,42 +142,34 @@ func getCommandRequirements() []config.ParameterRequirement {
 		},
 		{
 			Field:       controllers.ExecConcurrently,
-			Help:        "execute the command concurrently on multiple clients",
-			Description: "execute the command concurrently on multiple clients",
+			Help:        "execute the script concurrently on multiple clients",
+			Description: "execute the script concurrently on multiple clients",
 			ShortName:   "r",
 			Type:        config.BoolRequirementType,
 			Default:     "0",
 		},
 		{
 			Field:       controllers.IsFullOutput,
-			Help:        "output detailed information of a job execution",
-			Description: "output detailed information of a job execution",
+			Help:        "output detailed information of a script execution",
+			Description: "output detailed information of a script execution",
 			ShortName:   "f",
 			Type:        config.BoolRequirementType,
 			Default:     "0",
 		},
 		{
 			Field:       controllers.IsSudo,
-			Help:        "should execute command as sudo",
-			Description: "execute command as sudo",
+			Help:        "execute script as sudo",
+			Description: "execute script as sudo",
 			ShortName:   "u",
 			Type:        config.BoolRequirementType,
 			Default:     "0",
 		},
 		{
 			Field:       controllers.Interpreter,
-			Help:        "enter interpreter/shell name for the command execution",
-			Description: "interpreter/shell name for the command execution",
+			Help:        "enter interpreter/shell name for the script execution",
+			Description: "interpreter/shell name for the script execution",
 			ShortName:   "i",
 			Type:        config.StringRequirementType,
-		},
-		{
-			Field:       controllers.AbortOnError,
-			Description: "if true and command fails on one client, it's not executed on others",
-			Help:        "should abort command if it fails on any client",
-			ShortName:   "a",
-			Type:        config.BoolRequirementType,
-			Default:     "0",
 		},
 		{
 			Field:       controllers.Cwd,

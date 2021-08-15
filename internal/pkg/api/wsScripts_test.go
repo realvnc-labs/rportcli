@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuildCommandWsURL(t *testing.T) {
+func TestBuildScriptsWsURL(t *testing.T) {
 	testCases := []struct {
 		inputURL      string
 		expectedURL   string
@@ -15,21 +15,21 @@ func TestBuildCommandWsURL(t *testing.T) {
 		tokenToGive   string
 	}{
 		{
-			inputURL:      "http://some.url",
-			expectedURL:   "ws://some.url/api/v1/ws/commands?access_token=sometoken",
+			inputURL:      "http://scripts.url",
+			expectedURL:   "ws://scripts.url/api/v1/ws/scripts?access_token=tok123",
 			tokenValidity: 100,
-			tokenToGive:   "sometoken",
+			tokenToGive:   "tok123",
 		},
 		{
-			inputURL:      "https://some.url",
-			expectedURL:   "wss://some.url/api/v1/ws/commands?access_token=someothertoken",
+			inputURL:      "https://scripts.url",
+			expectedURL:   "wss://scripts.url/api/v1/ws/scripts?access_token=tok1234",
 			tokenValidity: 0,
-			tokenToGive:   "someothertoken",
+			tokenToGive:   "tok1234",
 		},
 	}
 	for _, testCase := range testCases {
 		tc := testCase
-		urlProvider := &WsCommandURLProvider{
+		urlProvider := &WsScriptsURLProvider{
 			WsURLProvider: &WsURLProvider{
 				BaseURL: testCase.inputURL,
 				TokenProvider: func() (token string, err error) {

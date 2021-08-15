@@ -32,15 +32,17 @@ type Job struct {
 	IsScript   bool      `json:"is_script"`
 }
 
-type WsCommand struct {
-	ClientIds           []string  `json:"client_ids"`
-	GroupIds            *[]string `json:"group_ids,omitempty"`
-	ExecuteConcurrently bool      `json:"execute_concurrently"`
-	AbortOnError        bool      `json:"abort_on_error"`
-	IsSudo              bool      `json:"sudo"`
-	TimeoutSec          int       `json:"timeout_sec"`
-	Cwd                 string    `json:"cwd"`
-	Command             string    `json:"command"`
+type WsScriptCommand struct {
+	ClientIDs           []string `json:"client_ids"`
+	GroupIDs            []string `json:"group_ids,omitempty"`
+	IsSudo              bool     `json:"is_sudo"`
+	ExecuteConcurrently bool     `json:"execute_concurrently"`
+	AbortOnError        bool     `json:"abort_on_error"`
+	TimeoutSec          int      `json:"timeout_sec"`
+	Command             string   `json:"command"`
+	Script              string   `json:"script"`
+	Cwd                 string   `json:"cwd"`
+	Interpreter         string   `json:"interpreter"`
 }
 
 func (j *Job) KeyValues() []testing.KeyValueStr {
