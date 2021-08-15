@@ -147,5 +147,29 @@ func getCommandRequirements() []config.ParameterRequirement {
 			Type:        config.BoolRequirementType,
 			Default:     "0",
 		},
+		{
+			Field:       controllers.IsSudo,
+			Help:        "execute command as sudo",
+			Description: "execute command as sudo",
+			ShortName:   "u",
+			Type:        config.BoolRequirementType,
+			Default:     "0",
+		},
+		{
+			Field:       controllers.AbortOnError,
+			Help:        "if true and command fails on one client, it's not executed on others",
+			Description: "should abort command if it fails on any client",
+			ShortName:   "a",
+			Type:        config.BoolRequirementType,
+			Default:     "0",
+		},
+		{
+			Field:       controllers.Cwd,
+			Help:        "current working directory",
+			Description: "current working directory",
+			ShortName:   "w",
+			Type:        config.StringRequirementType,
+			Default:     "",
+		},
 	}
 }

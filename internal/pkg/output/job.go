@@ -141,6 +141,11 @@ func (jr *JobRenderer) renderJobInHumanFormat(j *models.Job) error {
 		fmt.Sprintf("    Timeout sec: %d", j.TimeoutSec),
 		fmt.Sprintf("    Created By: %s", j.CreatedBy),
 		fmt.Sprintf("    Multi Job ID: %s", j.MultiJobID),
+		fmt.Sprintf("    Cwd: %s", j.Cwd),
+		fmt.Sprintf("    Is sudo: %v", j.IsSudo),
+		fmt.Sprintf("    Error: %v", j.Error),
+		fmt.Sprintf("    Is script: %v", j.IsScript),
+		fmt.Sprintf("    Status: %v", j.Status),
 	}
 	outputs = append(outputs, outputs2...)
 

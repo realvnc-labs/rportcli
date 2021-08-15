@@ -109,13 +109,16 @@ func TestCommandExecutionByClientIDsSuccess(t *testing.T) {
 		Timeout:          "1",
 		GroupIDs:         "333",
 		ExecConcurrently: "1",
+		Cwd:              "here",
+		IsSudo:           "1",
+		AbortOnError:     "1",
 	})
 	err = ic.Start(context.Background(), params)
 
 	assert.NoError(t, err)
 
 	assert.Len(t, rw.writtenItems, 1)
-	expectedCommandInput := `{"command":"cmd","client_ids":["1235"],"group_ids":["333"],"timeout_sec":1,"execute_concurrently":true}`
+	expectedCommandInput := `{"client_ids":["1235"],"group_ids":["333"],"execute_concurrently":true,"abort_on_error":true,"sudo":true,"timeout_sec":1,"cwd":"here","command":"cmd"}`
 	assert.Equal(t, expectedCommandInput, rw.writtenItems[0])
 
 	assert.NotNil(t, jr.jobToRender)
@@ -178,7 +181,7 @@ func TestCommandExecutionByClientNameSuccess(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Len(t, rw.writtenItems, 1)
-	expectedCommandInput := `{"command":"cmd","client_ids":["11344","11345"],"timeout_sec":1,"execute_concurrently":true}`
+	expectedCommandInput := `{"client_ids":["11344","11345"],"execute_concurrently":true,"abort_on_error":false,"sudo":false,"timeout_sec":1,"cwd":"","command":"cmd"}`
 	assert.Equal(t, expectedCommandInput, rw.writtenItems[0])
 }
 

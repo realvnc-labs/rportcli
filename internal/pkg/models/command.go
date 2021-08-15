@@ -19,6 +19,7 @@ type Job struct {
 	ClientID   string    `json:"client_id"`
 	ClientName string    `json:"client_name,omitempty"`
 	Command    string    `json:"command"`
+	Cwd        string    `json:"cwd"`
 	Shell      string    `json:"shell"`
 	Pid        int       `json:"pid"`
 	StartedAt  time.Time `json:"started_at"`
@@ -27,14 +28,19 @@ type Job struct {
 	TimeoutSec int       `json:"timeout_sec"`
 	Error      string    `json:"error"`
 	Result     JobResult `json:"result"`
+	IsSudo     bool      `json:"sudo"`
+	IsScript   bool      `json:"is_script"`
 }
 
 type WsCommand struct {
-	Command             string    `json:"command"`
 	ClientIds           []string  `json:"client_ids"`
 	GroupIds            *[]string `json:"group_ids,omitempty"`
-	TimeoutSec          int       `json:"timeout_sec"`
 	ExecuteConcurrently bool      `json:"execute_concurrently"`
+	AbortOnError        bool      `json:"abort_on_error"`
+	IsSudo              bool      `json:"sudo"`
+	TimeoutSec          int       `json:"timeout_sec"`
+	Cwd                 string    `json:"cwd"`
+	Command             string    `json:"command"`
 }
 
 func (j *Job) KeyValues() []testing.KeyValueStr {

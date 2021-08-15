@@ -25,6 +25,9 @@ const (
 	GroupIDs                 = "gids"
 	Timeout                  = "timeout"
 	ExecConcurrently         = "conc"
+	AbortOnError             = "abort"
+	Cwd                      = "cwd"
+	IsSudo                   = "sudo"
 	IsFullOutput             = "full-command-response"
 	waitingMsg               = "waiting for the command to finish"
 )
@@ -94,13 +97,16 @@ func (icm *CommandsController) Start(ctx context.Context, params *options.Parame
 	return err
 }
 
-func (icm *CommandsController) buildCommand(params *options.ParameterBag, clientIDs string) models.WsCommand {
-	wsCmd := models.WsCommand{
+func (icm *CommandsController) buildCommand(params *options.ParameterBag, clientIDs string) *models.WsCommand {
+	wsCmd := &models.WsCommand{
 		Command:             params.ReadString(Command, ""),
 		ClientIds:           strings.Split(clientIDs, ","),
 		TimeoutSec:          params.ReadInt(Timeout, DefaultCmdTimeoutSeconds),
 		ExecuteConcurrently: params.ReadBool(ExecConcurrently, false),
 		GroupIds:            nil,
+		AbortOnError:        params.ReadBool(AbortOnError, false),
+		Cwd:                 params.ReadString(Cwd, ""),
+		IsSudo:              params.ReadBool(IsSudo, false),
 	}
 	groupIDsStr := params.ReadString(GroupIDs, "")
 	if groupIDsStr != "" {
@@ -111,7 +117,7 @@ func (icm *CommandsController) buildCommand(params *options.ParameterBag, client
 	return wsCmd
 }
 
-func (icm *CommandsController) sendCommand(wsCmd models.WsCommand) error {
+func (icm *CommandsController) sendCommand(wsCmd *models.WsCommand) error {
 	wsCmdJSON, err := json.Marshal(wsCmd)
 	if err != nil {
 		return err

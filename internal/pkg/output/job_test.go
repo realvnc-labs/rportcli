@@ -28,6 +28,7 @@ Client Name: some cl name
     Command Output:
       some std
     Command Error Output:
+      no
     Started at: 2021-01-01 00:00:01 +0000 UTC
     Finished at: 2021-01-01 00:00:01 +0000 UTC
     Command: ls
@@ -35,7 +36,12 @@ Client Name: some cl name
     Pid: 123
     Timeout sec: 10
     Created By: me
-    Multi Job ID: 
+    Multi Job ID: multi1234
+    Cwd: here
+    Is sudo: true
+    Error: no
+    Is script: true
+    Status: success
 `,
 			IsFullOutput: true,
 		},
@@ -43,12 +49,13 @@ Client Name: some cl name
 			Format: FormatHuman,
 			ExpectedOutput: `some cl name
     some std
+    no
 `,
 			IsFullOutput: false,
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"jid":"123","status":"success","finished_at":"2021-01-01T00:00:01Z","client_id":"cl123","client_name":"some cl name","command":"ls","shell":"cmd","pid":123,"started_at":"2021-01-01T00:00:01Z","created_by":"me","multi_job_id":"","timeout_sec":10,"error":"","result":{"stdout":"some std","stderr":""}}
+			ExpectedOutput: `{"jid":"123","status":"success","finished_at":"2021-01-01T00:00:01Z","client_id":"cl123","client_name":"some cl name","command":"ls","cwd":"here","shell":"cmd","pid":123,"started_at":"2021-01-01T00:00:01Z","created_by":"me","multi_job_id":"multi1234","timeout_sec":10,"error":"no","result":{"stdout":"some std","stderr":""},"sudo":true,"is_script":true}
 `,
 		},
 		{
@@ -60,17 +67,20 @@ Client Name: some cl name
   "client_id": "cl123",
   "client_name": "some cl name",
   "command": "ls",
+  "cwd": "here",
   "shell": "cmd",
   "pid": 123,
   "started_at": "2021-01-01T00:00:01Z",
   "created_by": "me",
-  "multi_job_id": "",
+  "multi_job_id": "multi1234",
   "timeout_sec": 10,
-  "error": "",
+  "error": "no",
   "result": {
     "stdout": "some std",
     "stderr": ""
-  }
+  },
+  "sudo": true,
+  "is_script": true
 }
 `,
 		},
@@ -82,16 +92,19 @@ finishedat: 2021-01-01T00:00:01Z
 clientid: cl123
 clientname: some cl name
 command: ls
+cwd: here
 shell: cmd
 pid: 123
 startedat: 2021-01-01T00:00:01Z
 createdby: me
-multijobid: ""
+multijobid: multi1234
 timeoutsec: 10
-error: ""
+error: "no"
 result:
   stdout: some std
   stderr: ""
+issudo: true
+isscript: true
 `,
 		},
 	}
@@ -103,34 +116,42 @@ result:
 		ClientID:   "cl123",
 		ClientName: "some cl name",
 		Command:    "ls",
+		Cwd:        "here",
 		Shell:      "cmd",
 		Pid:        123,
 		StartedAt:  timeToCheck,
 		CreatedBy:  "me",
+		MultiJobID: "multi1234",
 		TimeoutSec: 10,
+		Error:      "no",
 		Result: models.JobResult{
 			Stdout: "some std",
 		},
+		IsSudo:   true,
+		IsScript: true,
 	}
 
 	for _, testCase := range testCases {
-		buf := &bytes.Buffer{}
-		jr := &JobRenderer{
-			Writer:       buf,
-			Format:       testCase.Format,
-			IsFullOutput: testCase.IsFullOutput,
-		}
+		tc := testCase
+		t.Run("render_"+tc.Format, func(t *testing.T) {
+			buf := &bytes.Buffer{}
+			jr := &JobRenderer{
+				Writer:       buf,
+				Format:       tc.Format,
+				IsFullOutput: tc.IsFullOutput,
+			}
 
-		err = jr.RenderJob(tunnel)
-		assert.NoError(t, err)
-		if err != nil {
-			return
-		}
+			err = jr.RenderJob(tunnel)
+			assert.NoError(t, err)
+			if err != nil {
+				return
+			}
 
-		assert.Equal(
-			t,
-			testCase.ExpectedOutput,
-			buf.String(),
-		)
+			assert.Equal(
+				t,
+				tc.ExpectedOutput,
+				buf.String(),
+			)
+		})
 	}
 }
