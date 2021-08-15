@@ -1,6 +1,6 @@
 env:
   - CGO_ENABLED=0
-  - PROJECT=github.com/cloudradar-monitoring/rport
+  - PROJECT=github.com/cloudradar-monitoring/rportcli
 builds:
   - id: rportcli
     main: ./
