@@ -32,7 +32,7 @@ Client Name: some cl name
     Started at: 2021-01-01 00:00:01 +0000 UTC
     Finished at: 2021-01-01 00:00:01 +0000 UTC
     Command: ls
-    Shell: cmd
+    Interpreter: cmd
     Pid: 123
     Timeout sec: 10
     Created By: me
@@ -55,7 +55,7 @@ Client Name: some cl name
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"jid":"123","status":"success","finished_at":"2021-01-01T00:00:01Z","client_id":"cl123","client_name":"some cl name","command":"ls","cwd":"here","shell":"cmd","pid":123,"started_at":"2021-01-01T00:00:01Z","created_by":"me","multi_job_id":"multi1234","timeout_sec":10,"error":"no","result":{"stdout":"some std","stderr":""},"sudo":true,"is_script":true}
+			ExpectedOutput: `{"jid":"123","status":"success","finished_at":"2021-01-01T00:00:01Z","client_id":"cl123","client_name":"some cl name","command":"ls","cwd":"here","pid":123,"started_at":"2021-01-01T00:00:01Z","created_by":"me","multi_job_id":"multi1234","timeout_sec":10,"error":"no","result":{"stdout":"some std","stderr":""},"sudo":true,"is_script":true,"interpreter":"cmd"}
 `,
 		},
 		{
@@ -68,7 +68,6 @@ Client Name: some cl name
   "client_name": "some cl name",
   "command": "ls",
   "cwd": "here",
-  "shell": "cmd",
   "pid": 123,
   "started_at": "2021-01-01T00:00:01Z",
   "created_by": "me",
@@ -80,7 +79,8 @@ Client Name: some cl name
     "stderr": ""
   },
   "sudo": true,
-  "is_script": true
+  "is_script": true,
+  "interpreter": "cmd"
 }
 `,
 		},
@@ -93,7 +93,6 @@ clientid: cl123
 clientname: some cl name
 command: ls
 cwd: here
-shell: cmd
 pid: 123
 startedat: 2021-01-01T00:00:01Z
 createdby: me
@@ -105,25 +104,26 @@ result:
   stderr: ""
 issudo: true
 isscript: true
+interpreter: cmd
 `,
 		},
 	}
 
 	tunnel := &models.Job{
-		Jid:        "123",
-		Status:     "success",
-		FinishedAt: timeToCheck,
-		ClientID:   "cl123",
-		ClientName: "some cl name",
-		Command:    "ls",
-		Cwd:        "here",
-		Shell:      "cmd",
-		Pid:        123,
-		StartedAt:  timeToCheck,
-		CreatedBy:  "me",
-		MultiJobID: "multi1234",
-		TimeoutSec: 10,
-		Error:      "no",
+		Jid:         "123",
+		Status:      "success",
+		FinishedAt:  timeToCheck,
+		ClientID:    "cl123",
+		ClientName:  "some cl name",
+		Command:     "ls",
+		Cwd:         "here",
+		Interpreter: "cmd",
+		Pid:         123,
+		StartedAt:   timeToCheck,
+		CreatedBy:   "me",
+		MultiJobID:  "multi1234",
+		TimeoutSec:  10,
+		Error:       "no",
 		Result: models.JobResult{
 			Stdout: "some std",
 		},

@@ -136,7 +136,7 @@ func (jr *JobRenderer) renderJobInHumanFormat(j *models.Job) error {
 		fmt.Sprintf("    Started at: %v", j.StartedAt),
 		fmt.Sprintf("    Finished at: %v", j.FinishedAt),
 		fmt.Sprintf("    Command: %s", j.Command),
-		fmt.Sprintf("    Shell: %s", j.Shell),
+		fmt.Sprintf("    Interpreter: %s", j.Interpreter),
 		fmt.Sprintf("    Pid: %d", j.Pid),
 		fmt.Sprintf("    Timeout sec: %d", j.TimeoutSec),
 		fmt.Sprintf("    Created By: %s", j.CreatedBy),

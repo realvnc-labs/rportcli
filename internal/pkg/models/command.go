@@ -13,23 +13,23 @@ type JobResult struct {
 }
 
 type Job struct {
-	Jid        string    `json:"jid"`
-	Status     string    `json:"status"`
-	FinishedAt time.Time `json:"finished_at"`
-	ClientID   string    `json:"client_id"`
-	ClientName string    `json:"client_name,omitempty"`
-	Command    string    `json:"command"`
-	Cwd        string    `json:"cwd"`
-	Shell      string    `json:"shell"`
-	Pid        int       `json:"pid"`
-	StartedAt  time.Time `json:"started_at"`
-	CreatedBy  string    `json:"created_by"`
-	MultiJobID string    `json:"multi_job_id"`
-	TimeoutSec int       `json:"timeout_sec"`
-	Error      string    `json:"error"`
-	Result     JobResult `json:"result"`
-	IsSudo     bool      `json:"sudo"`
-	IsScript   bool      `json:"is_script"`
+	Jid         string    `json:"jid"`
+	Status      string    `json:"status"`
+	FinishedAt  time.Time `json:"finished_at"`
+	ClientID    string    `json:"client_id"`
+	ClientName  string    `json:"client_name,omitempty"`
+	Command     string    `json:"command"`
+	Cwd         string    `json:"cwd"`
+	Pid         int       `json:"pid"`
+	StartedAt   time.Time `json:"started_at"`
+	CreatedBy   string    `json:"created_by"`
+	MultiJobID  string    `json:"multi_job_id"`
+	TimeoutSec  int       `json:"timeout_sec"`
+	Error       string    `json:"error"`
+	Result      JobResult `json:"result"`
+	IsSudo      bool      `json:"is_sudo"`
+	IsScript    bool      `json:"is_script"`
+	Interpreter string    `json:"interpreter"`
 }
 
 type WsScriptCommand struct {
@@ -80,10 +80,6 @@ func (j *Job) KeyValues() []testing.KeyValueStr {
 			Value: j.Command,
 		},
 		{
-			Key:   "Shell",
-			Value: j.Shell,
-		},
-		{
 			Key:   "Pid",
 			Value: strconv.Itoa(j.Pid),
 		},
@@ -98,6 +94,10 @@ func (j *Job) KeyValues() []testing.KeyValueStr {
 		{
 			Key:   "Multi Job ID",
 			Value: j.MultiJobID,
+		},
+		{
+			Key:   "Interpreter",
+			Value: j.Interpreter,
 		},
 	}
 }

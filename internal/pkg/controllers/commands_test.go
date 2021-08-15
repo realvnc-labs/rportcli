@@ -62,16 +62,16 @@ func (jrm *JobRendererMock) RenderJob(j *models.Job) error {
 
 func TestCommandExecutionByClientIDsSuccess(t *testing.T) {
 	jobResp := models.Job{
-		Jid:        "123",
-		Status:     "done",
-		FinishedAt: time.Now(),
-		ClientID:   "123",
-		Command:    "ls",
-		Shell:      "sh",
-		Pid:        12,
-		StartedAt:  time.Now(),
-		CreatedBy:  "admin",
-		TimeoutSec: 1,
+		Jid:         "123",
+		Status:      "done",
+		FinishedAt:  time.Now(),
+		ClientID:    "123",
+		Command:     "ls",
+		Interpreter: "sh",
+		Pid:         12,
+		StartedAt:   time.Now(),
+		CreatedBy:   "admin",
+		TimeoutSec:  1,
 		Result: models.JobResult{
 			Stdout: "some out",
 			Stderr: "some err",
