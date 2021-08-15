@@ -1,7 +1,9 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -12,6 +14,7 @@ import (
 
 const (
 	LoginURL                    = "/api/v1/login"
+	TwoFaURL                    = "/api/v1/verify-2fa"
 	MeURL                       = "/api/v1/me"
 	MeIPURL                     = "/api/v1/me/ip"
 	StatusURL                   = "/api/v1/status"
@@ -41,6 +44,44 @@ func (rp *Rport) GetToken(ctx context.Context, tokenLifetime int) (li LoginRespo
 	_, err = rp.CallBaseClient(req, &li)
 
 	return
+}
+
+type TwoFaLogin struct {
+	Username string `json:"username"`
+	Token    string `json:"token"`
+}
+
+func (rp *Rport) GetTokenBy2FA(ctx context.Context, twoFACode, login string, tokenLifetime int) (li LoginResponse, err error) {
+	loginModel := TwoFaLogin{
+		Username: login,
+		Token:    twoFACode,
+	}
+
+	buf := &bytes.Buffer{}
+	loginModelRaw := json.NewEncoder(buf)
+	err = loginModelRaw.Encode(loginModel)
+	if err != nil {
+		return li, err
+	}
+
+	var req *http.Request
+	req, err = http.NewRequestWithContext(
+		ctx,
+		http.MethodPost,
+		url.JoinURL(rp.BaseURL, TwoFaURL),
+		buf,
+	)
+	if err != nil {
+		return li, err
+	}
+
+	q := req.URL.Query()
+	q.Add("token-lifetime", strconv.Itoa(tokenLifetime))
+	req.URL.RawQuery = q.Encode()
+
+	_, err = rp.CallBaseClient(req, &li)
+
+	return li, err
 }
 
 type MetaPart struct {

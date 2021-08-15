@@ -2,9 +2,12 @@ package config
 
 import (
 	"encoding/json"
+	"io"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
 
 	"github.com/spf13/cobra"
 
@@ -224,6 +227,28 @@ func TestCommandPopulation(t *testing.T) {
 	assert.NoError(t, err2)
 }
 
+type ValueProviderMock struct {
+	mock.Mock
+}
+
+func (vpm *ValueProviderMock) Read(name string) (val interface{}, found bool) {
+	args := vpm.Called(name)
+
+	return args.Get(0), args.Bool(1)
+}
+
+func (vpm *ValueProviderMock) Dump(w io.Writer) (err error) {
+	args := vpm.Called(w)
+
+	return args.Error(0)
+}
+
+func (vpm *ValueProviderMock) ToKeyValues() map[string]interface{} {
+	args := vpm.Called()
+
+	return args.Get(0).(map[string]interface{})
+}
+
 func TestCollectParams(t *testing.T) {
 	prm := &PromptReaderMock{
 		Inputs: []string{},
@@ -262,12 +287,23 @@ func TestCollectParams(t *testing.T) {
 			Type:       StringRequirementType,
 			Validate:   RequiredValidate,
 		},
+		{
+			Field:      "token",
+			ShortName:  "o",
+			Help:       "token given",
+			IsSecure:   false,
+			IsRequired: false,
+		},
 	}
 
 	cmd := &cobra.Command{}
 	DefineCommandInputs(cmd, reqs)
 
-	params, err := CollectParamsFromCommandAndPrompt(cmd, reqs, prm)
+	vp := new(ValueProviderMock)
+	vp.On("Read", "token").Return("tokVal", true)
+	vp.On("Read", mock.Anything).Return("", false)
+
+	params, err := CollectParamsFromCommandAndPromptAndEnv(cmd, reqs, prm, vp)
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -281,4 +317,7 @@ func TestCollectParams(t *testing.T) {
 
 	actualPassword, _ := params.Read("password")
 	assert.Equal(t, "123", actualPassword)
+
+	actualToken, _ := params.Read("token")
+	assert.Equal(t, "tokVal", actualToken)
 }

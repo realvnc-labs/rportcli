@@ -40,6 +40,7 @@ var initCmd = &cobra.Command{
 
 		initController := &controllers.InitController{
 			ConfigWriter: config.WriteConfig,
+			PromptReader: promptReader,
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()

@@ -19,21 +19,33 @@ type InitController struct {
 }
 
 func (ic *InitController) InitConfig(ctx context.Context, params *options.ParameterBag) error {
+	login := params.ReadString(config.Login, "")
+	serverURL := params.ReadString(config.ServerURL, config.DefaultServerURL)
+
 	apiAuth := &utils.StorageBasicAuth{
-		AuthProvider: func() (login, pass string, err error) {
-			login = params.ReadString(config.Login, "")
-			pass = params.ReadString(config.Password, "")
-			return
+		AuthProvider: func() (l, p string, err error) {
+			p = params.ReadString(config.Password, "")
+			return login, p, nil
 		},
 	}
 
-	cl := api.New(params.ReadString(config.ServerURL, config.DefaultServerURL), apiAuth)
-	loginResp, err := cl.GetToken(ctx, env.ReadEnvInt(config.SessionValiditySecondsEnvVar, api.DefaultTokenValiditySeconds))
+	tokenValidity := env.ReadEnvInt(config.SessionValiditySecondsEnvVar, api.DefaultTokenValiditySeconds)
+
+	cl := api.New(serverURL, apiAuth)
+	loginResp, err := cl.GetToken(ctx, tokenValidity)
 	if err != nil {
 		return fmt.Errorf("config verification failed against the rport: %v", err)
 	}
+
+	if loginResp.Data.TwoFA.SentTo != "" {
+		twoFACl := api.New(serverURL, nil)
+		loginResp, err = ic.process2FA(ctx, twoFACl, loginResp.Data.TwoFA.SentTo, login, tokenValidity)
+		if err != nil {
+			return fmt.Errorf("2 factor login to rport failed: %v", err)
+		}
+	}
 	if loginResp.Data.Token == "" {
-		return fmt.Errorf("empty token received from rport")
+		return fmt.Errorf("no auth token received from rport")
 	}
 
 	valuesProvider := options.NewMapValuesProvider(map[string]interface{}{
@@ -47,4 +59,31 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 	}
 
 	return nil
+}
+
+func (ic *InitController) process2FA(
+	ctx context.Context,
+	cl *api.Rport,
+	twoFASentTo, login string,
+	tokenLifetime int,
+) (li api.LoginResponse, err error) {
+	req := config.ParameterRequirement{
+		Field: "code",
+		Help: fmt.Sprintf(
+			"2 factor auth is enabled, please provide code that was sent to %s",
+			twoFASentTo,
+		),
+		Validate:   config.RequiredValidate,
+		IsRequired: true,
+		Type:       config.StringRequirementType,
+	}
+	resultMap := map[string]interface{}{}
+	err = config.PromptRequiredValues([]config.ParameterRequirement{req}, resultMap, ic.PromptReader)
+	if err != nil {
+		return li, err
+	}
+
+	li, err = cl.GetTokenBy2FA(ctx, resultMap["code"].(string), login, tokenLifetime)
+
+	return li, err
 }

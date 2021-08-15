@@ -161,7 +161,7 @@ func LoadParamsFromFileAndEnvAndFlagsAndPrompt(
 		valueProviders = append(valueProviders, jvp)
 	}
 
-	valuesProviderFromCommandAndPrompt, err := CollectParamsFromCommandAndPrompt(c, reqs, promptReader)
+	valuesProviderFromCommandAndPrompt, err := CollectParamsFromCommandAndPromptAndEnv(c, reqs, promptReader, envValuesProvider)
 	if err != nil {
 		return nil, err
 	}
@@ -172,13 +172,20 @@ func LoadParamsFromFileAndEnvAndFlagsAndPrompt(
 	return options.New(mergedValuesProvider), nil
 }
 
-func CollectParamsFromCommandAndPrompt(
+func CollectParamsFromCommandAndPromptAndEnv(
 	c *cobra.Command,
 	reqs []ParameterRequirement,
 	promptReader PromptReader,
+	altValuesProvider options.ValuesProvider,
 ) (vp options.ValuesProvider, err error) {
 	paramsRaw := make(map[string]interface{}, len(reqs))
 	for _, req := range reqs {
+		envVal, isFound := altValuesProvider.Read(req.Field)
+		if isFound {
+			paramsRaw[req.Field] = envVal
+			continue
+		}
+
 		if req.Type == BoolRequirementType {
 			boolVal, e := c.Flags().GetBool(req.Field)
 			if e != nil {

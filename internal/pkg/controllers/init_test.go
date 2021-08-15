@@ -6,7 +6,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
@@ -74,6 +77,70 @@ func TestInitSuccess(t *testing.T) {
 	assert.Equal(t, srv.URL, writtenParams.ReadString(config.ServerURL, ""))
 	assert.Equal(t, tokenGiven, writtenParams.ReadString(config.Token, ""))
 	assert.True(t, statusRequested)
+}
+
+func TestInit2FASuccess(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		curURL := r.URL.String()
+		resp := api.LoginResponse{
+			Data: models.Token{
+				Token: "",
+				TwoFA: models.TwoFA{
+					SentTo: "no@mail.me",
+				},
+			},
+		}
+
+		if strings.HasPrefix(curURL, "/api/v1/login") {
+			rw.WriteHeader(http.StatusOK)
+			jsonEnc := json.NewEncoder(rw)
+			e := jsonEnc.Encode(resp)
+			assert.NoError(t, e)
+			return
+		}
+
+		if !strings.HasPrefix(curURL, "/api/v1/verify-2fa") {
+			rw.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "", r.Header.Get("Authorization"))
+
+		resp.Data.Token = "someTok"
+		resp.Data.TwoFA = models.TwoFA{}
+
+		rw.WriteHeader(http.StatusOK)
+		jsonEnc := json.NewEncoder(rw)
+		e := jsonEnc.Encode(resp)
+		assert.NoError(t, e)
+	}))
+	defer srv.Close()
+
+	writtenParams := options.New(options.NewMapValuesProvider(map[string]interface{}{}))
+	tController := InitController{
+		ConfigWriter: func(params *options.ParameterBag) (err error) {
+			writtenParams = params
+			return nil
+		},
+		PromptReader: &PromptReaderMock{
+			ReadOutputs: []string{
+				"someCode",
+			},
+		},
+	}
+
+	params := config.FromValues(map[string]string{
+		config.ServerURL: srv.URL,
+		config.Login:     "log1",
+		config.Password:  "pass1",
+	})
+	err := tController.InitConfig(context.Background(), params)
+
+	require.NoError(t, err)
+
+	assert.Equal(t, srv.URL, writtenParams.ReadString(config.ServerURL, ""))
+	assert.Equal(t, "someTok", writtenParams.ReadString(config.Token, ""))
 }
 
 func TestInitError(t *testing.T) {
