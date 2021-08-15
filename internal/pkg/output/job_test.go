@@ -55,7 +55,7 @@ Client Name: some cl name
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"jid":"123","status":"success","finished_at":"2021-01-01T00:00:01Z","client_id":"cl123","client_name":"some cl name","command":"ls","cwd":"here","pid":123,"started_at":"2021-01-01T00:00:01Z","created_by":"me","multi_job_id":"multi1234","timeout_sec":10,"error":"no","result":{"stdout":"some std","stderr":""},"sudo":true,"is_script":true,"interpreter":"cmd"}
+			ExpectedOutput: `{"jid":"123","status":"success","finished_at":"2021-01-01T00:00:01Z","client_id":"cl123","client_name":"some cl name","command":"ls","cwd":"here","pid":123,"started_at":"2021-01-01T00:00:01Z","created_by":"me","multi_job_id":"multi1234","timeout_sec":10,"error":"no","result":{"stdout":"some std","stderr":""},"is_sudo":true,"is_script":true,"interpreter":"cmd"}
 `,
 		},
 		{
@@ -78,7 +78,7 @@ Client Name: some cl name
     "stdout": "some std",
     "stderr": ""
   },
-  "sudo": true,
+  "is_sudo": true,
   "is_script": true,
   "interpreter": "cmd"
 }
