@@ -154,18 +154,19 @@ func LoadParamsFromFileAndEnvAndFlagsAndPrompt(
 	valueProviders := []options.ValuesProvider{
 		envValuesProvider,
 	}
-	jvp, err := CreateFileValuesProvider()
-	if err != nil {
-		logrus.Warn(err)
-	} else {
-		valueProviders = append(valueProviders, jvp)
-	}
 
 	valuesProviderFromCommandAndPrompt, err := CollectParamsFromCommandAndPromptAndEnv(c, reqs, promptReader, envValuesProvider)
 	if err != nil {
 		return nil, err
 	}
 	valueProviders = append(valueProviders, valuesProviderFromCommandAndPrompt)
+
+	jvp, err := CreateFileValuesProvider()
+	if err != nil {
+		logrus.Warn(err)
+	} else {
+		valueProviders = append(valueProviders, jvp)
+	}
 
 	mergedValuesProvider := options.NewValuesProviderComposite(valueProviders...)
 
