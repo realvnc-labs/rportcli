@@ -206,7 +206,7 @@ func (eh *ExecutionHelper) processRawMessage(msg []byte) error {
 	var job models.Job
 	err := json.Unmarshal(msg, &job)
 	if err != nil || job.Jid == "" {
-		logrus.Debugf("cannot unmarshal %s to the Job: %v, will try interpret it as an error", string(msg), err)
+		logrus.Debugf("cannot unmarshal '%s' to the Job: %v, will try interpret it as an error", string(msg), err)
 		var errResp models.ErrorResp
 		err = json.Unmarshal(msg, &errResp)
 		if err != nil {

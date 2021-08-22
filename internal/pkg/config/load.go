@@ -134,6 +134,13 @@ func WriteConfig(params *options.ParameterBag) (err error) {
 		Token:     params.ReadString(Token, ""),
 	}
 
+	if _, err := os.Stat(configLocation); err == nil {
+		err = os.Remove(configLocation)
+		if err != nil {
+			return err
+		}
+	}
+
 	fileToWrite, err := os.OpenFile(configLocation, os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil {
 		return err
