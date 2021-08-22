@@ -119,6 +119,7 @@ type TunnelCreated struct {
 	Scheme      string `json:"scheme" yaml:"scheme"`
 	ACL         string `json:"acl" yaml:"acl"`
 	Usage       string `json:"usage" yaml:"usage"`
+	RportServer string `json:"rport_server,omitempty" yaml:"rport_server,omitempty"`
 }
 
 func (tc *TunnelCreated) KeyValues() []testing.KeyValueStr {

@@ -176,6 +176,7 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	}
 
 	tunnelCreated := tunResp.Data
+	tunnelCreated.RportServer = tc.Rport.BaseURL
 	tunnelCreated.Usage = tc.generateUsage(tunnelCreated, params)
 	if tunnelCreated.ClientID == "" {
 		tunnelCreated.ClientID = clientID

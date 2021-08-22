@@ -102,7 +102,7 @@ const (
 		"a default corresponding value will be used 22 for ssh and 3389 for rdp"
 
 	createTunnelLong = `creates a new tunnel, e.g.
-rportcli tunnel create -l 0.0.0.0:22 -r 3394 -d bc0b705d-b5fb-4df5-84e3-82dba437bbef -s ssh --acl 10.1.2.3
+rportcli tunnel create -l 0.0.0.0:3394 -r 22 -d bc0b705d-b5fb-4df5-84e3-82dba437bbef -s ssh --acl 10.1.2.3
 this example opens port 3394 on the rport server and forwards to port 22 of the client bc0b705d-b5fb-4df5-84e3-82dba437bbef
 with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 `
