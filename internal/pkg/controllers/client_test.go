@@ -18,7 +18,7 @@ import (
 )
 
 type ClientRendererMock struct {
-	Writer io.Writer
+	Writer             io.Writer
 	renderDetailsGiven bool
 }
 
@@ -107,7 +107,7 @@ func TestClientFoundByIDController(t *testing.T) {
 		ClientRenderer: renderMock,
 	}
 
-	paramsProv := options.NewMapValuesProvider(map[string]interface{}{"all":true})
+	paramsProv := options.NewMapValuesProvider(map[string]interface{}{"all": true})
 	params := options.New(paramsProv)
 
 	err := clController.Client(context.Background(), params, "123", "")

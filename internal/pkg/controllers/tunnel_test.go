@@ -6,12 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
@@ -822,7 +823,7 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 		},
 		ClientSearch: &ClientSearchMock{clientsToGive: []*models.Client{}},
 		RDPWriter:    fileWriter,
-		RDPExecutor: rdpExecutor,
+		RDPExecutor:  rdpExecutor,
 	}
 
 	params := config.FromValues(map[string]string{
@@ -866,7 +867,6 @@ func TestTunnelCreateWithRDPIncompatibleFlags(t *testing.T) {
 
 	cl := api.New("localhost", apiAuth)
 
-
 	rdpExecutor := &RDPExecutorMock{}
 
 	tController := TunnelController{
@@ -875,7 +875,7 @@ func TestTunnelCreateWithRDPIncompatibleFlags(t *testing.T) {
 		IPProvider:     IPProviderMock{},
 		ClientSearch:   &ClientSearchMock{clientsToGive: []*models.Client{}},
 		RDPWriter:      nil,
-		RDPExecutor: rdpExecutor,
+		RDPExecutor:    rdpExecutor,
 	}
 
 	params := config.FromValues(map[string]string{

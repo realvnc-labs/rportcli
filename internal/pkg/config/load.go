@@ -3,12 +3,13 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/pflag"
 	"io"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/pflag"
 
 	"github.com/spf13/cobra"
 
@@ -134,7 +135,7 @@ func WriteConfig(params *options.ParameterBag) (err error) {
 		Token:     params.ReadString(Token, ""),
 	}
 
-	if _, err := os.Stat(configLocation); err == nil {
+	if _, e := os.Stat(configLocation); e == nil {
 		err = os.Remove(configLocation)
 		if err != nil {
 			return err
@@ -148,10 +149,13 @@ func WriteConfig(params *options.ParameterBag) (err error) {
 
 	encoder := json.NewEncoder(fileToWrite)
 	err = encoder.Encode(configToWrite)
+	if err != nil {
+		return err
+	}
 
 	logrus.Infof("created config at %s", configLocation)
 
-	return
+	return nil
 }
 
 func getConfigLocation() (configPath string) {

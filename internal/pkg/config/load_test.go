@@ -2,11 +2,12 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/spf13/pflag"
 	"io"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/spf13/pflag"
 
 	"github.com/stretchr/testify/mock"
 

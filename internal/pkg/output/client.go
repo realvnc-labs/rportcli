@@ -107,8 +107,8 @@ func (cr *ClientRenderer) renderUpdateStatusSummaries(summaries []models.UpdateS
 	}
 
 	rows := make([]RowData, 0, len(summaries))
-	for _, s := range summaries {
-		rows = append(rows, &s)
+	for i := range summaries {
+		rows = append(rows, &summaries[i])
 	}
 
 	return RenderTable(cr.Writer, &models.UpdateSummary{}, rows, cr.ColCountCalculator)

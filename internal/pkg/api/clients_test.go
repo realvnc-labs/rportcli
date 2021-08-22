@@ -126,8 +126,8 @@ func TestGetClientsList(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedClients := make([]*models.Client, 0, len(clientsStub))
-	for _, cp := range clientsStub {
-		expectedClients = append(expectedClients, cp)
-	}
+
+	expectedClients = append(expectedClients, clientsStub...)
+
 	assert.Equal(t, expectedClients, actualClients)
 }

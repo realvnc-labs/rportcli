@@ -115,6 +115,11 @@ issues:
         - dupl
         - lll
         - goconst
+    - path: internal/pkg/models/client.go
+      linters:
+        - funlen
+      text: "Function 'KeyValues' is too long" #large model with a lot of fields
+
 run:
   skip-dirs: []
 

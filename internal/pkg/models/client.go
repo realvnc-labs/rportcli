@@ -2,10 +2,11 @@ package models
 
 import (
 	"fmt"
-	"github.com/dustin/go-humanize"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dustin/go-humanize"
 
 	"github.com/breathbath/go_utils/v2/pkg/testing"
 

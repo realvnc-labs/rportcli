@@ -19,7 +19,7 @@ const DefaultCacheValidityHours = 24
 
 type ClientsCacheModel struct {
 	Clients   []*models.Client `json:"clients"`
-	ValidTill time.Time       `json:"valid_till"`
+	ValidTill time.Time        `json:"valid_till"`
 }
 
 type ClientsCache struct {
