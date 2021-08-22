@@ -16,7 +16,7 @@ const (
 
 type ClientRenderer interface {
 	RenderClients(clients []*models.Client) error
-	RenderClient(client *models.Client) error
+	RenderClient(client *models.Client, renderDetails bool) error
 }
 
 type ClientController struct {
@@ -39,6 +39,8 @@ func (cc *ClientController) Client(ctx context.Context, params *options.Paramete
 		return fmt.Errorf("no client id nor name provided")
 	}
 
+	renderDetails := params.ReadBool("all", false)
+
 	if id != "" {
 		clResp, err := cc.Rport.Clients(ctx)
 		if err != nil {
@@ -46,7 +48,7 @@ func (cc *ClientController) Client(ctx context.Context, params *options.Paramete
 		}
 		for _, cl := range clResp.Data {
 			if cl.ID == id {
-				return cc.ClientRenderer.RenderClient(cl)
+				return cc.ClientRenderer.RenderClient(cl, renderDetails)
 			}
 		}
 	} else {
@@ -54,7 +56,7 @@ func (cc *ClientController) Client(ctx context.Context, params *options.Paramete
 		if err != nil {
 			return err
 		}
-		return cc.ClientRenderer.RenderClient(&cl)
+		return cc.ClientRenderer.RenderClient(&cl, renderDetails)
 	}
 
 	return fmt.Errorf("client not found by the provided id '%s' or name '%s'", id, name)

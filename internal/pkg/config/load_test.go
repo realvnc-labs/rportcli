@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"github.com/spf13/pflag"
 	"io"
 	"io/ioutil"
 	"os"
@@ -73,7 +74,7 @@ func TestLoadConfigFromFile(t *testing.T) {
 		}
 	}()
 
-	cfg := LoadParamsFromFileAndEnv()
+	cfg := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -122,7 +123,7 @@ func TestLoadConfigFromEnvOrFile(t *testing.T) {
 		}
 	}()
 
-	cfg := LoadParamsFromFileAndEnv()
+	cfg := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
 
 	assert.Equal(t, "somepass", cfg.ReadString(Password, ""))
 	assert.Equal(t, "log1", cfg.ReadString(Login, ""))
@@ -143,7 +144,7 @@ func TestLoadConfigFromFileError(t *testing.T) {
 		}
 	}()
 
-	params := LoadParamsFromFileAndEnv()
+	params := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
 	assert.Equal(t, "", params.ReadString(Token, ""))
 }
 

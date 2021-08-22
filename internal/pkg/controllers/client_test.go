@@ -19,6 +19,7 @@ import (
 
 type ClientRendererMock struct {
 	Writer io.Writer
+	renderDetailsGiven bool
 }
 
 var clientStub = &models.Client{
@@ -53,7 +54,9 @@ func (crm *ClientRendererMock) RenderClients(clients []*models.Client) error {
 	return nil
 }
 
-func (crm *ClientRendererMock) RenderClient(client *models.Client) error {
+func (crm *ClientRendererMock) RenderClient(client *models.Client, renderDetails bool) error {
+	crm.renderDetailsGiven = renderDetails
+
 	jsonBytes, err := json.Marshal(client)
 	if err != nil {
 		return err
@@ -86,7 +89,7 @@ func TestClientsController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`[{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}]`,
+		`[{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}],"os_full_name":"","os_version":"","os_virtualization_system":"","os_virtualization_role":"","cpu_family":"","cpu_model":"","cpu_model_name":"","cpu_vendor":"","num_cpus":0,"mem_total":0,"timezone":"","allowed_user_groups":null,"updates_status":null}]`,
 		buf.String(),
 	)
 }
@@ -98,12 +101,16 @@ func TestClientFoundByIDController(t *testing.T) {
 	cl := api.New(srv.URL, nil)
 	buf := bytes.Buffer{}
 
+	renderMock := &ClientRendererMock{Writer: &buf}
 	clController := ClientController{
 		Rport:          cl,
-		ClientRenderer: &ClientRendererMock{Writer: &buf},
+		ClientRenderer: renderMock,
 	}
 
-	err := clController.Client(context.Background(), &options.ParameterBag{}, "123", "")
+	paramsProv := options.NewMapValuesProvider(map[string]interface{}{"all":true})
+	params := options.New(paramsProv)
+
+	err := clController.Client(context.Background(), params, "123", "")
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -111,9 +118,10 @@ func TestClientFoundByIDController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}`,
+		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}],"os_full_name":"","os_version":"","os_virtualization_system":"","os_virtualization_role":"","cpu_family":"","cpu_model":"","cpu_model_name":"","cpu_vendor":"","num_cpus":0,"mem_total":0,"timezone":"","allowed_user_groups":null,"updates_status":null}`,
 		buf.String(),
 	)
+	assert.True(t, renderMock.renderDetailsGiven)
 }
 
 func TestClientFoundByNameController(t *testing.T) {
@@ -142,7 +150,7 @@ func TestClientFoundByNameController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","Tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]}`,
+		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}],"os_full_name":"","os_version":"","os_virtualization_system":"","os_virtualization_role":"","cpu_family":"","cpu_model":"","cpu_model_name":"","cpu_vendor":"","num_cpus":0,"mem_total":0,"timezone":"","allowed_user_groups":null,"updates_status":null}`,
 		buf.String(),
 	)
 }

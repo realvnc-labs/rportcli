@@ -23,7 +23,7 @@ ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL S
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `[{"id":"123","name":"SomeName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","Tunnels":null},{"id":"124","name":"SomeOtherName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","Tunnels":null}]
+			ExpectedOutput: `[{"id":"123","name":"SomeName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","tunnels":null,"os_full_name":"","os_version":"","os_virtualization_system":"","os_virtualization_role":"","cpu_family":"","cpu_model":"","cpu_model_name":"","cpu_vendor":"","num_cpus":0,"mem_total":0,"timezone":"","allowed_user_groups":null,"updates_status":null},{"id":"124","name":"SomeOtherName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","tunnels":null,"os_full_name":"","os_version":"","os_virtualization_system":"","os_virtualization_role":"","cpu_family":"","cpu_model":"","cpu_model_name":"","cpu_vendor":"","num_cpus":0,"mem_total":0,"timezone":"","allowed_user_groups":null,"updates_status":null}]
 `,
 		},
 		{
@@ -45,7 +45,20 @@ ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL S
     "tags": null,
     "version": "",
     "address": "",
-    "Tunnels": null
+    "tunnels": null,
+    "os_full_name": "",
+    "os_version": "",
+    "os_virtualization_system": "",
+    "os_virtualization_role": "",
+    "cpu_family": "",
+    "cpu_model": "",
+    "cpu_model_name": "",
+    "cpu_vendor": "",
+    "num_cpus": 0,
+    "mem_total": 0,
+    "timezone": "",
+    "allowed_user_groups": null,
+    "updates_status": null
   },
   {
     "id": "124",
@@ -63,7 +76,20 @@ ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL S
     "tags": null,
     "version": "",
     "address": "",
-    "Tunnels": null
+    "tunnels": null,
+    "os_full_name": "",
+    "os_version": "",
+    "os_virtualization_system": "",
+    "os_virtualization_role": "",
+    "cpu_family": "",
+    "cpu_model": "",
+    "cpu_model_name": "",
+    "cpu_vendor": "",
+    "num_cpus": 0,
+    "mem_total": 0,
+    "timezone": "",
+    "allowed_user_groups": null,
+    "updates_status": null
   }
 ]
 `,
@@ -86,6 +112,19 @@ ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL S
   version: ""
   address: ""
   tunnels: []
+  osfullname: ""
+  osversion: ""
+  osvirtualizationsystem: ""
+  osvirtualizationrole: ""
+  cpufamily: ""
+  cpumodel: ""
+  cpumodelname: ""
+  cpuvendor: ""
+  numcpus: 0
+  memorytotal: 0
+  timezone: ""
+  allowedusergroups: []
+  updatesstatus: null
 - id: "124"
   name: SomeOtherName
   os: ""
@@ -102,6 +141,19 @@ ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL S
   version: ""
   address: ""
   tunnels: []
+  osfullname: ""
+  osversion: ""
+  osvirtualizationsystem: ""
+  osvirtualizationrole: ""
+  cpufamily: ""
+  cpumodel: ""
+  cpumodelname: ""
+  cpuvendor: ""
+  numcpus: 0
+  memorytotal: 0
+  timezone: ""
+  allowedusergroups: []
+  updatesstatus: null
 `,
 		},
 	}
@@ -120,26 +172,29 @@ ID  NAME          TUNNELS REMOTE ADDRESS HOSTNAME OS KERNEL S
 	}
 
 	for _, testCase := range testCases {
-		buf := &bytes.Buffer{}
-		cr := &ClientRenderer{
-			ColCountCalculator: func() int {
-				return 150
-			},
-			Writer: buf,
-			Format: testCase.Format,
-		}
+		tc := testCase
+		t.Run(testCase.Format, func(t *testing.T) {
+			buf := &bytes.Buffer{}
+			cr := &ClientRenderer{
+				ColCountCalculator: func() int {
+					return 150
+				},
+				Writer: buf,
+				Format: tc.Format,
+			}
 
-		err := cr.RenderClients(clients)
-		assert.NoError(t, err)
-		if err != nil {
-			return
-		}
+			err := cr.RenderClients(clients)
+			assert.NoError(t, err)
+			if err != nil {
+				return
+			}
 
-		assert.Equal(
-			t,
-			testCase.ExpectedOutput,
-			buf.String(),
-		)
+			assert.Equal(
+				t,
+				tc.ExpectedOutput,
+				buf.String(),
+			)
+		})
 	}
 }
 
@@ -152,27 +207,39 @@ func TestRenderClient(t *testing.T) {
 			Format: FormatHuman,
 			ExpectedOutput: `Client [123]
 
-KEY               VALUE     
-ID:               123       
-Name:             SomeName  
-Os:                         
-OsArch:                     
-OsFamily:                   
-OsKernel:                   
-Hostname:                   
-Ipv4:                       
-Ipv6:                       
-Tags:                       
-Version:                    
-Address:                    
-Connection State: connected 
-Disconnected At:            
-Client Auth ID:             
+KEY                     VALUE     
+ID:                     123       
+Name:                   SomeName  
+Os:                               
+OsArch:                           
+OsFamily:                         
+OsKernel:                         
+Hostname:                         
+Ipv4:                             
+Ipv6:                             
+Tags:                             
+Version:                          
+Address:                          
+Connection State:       connected 
+Disconnected At:                  
+Client Auth ID:                   
+OSFullName:                       
+OSVersion:                        
+OSVirtualizationSystem:           
+OSVirtualizationRole:             
+CPUFamily:                        
+CPUModel:                         
+CPUModelName:                     
+CPUVendor:                        
+NumCPUs:                0         
+MemoryTotal:            0 B       
+Timezone:                         
+AllowedUserGroups:                
 `,
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"id":"123","name":"SomeName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","Tunnels":null}
+			ExpectedOutput: `{"id":"123","name":"SomeName","os":"","os_arch":"","os_family":"","os_kernel":"","hostname":"","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":null,"version":"","address":"","tunnels":null,"os_full_name":"","os_version":"","os_virtualization_system":"","os_virtualization_role":"","cpu_family":"","cpu_model":"","cpu_model_name":"","cpu_vendor":"","num_cpus":0,"mem_total":0,"timezone":"","allowed_user_groups":null,"updates_status":null}
 `,
 		},
 		{
@@ -193,7 +260,20 @@ Client Auth ID:
   "tags": null,
   "version": "",
   "address": "",
-  "Tunnels": null
+  "tunnels": null,
+  "os_full_name": "",
+  "os_version": "",
+  "os_virtualization_system": "",
+  "os_virtualization_role": "",
+  "cpu_family": "",
+  "cpu_model": "",
+  "cpu_model_name": "",
+  "cpu_vendor": "",
+  "num_cpus": 0,
+  "mem_total": 0,
+  "timezone": "",
+  "allowed_user_groups": null,
+  "updates_status": null
 }
 `,
 		},
@@ -215,6 +295,19 @@ tags: []
 version: ""
 address: ""
 tunnels: []
+osfullname: ""
+osversion: ""
+osvirtualizationsystem: ""
+osvirtualizationrole: ""
+cpufamily: ""
+cpumodel: ""
+cpumodelname: ""
+cpuvendor: ""
+numcpus: 0
+memorytotal: 0
+timezone: ""
+allowedusergroups: []
+updatesstatus: null
 `,
 		},
 	}
@@ -225,21 +318,24 @@ tunnels: []
 	}
 
 	for _, testCase := range testCases {
-		buf := &bytes.Buffer{}
-		cr := &ClientRenderer{
-			ColCountCalculator: func() int {
-				return 150
-			},
-			Writer: buf,
-			Format: testCase.Format,
-		}
+		tc := testCase
+		t.Run(testCase.Format, func(t *testing.T) {
+			buf := &bytes.Buffer{}
+			cr := &ClientRenderer{
+				ColCountCalculator: func() int {
+					return 150
+				},
+				Writer: buf,
+				Format: tc.Format,
+			}
 
-		err := cr.RenderClient(client)
-		assert.NoError(t, err)
-		if err != nil {
-			return
-		}
+			err := cr.RenderClient(client, false)
+			assert.NoError(t, err)
+			if err != nil {
+				return
+			}
 
-		assert.Equal(t, testCase.ExpectedOutput, buf.String())
+			assert.Equal(t, tc.ExpectedOutput, buf.String())
+		})
 	}
 }

@@ -3,6 +3,8 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/pflag"
+	"io"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -26,7 +28,7 @@ const (
 	DefaultServerURL = "http://localhost:3000"
 )
 
-func LoadParamsFromFileAndEnv() (params *options.ParameterBag) {
+func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBag) {
 	envValuesProvider := CreateEnvValuesProvider()
 	jvp, err := CreateFileValuesProvider()
 	if err != nil {
@@ -34,11 +36,45 @@ func LoadParamsFromFileAndEnv() (params *options.ParameterBag) {
 		return options.New(envValuesProvider)
 	}
 
-	valuesProvider := options.NewValuesProviderComposite(jvp, envValuesProvider)
+	flagValuesProvider := CreateFlagValuesProvider(flags)
+
+	valuesProvider := options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider, jvp)
 
 	paramsToReturn := options.New(valuesProvider)
 
 	return paramsToReturn
+}
+
+type FlagValuesProvider struct {
+	flags *pflag.FlagSet
+}
+
+func CreateFlagValuesProvider(flags *pflag.FlagSet) options.ValuesProvider {
+	return &FlagValuesProvider{flags: flags}
+}
+
+func (fvp *FlagValuesProvider) Dump(w io.Writer) (err error) {
+	jsonEncoder := json.NewEncoder(w)
+	err = jsonEncoder.Encode(fvp.ToKeyValues())
+	return
+}
+
+func (fvp *FlagValuesProvider) ToKeyValues() map[string]interface{} {
+	res := make(map[string]interface{})
+	fvp.flags.VisitAll(func(flag *pflag.Flag) {
+		res[flag.Name] = flag.Value.String()
+	})
+
+	return res
+}
+
+func (fvp *FlagValuesProvider) Read(name string) (val interface{}, found bool) {
+	fl := fvp.flags.Lookup(name)
+	if fl == nil {
+		return nil, false
+	}
+
+	return fl.Value.String(), true
 }
 
 func CreateEnvValuesProvider() options.ValuesProvider {

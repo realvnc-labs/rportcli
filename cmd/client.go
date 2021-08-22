@@ -20,6 +20,7 @@ import (
 func init() {
 	clientsCmd.AddCommand(clientsListCmd)
 	clientCmd.Flags().StringP(controllers.ClientNameFlag, "n", "", "Get client by name")
+	clientCmd.Flags().BoolP("all", "a", false, "Show client info with additional details")
 	clientsCmd.AddCommand(clientCmd)
 	rootCmd.AddCommand(clientsCmd)
 }
@@ -35,7 +36,7 @@ var clientsListCmd = &cobra.Command{
 	Short: "list all connected and disconnected rport clients",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		params := config.LoadParamsFromFileAndEnv()
+		params := config.LoadParamsFromFileAndEnv(cmd.Flags())
 
 		rportAPI := buildRport(params)
 		cr := &output.ClientRenderer{
@@ -76,7 +77,7 @@ var clientCmd = &cobra.Command{
 			clientID = args[0]
 		}
 
-		params := config.LoadParamsFromFileAndEnv()
+		params := config.LoadParamsFromFileAndEnv(cmd.Flags())
 		rportAPI := buildRport(params)
 
 		cr := &output.ClientRenderer{

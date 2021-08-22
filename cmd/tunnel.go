@@ -46,7 +46,7 @@ var tunnelListCmd = &cobra.Command{
 	Short: "list all active tunnels created with rport",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		params := config.LoadParamsFromFileAndEnv()
+		params := config.LoadParamsFromFileAndEnv(cmd.Flags())
 
 		rportAPI := buildRport(params)
 
