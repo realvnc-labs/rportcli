@@ -61,7 +61,7 @@ var clientsListCmd = &cobra.Command{
 
 var clientCmd = &cobra.Command{
 	Use:   "get <ID>",
-	Short: "get all details about a specific client identified by its id",
+	Short: "get all details about a specific client identified by its id or flags like name",
 	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var clientName string
