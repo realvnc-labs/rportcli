@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -106,17 +107,18 @@ func TestTunnelsController(t *testing.T) {
 
 	buf := bytes.Buffer{}
 	isSSHExecuted := false
-	tController := TunnelController{
+	tController := &TunnelController{
 		Rport:          cl,
 		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
 		SSHFunc: func(sshParams []string) error {
 			isSSHExecuted = true
 			return nil
 		},
+		ClientSearch:   &ClientSearchMock{},
 	}
 	assert.False(t, isSSHExecuted)
 
-	err := tController.Tunnels(context.Background())
+	err := tController.Tunnels(context.Background(), &options.ParameterBag{})
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -127,6 +129,63 @@ func TestTunnelsController(t *testing.T) {
 		`[{"id":"1","client_id":"123","client_name":"Client 123","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]`,
 		buf.String(),
 	)
+}
+
+func TestTunnelsControllerByClient(t *testing.T) {
+	srv := startClientsServer()
+	defer srv.Close()
+
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1455"
+			pass = "pass1446"
+			return
+		},
+	}
+	cl := api.New(srv.URL, apiAuth)
+	buf := bytes.Buffer{}
+	searchMock := &ClientSearchMock{
+		clientsToGive: []*models.Client{
+			{
+				ID:   "cl2",
+				Name: "client 354351",
+				Tunnels: []*models.Tunnel{
+					{
+						ID: "23",
+					},
+				},
+			},
+		},
+	}
+	tController := &TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
+		SSHFunc: func(sshParams []string) error {
+			return nil
+		},
+		ClientSearch:   searchMock,
+	}
+
+	paramProv := options.NewMapValuesProvider(map[string]interface{}{
+		ClientNameFlag: "client 354351",
+	})
+	err := tController.Tunnels(context.Background(), options.New(paramProv))
+	require.NoError(t, err)
+
+	assert.Equal(
+		t,
+		`[{"id":"23","client_id":"cl2","client_name":"client 354351","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]`,
+		buf.String(),
+	)
+
+	assert.Equal(t, "client 354351", searchMock.searchTermGiven)
+
+	paramProv2 := options.NewMapValuesProvider(map[string]interface{}{
+		ClientID: "cl2",
+	})
+	err = tController.Tunnels(context.Background(), options.New(paramProv2))
+	require.NoError(t, err)
+	assert.Equal(t, "cl2", searchMock.searchTermGiven)
 }
 
 func TestTunnelDeleteByClientIDController(t *testing.T) {
@@ -189,7 +248,7 @@ func TestTunnelDeleteByClientNameController(t *testing.T) {
 	cl := api.New(srv.URL, apiAuth)
 	buf := bytes.Buffer{}
 	searchMock := &ClientSearchMock{
-		clientsToGive: []models.Client{
+		clientsToGive: []*models.Client{
 			{
 				ID:   "cl2",
 				Name: "some client",
@@ -218,7 +277,7 @@ func TestTunnelDeleteByClientNameController(t *testing.T) {
 
 func TestTunnelDeleteByAmbiguousClientName(t *testing.T) {
 	searchMock := &ClientSearchMock{
-		clientsToGive: []models.Client{
+		clientsToGive: []*models.Client{
 			{
 				ID:   "cl1",
 				Name: "some client 1",
@@ -248,7 +307,7 @@ func TestTunnelDeleteByAmbiguousClientName(t *testing.T) {
 
 func TestTunnelDeleteNotFoundClientName(t *testing.T) {
 	searchMock := &ClientSearchMock{
-		clientsToGive: []models.Client{},
+		clientsToGive: []*models.Client{},
 	}
 	tController := TunnelController{
 		ClientSearch: searchMock,
@@ -369,7 +428,7 @@ func TestTunnelCreateWithClientName(t *testing.T) {
 	cl := api.New(srv.URL, apiAuth)
 
 	searchMock := &ClientSearchMock{
-		clientsToGive: []models.Client{
+		clientsToGive: []*models.Client{
 			{
 				ID:   "444",
 				Name: "some client 444",
@@ -466,7 +525,7 @@ func TestTunnelCreateWithSchemeDiscovery(t *testing.T) {
 
 	cl := api.New(srv.URL, apiAuth)
 
-	searchMock := &ClientSearchMock{clientsToGive: []models.Client{}}
+	searchMock := &ClientSearchMock{clientsToGive: []*models.Client{}}
 
 	tController := TunnelController{
 		Rport:          cl,
@@ -529,7 +588,7 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 
 	cl := api.New(srv.URL, apiAuth)
 
-	searchMock := &ClientSearchMock{clientsToGive: []models.Client{}}
+	searchMock := &ClientSearchMock{clientsToGive: []*models.Client{}}
 
 	tController := TunnelController{
 		Rport:          cl,
@@ -615,7 +674,7 @@ func TestTunnelCreateWithSSH(t *testing.T) {
 
 	cl := api.New(srv.URL, apiAuth)
 
-	searchMock := &ClientSearchMock{clientsToGive: []models.Client{}}
+	searchMock := &ClientSearchMock{clientsToGive: []*models.Client{}}
 
 	isSSHCalled := false
 	tController := TunnelController{
@@ -696,7 +755,7 @@ func TestTunnelCreateWithSSHFailure(t *testing.T) {
 		IPProvider: IPProviderMock{
 			IP: "3.4.5.16",
 		},
-		ClientSearch: &ClientSearchMock{clientsToGive: []models.Client{}},
+		ClientSearch: &ClientSearchMock{clientsToGive: []*models.Client{}},
 		SSHFunc: func(sshParams []string) error {
 			return errors.New("ssh failure")
 		},
@@ -751,7 +810,7 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 		IPProvider: IPProviderMock{
 			IP: "3.4.5.166",
 		},
-		ClientSearch: &ClientSearchMock{clientsToGive: []models.Client{}},
+		ClientSearch: &ClientSearchMock{clientsToGive: []*models.Client{}},
 		RDPWriter:    fileWriter,
 		RDPExecutor: &rdp.Executor{
 			CommandProvider: func(filePath string) (cmd string, args []string) {
@@ -810,7 +869,7 @@ func TestTunnelCreateWithRDPIncompatibleFlags(t *testing.T) {
 		Rport:          cl,
 		TunnelRenderer: &TunnelRendererMock{Writer: &renderBuf},
 		IPProvider:     IPProviderMock{},
-		ClientSearch:   &ClientSearchMock{clientsToGive: []models.Client{}},
+		ClientSearch:   &ClientSearchMock{clientsToGive: []*models.Client{}},
 		RDPWriter:      nil,
 		RDPExecutor: &rdp.Executor{
 			CommandProvider: func(filePath string) (cmd string, args []string) {
@@ -848,7 +907,7 @@ func TestTunnelCreateWithSSHIncompatibleFlags(t *testing.T) {
 		Rport:          cl,
 		TunnelRenderer: &TunnelRendererMock{Writer: &renderBuf},
 		IPProvider:     IPProviderMock{},
-		ClientSearch:   &ClientSearchMock{clientsToGive: []models.Client{}},
+		ClientSearch:   &ClientSearchMock{clientsToGive: []*models.Client{}},
 		SSHFunc: func(sshParams []string) error {
 			isSSHCalled = true
 			return nil

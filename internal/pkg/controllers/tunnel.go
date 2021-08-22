@@ -65,14 +65,33 @@ type TunnelController struct {
 	RDPExecutor    *rdp.Executor
 }
 
-func (tc *TunnelController) Tunnels(ctx context.Context) error {
-	clResp, err := tc.Rport.Clients(ctx)
-	if err != nil {
-		return err
+func (tc *TunnelController) Tunnels(ctx context.Context, params *options.ParameterBag) error {
+	clientID := params.ReadString(ClientID, "")
+	clientName := params.ReadString(ClientNameFlag, "")
+
+	var err error
+	var clients []*models.Client
+	if clientID != "" || clientName != "" {
+		searchTerm := clientID
+		if clientName != "" {
+			searchTerm = clientName
+		}
+
+		clients, err = tc.ClientSearch.Search(ctx, searchTerm, params)
+		if err != nil {
+			return err
+		}
+	} else {
+		var clResp *api.ClientsResponse
+		clResp, err = tc.Rport.Clients(ctx)
+		if err != nil {
+			return err
+		}
+		clients = clResp.Data
 	}
 
 	tunnels := make([]*models.Tunnel, 0)
-	for _, cl := range clResp.Data {
+	for _, cl := range clients {
 		for _, t := range cl.Tunnels {
 			t.ClientID = cl.ID
 			t.ClientName = cl.Name

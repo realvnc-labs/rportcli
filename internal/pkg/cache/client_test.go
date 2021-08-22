@@ -22,7 +22,7 @@ func TestCache(t *testing.T) {
 
 func assertStoreAndLoad(t *testing.T) {
 	cc := &ClientsCache{}
-	providedClients := []models.Client{
+	providedClients := []*models.Client{
 		{
 			ID:   "1",
 			Name: "client 1",
@@ -35,8 +35,7 @@ func assertStoreAndLoad(t *testing.T) {
 	err := cc.Store(context.Background(), providedClients, &options.ParameterBag{})
 	assert.NoError(t, err)
 
-	actualClients := []models.Client{}
-	err = cc.Load(context.Background(), &actualClients, &options.ParameterBag{})
+	actualClients, err := cc.Load(context.Background(), &options.ParameterBag{})
 	assert.NoError(t, err)
 	assert.Equal(t, providedClients, actualClients)
 
@@ -52,7 +51,7 @@ func assertExists(t *testing.T) {
 	assert.False(t, exists)
 
 	err = storeModelToFile(&ClientsCacheModel{
-		Clients:   []models.Client{},
+		Clients:   []*models.Client{},
 		ValidTill: time.Now().UTC().Add(-1 * time.Hour),
 	})
 	assert.NoError(t, err)
@@ -66,7 +65,7 @@ func assertExists(t *testing.T) {
 	assert.NoError(t, err)
 
 	err = storeModelToFile(&ClientsCacheModel{
-		Clients:   []models.Client{},
+		Clients:   []*models.Client{},
 		ValidTill: time.Now().UTC().Add(time.Hour),
 	})
 	assert.NoError(t, err)

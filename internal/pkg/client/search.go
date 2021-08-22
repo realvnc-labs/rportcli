@@ -11,13 +11,13 @@ import (
 )
 
 type DataProvider interface {
-	GetClients(ctx context.Context) (cls []models.Client, err error)
+	GetClients(ctx context.Context) (cls []*models.Client, err error)
 }
 
 type Cache interface {
-	Store(ctx context.Context, cls []models.Client, params *options.ParameterBag) error
+	Store(ctx context.Context, cls []*models.Client, params *options.ParameterBag) error
 	Exists(ctx context.Context, params *options.ParameterBag) (bool, error)
-	Load(ctx context.Context, cls *[]models.Client, params *options.ParameterBag) error
+	Load(ctx context.Context, params *options.ParameterBag) (cls []*models.Client, err error)
 }
 
 type Search struct {
@@ -25,7 +25,7 @@ type Search struct {
 	Cache        Cache
 }
 
-func (s *Search) Search(ctx context.Context, term string, params *options.ParameterBag) (foundCls []models.Client, err error) {
+func (s *Search) Search(ctx context.Context, term string, params *options.ParameterBag) (foundCls []*models.Client, err error) {
 	cls, err := s.getClientsList(ctx, params)
 	if err != nil {
 		return foundCls, err
@@ -35,24 +35,24 @@ func (s *Search) Search(ctx context.Context, term string, params *options.Parame
 	return
 }
 
-func (s *Search) FindOne(ctx context.Context, searchTerm string, params *options.ParameterBag) (models.Client, error) {
+func (s *Search) FindOne(ctx context.Context, searchTerm string, params *options.ParameterBag) (*models.Client, error) {
 	clients, err := s.Search(ctx, searchTerm, params)
 	if err != nil {
-		return models.Client{}, err
+		return &models.Client{}, err
 	}
 
 	if len(clients) == 0 {
-		return models.Client{}, fmt.Errorf("unknown client '%s'", searchTerm)
+		return &models.Client{}, fmt.Errorf("unknown client '%s'", searchTerm)
 	}
 
 	if len(clients) == 1 {
 		return clients[0], nil
 	}
 
-	return models.Client{}, fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", searchTerm)
+	return &models.Client{}, fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", searchTerm)
 }
 
-func (s *Search) getClientsList(ctx context.Context, params *options.ParameterBag) (cls []models.Client, err error) {
+func (s *Search) getClientsList(ctx context.Context, params *options.ParameterBag) (cls []*models.Client, err error) {
 	cacheExists, err := s.Cache.Exists(ctx, params)
 	if err != nil {
 		return cls, err
@@ -68,18 +68,18 @@ func (s *Search) getClientsList(ctx context.Context, params *options.ParameterBa
 		return
 	}
 
-	cls = []models.Client{}
-	err = s.Cache.Load(ctx, &cls, params)
-	return
+	cls, err = s.Cache.Load(ctx, params)
+
+	return cls, err
 }
 
-func (s *Search) findInClientsList(cls []models.Client, term string) (foundCls []models.Client) {
+func (s *Search) findInClientsList(cls []*models.Client, term string) (foundCls []*models.Client) {
 	terms := strings.Split(term, ",")
 	for i := range terms {
 		terms[i] = strings.ToLower(terms[i])
 	}
 
-	foundCls = make([]models.Client, 0)
+	foundCls = make([]*models.Client, 0)
 	for i := range cls {
 		cl := cls[i]
 		curClientName := strings.ToLower(cl.Name)

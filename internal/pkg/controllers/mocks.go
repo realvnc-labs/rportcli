@@ -43,19 +43,19 @@ func (prm *PromptReaderMock) Output(text string) {
 
 type ClientSearchMock struct {
 	searchTermGiven string
-	clientsToGive   []models.Client
+	clientsToGive   []*models.Client
 	errorToGive     error
 }
 
-func (csm *ClientSearchMock) Search(ctx context.Context, term string, params *options.ParameterBag) (foundCls []models.Client, err error) {
+func (csm *ClientSearchMock) Search(ctx context.Context, term string, params *options.ParameterBag) (foundCls []*models.Client, err error) {
 	csm.searchTermGiven = term
 	return csm.clientsToGive, csm.errorToGive
 }
 
-func (csm *ClientSearchMock) FindOne(ctx context.Context, searchTerm string, params *options.ParameterBag) (models.Client, error) {
+func (csm *ClientSearchMock) FindOne(ctx context.Context, searchTerm string, params *options.ParameterBag) (*models.Client, error) {
 	csm.searchTermGiven = searchTerm
 	if len(csm.clientsToGive) > 0 {
 		return csm.clientsToGive[0], csm.errorToGive
 	}
-	return models.Client{}, csm.errorToGive
+	return &models.Client{}, csm.errorToGive
 }

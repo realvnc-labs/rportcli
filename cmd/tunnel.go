@@ -32,6 +32,9 @@ func init() {
 	config.DefineCommandInputs(tunnelCreateCmd, getCreateTunnelRequirements())
 	tunnelsCmd.AddCommand(tunnelCreateCmd)
 
+	tunnelListCmd.Flags().StringP(controllers.ClientNameFlag, "n", "", "Get tunnels of a client by name")
+	tunnelListCmd.Flags().StringP(controllers.ClientID, "c", "", "Get tunnels of a client by client id")
+
 	rootCmd.AddCommand(tunnelsCmd)
 }
 
@@ -74,7 +77,7 @@ var tunnelListCmd = &cobra.Command{
 			},
 		}
 
-		return tunnelController.Tunnels(context.Background())
+		return tunnelController.Tunnels(context.Background(), params)
 	},
 }
 

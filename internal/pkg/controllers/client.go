@@ -56,7 +56,7 @@ func (cc *ClientController) Client(ctx context.Context, params *options.Paramete
 		if err != nil {
 			return err
 		}
-		return cc.ClientRenderer.RenderClient(&cl, renderDetails)
+		return cc.ClientRenderer.RenderClient(cl, renderDetails)
 	}
 
 	return fmt.Errorf("client not found by the provided id '%s' or name '%s'", id, name)

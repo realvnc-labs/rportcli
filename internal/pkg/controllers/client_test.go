@@ -133,7 +133,7 @@ func TestClientFoundByNameController(t *testing.T) {
 
 	clSearch := &ClientSearchMock{
 		searchTermGiven: "",
-		clientsToGive:   []models.Client{*clientStub},
+		clientsToGive:   []*models.Client{clientStub},
 		errorToGive:     nil,
 	}
 	clController := ClientController{

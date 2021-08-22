@@ -18,14 +18,14 @@ const ClientsCacheFileName = "clients.json"
 const DefaultCacheValidityHours = 24
 
 type ClientsCacheModel struct {
-	Clients   []models.Client `json:"clients"`
+	Clients   []*models.Client `json:"clients"`
 	ValidTill time.Time       `json:"valid_till"`
 }
 
 type ClientsCache struct {
 }
 
-func (cc *ClientsCache) Store(ctx context.Context, cls []models.Client, params *options.ParameterBag) error {
+func (cc *ClientsCache) Store(ctx context.Context, cls []*models.Client, params *options.ParameterBag) error {
 	filePath := cc.getFilePath(params)
 
 	f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0600)
@@ -62,14 +62,14 @@ func (cc *ClientsCache) Exists(ctx context.Context, params *options.ParameterBag
 	return clc.ValidTill.After(time.Now().UTC()), nil
 }
 
-func (cc *ClientsCache) Load(ctx context.Context, cls *[]models.Client, params *options.ParameterBag) error {
+func (cc *ClientsCache) Load(ctx context.Context, params *options.ParameterBag) (cls []*models.Client, err error) {
 	clc, err := cc.loadFromFile(params)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	*cls = append(*cls, clc.Clients...)
-	return nil
+	cls = append(cls, clc.Clients...)
+	return cls, nil
 }
 
 func (cc *ClientsCache) getFilePath(params *options.ParameterBag) string {

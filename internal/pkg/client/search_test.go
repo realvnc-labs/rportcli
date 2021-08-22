@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var clientsList = []models.Client{
+var clientsList = []*models.Client{
 	{
 		ID:   "1",
 		Name: "my tiny client",
@@ -27,23 +27,23 @@ var clientsList = []models.Client{
 }
 
 type DataProviderMock struct {
-	clientsToGive []models.Client
+	clientsToGive []*models.Client
 	errToGive     error
 }
 
-func (dpm *DataProviderMock) GetClients(ctx context.Context) (cls []models.Client, err error) {
+func (dpm *DataProviderMock) GetClients(ctx context.Context) (cls []*models.Client, err error) {
 	return dpm.clientsToGive, dpm.errToGive
 }
 
 type CacheMock struct {
-	clientsToStore  []models.Client
+	clientsToStore  []*models.Client
 	storeErrToGive  error
 	existsErrToGive error
-	clientsToLoad   []models.Client
+	clientsToLoad   []*models.Client
 	loadClientsErr  error
 }
 
-func (cm *CacheMock) Store(ctx context.Context, cls []models.Client, params *options.ParameterBag) error {
+func (cm *CacheMock) Store(ctx context.Context, cls []*models.Client, params *options.ParameterBag) error {
 	cm.clientsToStore = cls
 	return cm.storeErrToGive
 }
@@ -52,15 +52,14 @@ func (cm *CacheMock) Exists(ctx context.Context, params *options.ParameterBag) (
 	return len(cm.clientsToLoad) > 1, cm.existsErrToGive
 }
 
-func (cm *CacheMock) Load(ctx context.Context, cls *[]models.Client, params *options.ParameterBag) error {
-	*cls = append(*cls, cm.clientsToLoad...)
-	return cm.loadClientsErr
+func (cm *CacheMock) Load(ctx context.Context, params *options.ParameterBag) (cls []*models.Client, err error) {
+	return cm.clientsToLoad, cm.loadClientsErr
 }
 
 func TestFindClientsFromDataProvider(t *testing.T) {
 	cacheMock := &CacheMock{
-		clientsToStore: []models.Client{},
-		clientsToLoad:  []models.Client{},
+		clientsToStore: []*models.Client{},
+		clientsToLoad:  []*models.Client{},
 	}
 	search := Search{
 		DataProvider: &DataProviderMock{
@@ -72,7 +71,7 @@ func TestFindClientsFromDataProvider(t *testing.T) {
 	foundCls, err := search.Search(context.Background(), "my tiny", &options.ParameterBag{})
 	assert.NoError(t, err)
 	assert.Len(t, foundCls, 2)
-	assert.Equal(t, foundCls, []models.Client{
+	assert.Equal(t, foundCls, []*models.Client{
 		{
 			ID:   "1",
 			Name: "my tiny client",
@@ -86,7 +85,7 @@ func TestFindClientsFromDataProvider(t *testing.T) {
 
 	foundCls2, err2 := search.Search(context.Background(), "my tiny client,$100 usd client", &options.ParameterBag{})
 	assert.NoError(t, err2)
-	assert.Equal(t, foundCls2, []models.Client{
+	assert.Equal(t, foundCls2, []*models.Client{
 		{
 			ID:   "1",
 			Name: "my tiny client",
@@ -100,7 +99,7 @@ func TestFindClientsFromDataProvider(t *testing.T) {
 
 func TestFindClientsFromCache(t *testing.T) {
 	cacheMock := &CacheMock{
-		clientsToStore: []models.Client{},
+		clientsToStore: []*models.Client{},
 		clientsToLoad:  clientsList,
 	}
 	search := Search{
@@ -113,7 +112,7 @@ func TestFindClientsFromCache(t *testing.T) {
 	foundCls, err := search.Search(context.Background(), "$100", &options.ParameterBag{})
 	assert.NoError(t, err)
 	assert.Len(t, foundCls, 1)
-	assert.Equal(t, foundCls, []models.Client{
+	assert.Equal(t, foundCls, []*models.Client{
 		{
 			ID:   "3",
 			Name: "$100 usd client",
@@ -129,8 +128,8 @@ func TestDataProviderError(t *testing.T) {
 			errToGive:     errors.New("some load error"),
 		},
 		Cache: &CacheMock{
-			clientsToStore: []models.Client{},
-			clientsToLoad:  []models.Client{},
+			clientsToStore: []*models.Client{},
+			clientsToLoad:  []*models.Client{},
 		},
 	}
 
@@ -144,9 +143,9 @@ func TestCacheStoreError(t *testing.T) {
 			clientsToGive: clientsList,
 		},
 		Cache: &CacheMock{
-			clientsToStore: []models.Client{},
+			clientsToStore: []*models.Client{},
 			storeErrToGive: errors.New("some store err"),
-			clientsToLoad:  []models.Client{},
+			clientsToLoad:  []*models.Client{},
 		},
 	}
 
@@ -157,12 +156,12 @@ func TestCacheStoreError(t *testing.T) {
 func TestCacheExistsError(t *testing.T) {
 	search := Search{
 		DataProvider: &DataProviderMock{
-			clientsToGive: []models.Client{},
+			clientsToGive: []*models.Client{},
 		},
 		Cache: &CacheMock{
-			clientsToStore:  []models.Client{},
+			clientsToStore:  []*models.Client{},
 			existsErrToGive: errors.New("some exists err"),
-			clientsToLoad:   []models.Client{},
+			clientsToLoad:   []*models.Client{},
 		},
 	}
 
@@ -173,10 +172,10 @@ func TestCacheExistsError(t *testing.T) {
 func TestLoadCacheError(t *testing.T) {
 	search := Search{
 		DataProvider: &DataProviderMock{
-			clientsToGive: []models.Client{},
+			clientsToGive: []*models.Client{},
 		},
 		Cache: &CacheMock{
-			clientsToStore: []models.Client{},
+			clientsToStore: []*models.Client{},
 			loadClientsErr: errors.New("some cache load err"),
 			clientsToLoad:  clientsList,
 		},
@@ -188,8 +187,8 @@ func TestLoadCacheError(t *testing.T) {
 
 func TestFindByAmbiguousClientName(t *testing.T) {
 	cacheMock := &CacheMock{
-		clientsToStore: []models.Client{},
-		clientsToLoad:  []models.Client{},
+		clientsToStore: []*models.Client{},
+		clientsToLoad:  []*models.Client{},
 	}
 	search := Search{
 		DataProvider: &DataProviderMock{

@@ -155,7 +155,7 @@ func TestCommandExecutionByClientNameSuccess(t *testing.T) {
 	jr := &JobRendererMock{}
 
 	searchMock := &ClientSearchMock{
-		clientsToGive: []models.Client{
+		clientsToGive: []*models.Client{
 			{
 				ID:   "11344",
 				Name: "some client 11344",
@@ -199,7 +199,7 @@ func TestCommandExecutionClientNotFoundByName(t *testing.T) {
 
 	jr := &JobRendererMock{}
 
-	searchMock := &ClientSearchMock{clientsToGive: []models.Client{}}
+	searchMock := &ClientSearchMock{clientsToGive: []*models.Client{}}
 
 	ic := &CommandsController{
 		ExecutionHelper: &ExecutionHelper{
