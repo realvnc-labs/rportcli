@@ -6,13 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/rdp"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
@@ -92,6 +91,16 @@ func (rwm *RDPWriterMock) WriteRDPFile(fi models.FileInput) (filePath string, er
 	return rwm.filePathToGive, rwm.errorToGive
 }
 
+type RDPExecutorMock struct {
+	mock.Mock
+}
+
+func (rem *RDPExecutorMock) StartRdp(filePath string) error {
+	args := rem.Called(filePath)
+
+	return args.Error(0)
+}
+
 func TestTunnelsController(t *testing.T) {
 	srv := startClientsServer()
 	defer srv.Close()
@@ -114,7 +123,7 @@ func TestTunnelsController(t *testing.T) {
 			isSSHExecuted = true
 			return nil
 		},
-		ClientSearch:   &ClientSearchMock{},
+		ClientSearch: &ClientSearchMock{},
 	}
 	assert.False(t, isSSHExecuted)
 
@@ -163,7 +172,7 @@ func TestTunnelsControllerByClient(t *testing.T) {
 		SSHFunc: func(sshParams []string) error {
 			return nil
 		},
-		ClientSearch:   searchMock,
+		ClientSearch: searchMock,
 	}
 
 	paramProv := options.NewMapValuesProvider(map[string]interface{}{
@@ -781,7 +790,7 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 				Lhost:    "lohost77",
 				ClientID: "1314",
 				Lport:    "3344",
-				Scheme:   utils.SSH,
+				Scheme:   utils.RDP,
 			}})
 			assert.NoError(t, e)
 		}
@@ -794,7 +803,6 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 	}
 
 	renderBuf := bytes.Buffer{}
-	cmdOutput := bytes.Buffer{}
 
 	cl := api.New(srv.URL, apiAuth)
 
@@ -803,7 +811,9 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 		filePathToGive: filePathGiven,
 		errorToGive:    nil,
 	}
-	isRDPCalled := false
+	rdpExecutor := &RDPExecutorMock{}
+	rdpExecutor.On("StartRdp", filePathGiven).Return(nil)
+
 	tController := TunnelController{
 		Rport:          cl,
 		TunnelRenderer: &TunnelRendererMock{Writer: &renderBuf},
@@ -812,14 +822,7 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 		},
 		ClientSearch: &ClientSearchMock{clientsToGive: []*models.Client{}},
 		RDPWriter:    fileWriter,
-		RDPExecutor: &rdp.Executor{
-			CommandProvider: func(filePath string) (cmd string, args []string) {
-				isRDPCalled = true
-				assert.Equal(t, filePathGiven, filePath)
-				return "echo", []string{"rdp executed"}
-			},
-			StdOut: &cmdOutput,
-		},
+		RDPExecutor: rdpExecutor,
 	}
 
 	params := config.FromValues(map[string]string{
@@ -844,14 +847,14 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 	assert.Equal(t, expectedFileInput.ScreenWidth, fileWriter.FileInput.ScreenWidth)
 	assert.Equal(t, expectedFileInput.UserName, fileWriter.FileInput.UserName)
 	assert.NoError(t, err)
-	assert.Equal(
-		t,
-		`rdp executed
-`,
-		cmdOutput.String(),
-	)
 
-	assert.True(t, isRDPCalled)
+	expectedOutput := fmt.Sprintf(
+		`{"id":"777","client_id":"1314","client_name":"","lhost":"lohost77","lport":"3344","rhost":"","rport":"","lport_random":false,"scheme":"rdp","acl":"","usage":"rdp://rport-url123.com:3344","rport_server":"%s"}`,
+		srv.URL,
+	)
+	assert.Equal(t, expectedOutput, renderBuf.String())
+
+	rdpExecutor.AssertCalled(t, "StartRdp", filePathGiven)
 }
 
 func TestTunnelCreateWithRDPIncompatibleFlags(t *testing.T) {
@@ -860,24 +863,19 @@ func TestTunnelCreateWithRDPIncompatibleFlags(t *testing.T) {
 	}
 
 	renderBuf := bytes.Buffer{}
-	cmdOutput := bytes.Buffer{}
 
 	cl := api.New("localhost", apiAuth)
 
-	isRDPCalled := false
+
+	rdpExecutor := &RDPExecutorMock{}
+
 	tController := TunnelController{
 		Rport:          cl,
 		TunnelRenderer: &TunnelRendererMock{Writer: &renderBuf},
 		IPProvider:     IPProviderMock{},
 		ClientSearch:   &ClientSearchMock{clientsToGive: []*models.Client{}},
 		RDPWriter:      nil,
-		RDPExecutor: &rdp.Executor{
-			CommandProvider: func(filePath string) (cmd string, args []string) {
-				isRDPCalled = true
-				return
-			},
-			StdOut: &cmdOutput,
-		},
+		RDPExecutor: rdpExecutor,
 	}
 
 	params := config.FromValues(map[string]string{
@@ -890,7 +888,6 @@ func TestTunnelCreateWithRDPIncompatibleFlags(t *testing.T) {
 	})
 	err := tController.Create(context.Background(), params)
 	assert.EqualError(t, err, fmt.Sprintf("scheme rdp is not compatible with the %s option", LaunchSSH))
-	assert.False(t, isRDPCalled)
 }
 
 func TestTunnelCreateWithSSHIncompatibleFlags(t *testing.T) {

@@ -9,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/rdp"
-
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
@@ -55,6 +53,10 @@ type RDPFileWriter interface {
 	WriteRDPFile(fi models.FileInput) (filePath string, err error)
 }
 
+type RDPExecutor interface {
+	StartRdp(filePath string) error
+}
+
 type TunnelController struct {
 	Rport          *api.Rport
 	TunnelRenderer TunnelRenderer
@@ -62,7 +64,7 @@ type TunnelController struct {
 	ClientSearch   ClientSearch
 	SSHFunc        func(sshParams []string) error
 	RDPWriter      RDPFileWriter
-	RDPExecutor    *rdp.Executor
+	RDPExecutor    RDPExecutor
 }
 
 func (tc *TunnelController) Tunnels(ctx context.Context, params *options.ParameterBag) error {
@@ -334,21 +336,31 @@ func (tc *TunnelController) startSSHFlow(
 }
 
 func (tc *TunnelController) generateUsage(tunnelCreated *models.TunnelCreated, params *options.ParameterBag) string {
+	shouldLaunchRDP := params.ReadBool(LaunchRDP, false)
+
+	if !shouldLaunchRDP {
+		port, host, err := tc.extractPortAndHost(tunnelCreated, params)
+		if err != nil {
+			logrus.Error(err)
+			return ""
+		}
+
+		if host == "" {
+			return ""
+		}
+
+		if port != "" {
+			return fmt.Sprintf("ssh -p %s %s -l ${USER}", port, host)
+		}
+
+		return fmt.Sprintf("ssh %s -l ${USER}", host)
+	}
+
 	port, host, err := tc.extractPortAndHost(tunnelCreated, params)
 	if err != nil {
-		logrus.Error(err)
 		return ""
 	}
-
-	if host == "" {
-		return ""
-	}
-
-	if port != "" {
-		return fmt.Sprintf("ssh -p %s %s -l ${USER}", port, host)
-	}
-
-	return fmt.Sprintf("ssh %s -l ${USER}", host)
+	return fmt.Sprintf("rdp://%s:%s", host, port)
 }
 
 func (tc *TunnelController) extractPortAndHost(
