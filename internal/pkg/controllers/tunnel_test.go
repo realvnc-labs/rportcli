@@ -334,7 +334,12 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"id":"123","client_id":"334","client_name":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6","usage":"ssh -p 3300 localhost.com -l ${USER}"}`, buf.String())
+
+	expectedOutput := fmt.Sprintf(
+		`{"id":"123","client_id":"334","client_name":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6","usage":"ssh -p 3300 localhost.com -l ${USER}","rport_server":"%s"}`,
+		srv.URL,
+	)
+	assert.Equal(t, expectedOutput, buf.String())
 }
 
 func TestTunnelCreateWithClientName(t *testing.T) {
@@ -398,7 +403,12 @@ func TestTunnelCreateWithClientName(t *testing.T) {
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
-	assert.Equal(t, `{"id":"444","client_id":"some client 444","client_name":"","lhost":"lohost2","lport":"3301","rhost":"rhost4","rport":"3345","lport_random":true,"scheme":"ssh","acl":"3.4.5.7","usage":"ssh -p 3301 11.11.11.11 -l ${USER}"}`, buf.String())
+
+	expectedOutput := fmt.Sprintf(
+		`{"id":"444","client_id":"some client 444","client_name":"","lhost":"lohost2","lport":"3301","rhost":"rhost4","rport":"3345","lport_random":true,"scheme":"ssh","acl":"3.4.5.7","usage":"ssh -p 3301 11.11.11.11 -l ${USER}","rport_server":"%s"}`,
+		srv.URL,
+	)
+	assert.Equal(t, expectedOutput, buf.String())
 }
 
 func TestInvalidInputForTunnelCreate(t *testing.T) {
@@ -478,9 +488,15 @@ func TestTunnelCreateWithSchemeDiscovery(t *testing.T) {
 	}
 	err := tController.Create(context.Background(), config.FromValues(params))
 	assert.NoError(t, err)
+
+	expectedOutput := fmt.Sprintf(
+		`{"id":"444","client_id":"32312","client_name":"","lhost":"lohost33","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh ya.ru -l ${USER}","rport_server":"%s"}`,
+		srv.URL,
+	)
+
 	assert.Equal(
 		t,
-		`{"id":"444","client_id":"32312","client_name":"","lhost":"lohost33","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh ya.ru -l ${USER}"}`,
+		expectedOutput,
 		buf.String(),
 	)
 }
@@ -535,9 +551,15 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 	}
 	err := tController.Create(context.Background(), config.FromValues(params))
 	assert.NoError(t, err)
+
+	expectedOutput := fmt.Sprintf(
+		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh some.com -l ${USER}","rport_server":"%s"}`,
+		srv.URL,
+	)
+
 	assert.Equal(
 		t,
-		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh some.com -l ${USER}"}`,
+		expectedOutput,
 		buf.String(),
 	)
 	buf = bytes.Buffer{}
@@ -546,9 +568,14 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 	params[LaunchSSH] = "-l root"
 	err = tController.Create(context.Background(), config.FromValues(params))
 	assert.NoError(t, err)
+
+	expectedOutput2 := fmt.Sprintf(
+		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh some.com -l ${USER}","rport_server":"%s"}{"status":"Tunnel successfully deleted"}`,
+		srv.URL,
+	)
 	assert.Equal(
 		t,
-		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh some.com -l ${USER}"}{"status":"Tunnel successfully deleted"}`,
+		expectedOutput2,
 		buf.String(),
 	)
 }
@@ -614,9 +641,15 @@ func TestTunnelCreateWithSSH(t *testing.T) {
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
+
+	expectedOutput := fmt.Sprintf(
+		`{"id":"777","client_id":"1314","client_name":"","lhost":"lohost77","lport":"22","rhost":"","rport":"","lport_random":false,"scheme":"ssh","acl":"","usage":"ssh -p 22 rport-url.com -l ${USER}","rport_server":"%s"}{"status":"Tunnel successfully deleted"}`,
+		srv.URL,
+	)
+
 	assert.Equal(
 		t,
-		`{"id":"777","client_id":"1314","client_name":"","lhost":"lohost77","lport":"22","rhost":"","rport":"","lport_random":false,"scheme":"ssh","acl":"","usage":"ssh -p 22 rport-url.com -l ${USER}"}{"status":"Tunnel successfully deleted"}`,
+		expectedOutput,
 		buf.String(),
 	)
 
