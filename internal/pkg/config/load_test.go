@@ -1,11 +1,14 @@
 package config
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/spf13/pflag"
 
@@ -322,4 +325,29 @@ func TestCollectParams(t *testing.T) {
 
 	actualToken, _ := params.Read("token")
 	assert.Equal(t, "tokVal", actualToken)
+}
+
+func TestFlagValuesProvider(t *testing.T) {
+	fl := &pflag.FlagSet{}
+	fl.StringP("somekey", "s", "", "")
+
+	flagValuesProv := CreateFlagValuesProvider(fl)
+
+	_, found := flagValuesProv.Read("somekey")
+	assert.False(t, found)
+
+	err := fl.Parse([]string{"--somekey", "someval"})
+	require.NoError(t, err)
+
+	val, found2 := flagValuesProv.Read("somekey")
+	assert.True(t, found2)
+	assert.Equal(t, "someval", val.(string))
+
+	actualKeyValues := flagValuesProv.ToKeyValues()
+	assert.Equal(t, map[string]interface{}{"somekey": "someval"}, actualKeyValues)
+
+	buf := &bytes.Buffer{}
+	err = flagValuesProv.Dump(buf)
+	require.NoError(t, err)
+	assert.Equal(t, `{"somekey":"someval"}`+"\n", buf.String())
 }

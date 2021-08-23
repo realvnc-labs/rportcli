@@ -3,9 +3,12 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
@@ -161,4 +164,87 @@ func TestErrorResponse(t *testing.T) {
 		},
 	}
 	assert.Equal(t, expectedErrors, errResp.Errors)
+}
+
+func TestLogout(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		actualToken := r.Header.Get("Authorization")
+		assert.Equal(t, "Bearer some_tok", actualToken)
+		rw.WriteHeader(http.StatusNoContent)
+	}))
+	defer srv.Close()
+
+	cl := New(srv.URL, &utils.BearerAuth{
+		TokenProvider: func() (string, error) {
+			return "some_tok", nil
+		},
+	})
+	err := cl.Logout(context.Background())
+	require.NoError(t, err)
+
+	cl2 := New(srv.URL, &utils.BearerAuth{
+		TokenProvider: func() (string, error) {
+			return "", errors.New("some failed to get token")
+		},
+	})
+	err = cl2.Logout(context.Background())
+	require.EqualError(t, err, "some failed to get token")
+}
+
+func TestLogoutServerError(t *testing.T) {
+	testCases := []struct {
+		respCodeToGive int
+		errRespToGive  string
+		errToExpect    string
+		name           string
+	}{
+		{
+			respCodeToGive: http.StatusInternalServerError,
+			errToExpect:    "operation failed",
+			name:           "handle_500code",
+		},
+		{
+			respCodeToGive: http.StatusCreated,
+			errToExpect:    "unexpected response code 201, 204 is expected",
+			name:           "handle_201code",
+		},
+		{
+			respCodeToGive: http.StatusBadRequest,
+			errToExpect:    "some problem, code: 400, details: some problem",
+			errRespToGive:  "some problem",
+			name:           "handle_400code+error_resp",
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+		t.Run(testCases[i].name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+				rw.WriteHeader(tc.respCodeToGive)
+
+				if tc.errRespToGive != "" {
+					jsonEnc := json.NewEncoder(rw)
+					e := jsonEnc.Encode(models.ErrorResp{
+						Errors: []models.Error{
+							{
+								Code:   "400",
+								Title:  tc.errRespToGive,
+								Detail: tc.errRespToGive,
+							},
+						},
+					})
+					assert.NoError(t, e)
+				}
+			}))
+			defer srv.Close()
+
+			cl := New(srv.URL, &utils.BearerAuth{
+				TokenProvider: func() (string, error) {
+					return "123", nil
+				},
+			})
+			err := cl.Logout(context.Background())
+			require.EqualError(t, err, tc.errToExpect)
+		})
+	}
 }

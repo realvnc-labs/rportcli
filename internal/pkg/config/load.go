@@ -31,7 +31,7 @@ const (
 
 func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBag) {
 	envValuesProvider := CreateEnvValuesProvider()
-	jvp, err := CreateFileValuesProvider()
+	fileValuesProvider, err := CreateFileValuesProvider()
 	if err != nil {
 		logrus.Warn(err)
 		return options.New(envValuesProvider)
@@ -39,7 +39,7 @@ func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBa
 
 	flagValuesProvider := CreateFlagValuesProvider(flags)
 
-	valuesProvider := options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider, jvp)
+	valuesProvider := options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider, fileValuesProvider)
 
 	paramsToReturn := options.New(valuesProvider)
 
@@ -71,7 +71,7 @@ func (fvp *FlagValuesProvider) ToKeyValues() map[string]interface{} {
 
 func (fvp *FlagValuesProvider) Read(name string) (val interface{}, found bool) {
 	fl := fvp.flags.Lookup(name)
-	if fl == nil {
+	if fl == nil || !fl.Changed {
 		return nil, false
 	}
 

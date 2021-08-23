@@ -15,8 +15,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var isLogout bool
+
 func init() {
 	config.DefineCommandInputs(initCmd, getInitRequirements())
+	initCmd.Flags().BoolVarP(&isLogout, "delete", "d", false, "Logout user")
 	rootCmd.AddCommand(initCmd)
 }
 
@@ -25,28 +28,47 @@ var initCmd = &cobra.Command{
 	Short: "initialize your connection to the rportd API",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		promptReader := &utils.PromptReader{
-			Sc:              bufio.NewScanner(os.Stdin),
-			SigChan:         sigs,
-			PasswordScanner: utils.ReadPassword,
-		}
-		params, err := config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, getInitRequirements(), promptReader)
-		if err != nil {
-			return err
-		}
-
-		initController := &controllers.InitController{
-			ConfigWriter: config.WriteConfig,
-			PromptReader: promptReader,
-		}
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
-		return initController.InitConfig(ctx, params)
+		if isLogout {
+			return manageLogout(ctx, cmd)
+		}
+
+		return manageInit(ctx, cmd)
 	},
+}
+
+func manageLogout(ctx context.Context, cmd *cobra.Command) error {
+	params := config.LoadParamsFromFileAndEnv(cmd.Flags())
+
+	rportAPI := buildRport(params)
+
+	logoutController := controllers.NewLogoutController(rportAPI, config.WriteConfig)
+
+	return logoutController.Logout(ctx, params)
+}
+
+func manageInit(ctx context.Context, cmd *cobra.Command) error {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	promptReader := &utils.PromptReader{
+		Sc:              bufio.NewScanner(os.Stdin),
+		SigChan:         sigs,
+		PasswordScanner: utils.ReadPassword,
+	}
+	params, err := config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, getInitRequirements(), promptReader)
+	if err != nil {
+		return err
+	}
+
+	initController := &controllers.InitController{
+		ConfigWriter: config.WriteConfig,
+		PromptReader: promptReader,
+	}
+
+	return initController.InitConfig(ctx, params)
 }
 
 func getInitRequirements() []config.ParameterRequirement {

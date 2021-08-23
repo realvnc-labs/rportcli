@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -14,6 +15,7 @@ import (
 
 const (
 	LoginURL                    = "/api/v1/login"
+	LogoutURL                   = "/api/v1/logout"
 	TwoFaURL                    = "/api/v1/verify-2fa"
 	MeURL                       = "/api/v1/me"
 	MeIPURL                     = "/api/v1/me/ip"
@@ -160,4 +162,28 @@ func (rp *Rport) Status(ctx context.Context) (st StatusResponse, err error) {
 	_, err = rp.CallBaseClient(req, &st)
 
 	return
+}
+
+func (rp *Rport) Logout(ctx context.Context) (err error) {
+	var req *http.Request
+	req, err = http.NewRequestWithContext(
+		ctx,
+		http.MethodDelete,
+		url.JoinURL(rp.BaseURL, LogoutURL),
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	resp, err := rp.CallBaseClient(req, nil)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("unexpected response code %d, %d is expected", resp.StatusCode, http.StatusNoContent)
+	}
+
+	return nil
 }
