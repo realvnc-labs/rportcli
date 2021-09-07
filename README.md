@@ -45,7 +45,8 @@ Unpack and install the rportcli binary on your host machine
 
     
     #On linux/MacOS
-    tar -xzvOf rportcli-v0.0.1pre1-darwin-amd64.tar.gz >> /usr/local/bin/rportcli
+    tar -xzvf rportcli-v0.0.1pre1-darwin-amd64.tar.gz 
+    mv rportcli /usr/local/bin/rportcli
     chmod +x /usr/local/bin/rportcli
     
 
