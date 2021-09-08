@@ -1,11 +1,10 @@
 package controllers
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -35,21 +34,21 @@ func (cc *ScriptsController) Start(ctx context.Context, params *options.Paramete
 		return fmt.Errorf("script file %s is a directory", scriptsFilePath)
 	}
 
-	file, err := os.Open(scriptsFilePath)
+	scriptFile, err := os.Open(scriptsFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file %s: %w", scriptsFilePath, err)
 	}
 
-	buf := &bytes.Buffer{}
-	enc := base64.NewEncoder(base64.StdEncoding, buf)
-	_, err = io.Copy(enc, file)
+	scriptContent, err := ioutil.ReadAll(scriptFile)
 	if err != nil {
-		return fmt.Errorf("failed to encode file %s to base64: %w", scriptsFilePath, err)
+		return fmt.Errorf("failed to read file %s: %w", scriptsFilePath, err)
 	}
+
+	scriptContentBase64 := base64.StdEncoding.EncodeToString(scriptContent)
 
 	interpreter := cc.resolveInterpreterByFileName(scriptsFilePath, params.ReadString(Interpreter, ""))
 
-	return cc.execute(ctx, params, buf.String(), interpreter)
+	return cc.execute(ctx, params, scriptContentBase64, interpreter)
 }
 
 func (cc *ScriptsController) resolveInterpreterByFileName(scriptFilePath, scriptsFilePathFromArgs string) string {
