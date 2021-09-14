@@ -146,7 +146,7 @@ func getCommandRequirements() []config.ParameterRequirement {
 			Description: "execute the command concurrently on multiple clients",
 			ShortName:   "r",
 			Type:        config.BoolRequirementType,
-			Default:     "0",
+			Default:     false,
 		},
 		{
 			Field:       controllers.IsFullOutput,
@@ -154,7 +154,7 @@ func getCommandRequirements() []config.ParameterRequirement {
 			Description: "output detailed information of a job execution",
 			ShortName:   "f",
 			Type:        config.BoolRequirementType,
-			Default:     "0",
+			Default:     false,
 		},
 		{
 			Field:       controllers.IsSudo,
@@ -162,7 +162,7 @@ func getCommandRequirements() []config.ParameterRequirement {
 			Description: "execute command as sudo",
 			ShortName:   "u",
 			Type:        config.BoolRequirementType,
-			Default:     "0",
+			Default:     false,
 		},
 		{
 			Field:       controllers.Interpreter,
@@ -177,7 +177,7 @@ func getCommandRequirements() []config.ParameterRequirement {
 			Help:        "should abort command if it fails on any client",
 			ShortName:   "a",
 			Type:        config.BoolRequirementType,
-			Default:     "0",
+			Default:     false,
 		},
 		{
 			Field:       controllers.Cwd,

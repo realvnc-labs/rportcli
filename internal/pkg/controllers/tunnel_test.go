@@ -352,17 +352,18 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 		assert.Equal(t, "Basic bG9nMTpwYXNzMQ==", r.Header.Get("Authorization"))
 		assert.Equal(t, http.MethodPut, r.Method)
 
-		assert.Equal(t, "/api/v1/clients/334/tunnels?acl=3.4.5.6&check_port=1&local=lohost1%3A3300&remote=rhost2%3A3344&scheme=ssh", r.URL.String())
+		assert.Equal(t, "/api/v1/clients/334/tunnels?acl=3.4.5.6&check_port=1&idle-timeout-minutes=7&local=lohost1%3A3300&remote=rhost2%3A3344&scheme=ssh", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(api.TunnelResponse{Data: &models.Tunnel{
-			ID:          "123",
-			Lhost:       "lohost1",
-			Lport:       "3300",
-			Rhost:       "rhost2",
-			Rport:       "3344",
-			LportRandom: true,
-			Scheme:      utils.SSH,
-			ACL:         "3.4.5.6",
+		e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
+			ID:              "123",
+			Lhost:           "lohost1",
+			Lport:           "3300",
+			Rhost:           "rhost2",
+			Rport:           "3344",
+			LportRandom:     true,
+			Scheme:          utils.SSH,
+			ACL:             "3.4.5.6",
+			IdleTimeoutMins: 7,
 		}})
 		assert.NoError(t, e)
 	}))
@@ -394,18 +395,19 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 	assert.False(t, isSSHExecuted)
 
 	params := config.FromValues(map[string]string{
-		ClientID:         "334",
-		Local:            "lohost1:3300",
-		Remote:           "rhost2:3344",
-		Scheme:           utils.SSH,
-		CheckPort:        "1",
-		config.ServerURL: "https://localhost.com:34",
+		ClientID:           "334",
+		Local:              "lohost1:3300",
+		Remote:             "rhost2:3344",
+		Scheme:             utils.SSH,
+		CheckPort:          "1",
+		config.ServerURL:   "https://localhost.com:34",
+		IdleTimeoutMinutes: "7",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
 
 	expectedOutput := fmt.Sprintf(
-		`{"id":"123","client_id":"334","client_name":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6","usage":"ssh -p 3300 localhost.com -l ${USER}","rport_server":"%s"}`,
+		`{"id":"123","client_id":"334","client_name":"","lhost":"lohost1","lport":"3300","rhost":"rhost2","rport":"3344","lport_random":true,"scheme":"ssh","acl":"3.4.5.6","usage":"ssh -p 3300 localhost.com -l ${USER}","idle_timeout_minutes":7,"rport_server":"%s"}`,
 		srv.URL,
 	)
 	assert.Equal(t, expectedOutput, buf.String())
@@ -413,9 +415,9 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 
 func TestTunnelCreateWithClientName(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/api/v1/clients/444/tunnels?acl=3.4.5.7&check_port=1&local=lohost2%3A3301&remote=rhost4%3A3345&scheme=ssh", r.URL.String())
+		assert.Equal(t, "/api/v1/clients/444/tunnels?acl=3.4.5.7&check_port=1&local=lohost2%3A3301&remote=rhost4%3A3345&scheme=ssh&skip-idle-timeout=1", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(api.TunnelResponse{Data: &models.Tunnel{
+		e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
 			ID:          "444",
 			Lhost:       "lohost2",
 			Lport:       "3301",
@@ -469,12 +471,13 @@ func TestTunnelCreateWithClientName(t *testing.T) {
 		Scheme:           utils.SSH,
 		CheckPort:        "1",
 		config.ServerURL: "http://11.11.11.11:33",
+		SkipIdleTimeout:  "1",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
 
 	expectedOutput := fmt.Sprintf(
-		`{"id":"444","client_id":"some client 444","client_name":"","lhost":"lohost2","lport":"3301","rhost":"rhost4","rport":"3345","lport_random":true,"scheme":"ssh","acl":"3.4.5.7","usage":"ssh -p 3301 11.11.11.11 -l ${USER}","rport_server":"%s"}`,
+		`{"id":"444","client_id":"some client 444","client_name":"","lhost":"lohost2","lport":"3301","rhost":"rhost4","rport":"3345","lport_random":true,"scheme":"ssh","acl":"3.4.5.7","usage":"ssh -p 3301 11.11.11.11 -l ${USER}","idle_timeout_minutes":0,"rport_server":"%s"}`,
 		srv.URL,
 	)
 	assert.Equal(t, expectedOutput, buf.String())
@@ -514,10 +517,11 @@ func TestTunnelCreateWithSchemeDiscovery(t *testing.T) {
 		if r.Method == http.MethodPut {
 			assert.Equal(t, "/api/v1/clients/32312/tunnels?acl=3.4.5.8&check_port=&local=lohost33%3A3301&remote=rhost5%3A22&scheme=ssh", r.URL.String())
 			jsonEnc := json.NewEncoder(rw)
-			e := jsonEnc.Encode(api.TunnelResponse{Data: &models.Tunnel{
-				ID:       "444",
-				Lhost:    "lohost33",
-				ClientID: "32312",
+			e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
+				ID:              "444",
+				Lhost:           "lohost33",
+				ClientID:        "32312",
+				IdleTimeoutMins: 5,
 			}})
 			assert.NoError(t, e)
 		}
@@ -559,7 +563,7 @@ func TestTunnelCreateWithSchemeDiscovery(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedOutput := fmt.Sprintf(
-		`{"id":"444","client_id":"32312","client_name":"","lhost":"lohost33","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh ya.ru -l ${USER}","rport_server":"%s"}`,
+		`{"id":"444","client_id":"32312","client_name":"","lhost":"lohost33","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh ya.ru -l ${USER}","idle_timeout_minutes":5,"rport_server":"%s"}`,
 		srv.URL,
 	)
 
@@ -576,9 +580,10 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 			assert.Equal(t, "/api/v1/clients/1313/tunnels?acl=3.4.5.9&check_port=&local=lohost44%3A3302&remote=22&scheme=ssh", r.URL.String())
 			jsonEnc := json.NewEncoder(rw)
 			e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
-				ID:       "777",
-				Lhost:    "lohost44",
-				ClientID: "1313",
+				ID:              "777",
+				Lhost:           "lohost44",
+				ClientID:        "1313",
+				IdleTimeoutMins: 5,
 			}})
 			assert.NoError(t, e)
 		}
@@ -622,7 +627,7 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedOutput := fmt.Sprintf(
-		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh some.com -l ${USER}","rport_server":"%s"}`,
+		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh some.com -l ${USER}","idle_timeout_minutes":5,"rport_server":"%s"}`,
 		srv.URL,
 	)
 
@@ -639,7 +644,7 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedOutput2 := fmt.Sprintf(
-		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh some.com -l ${USER}","rport_server":"%s"}{"status":"Tunnel successfully deleted"}`,
+		`{"id":"777","client_id":"1313","client_name":"","lhost":"lohost44","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","usage":"ssh some.com -l ${USER}","idle_timeout_minutes":5,"rport_server":"%s"}{"status":"Tunnel successfully deleted"}`,
 		srv.URL,
 	)
 	assert.Equal(
@@ -654,13 +659,14 @@ func TestTunnelCreateWithSSH(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		jsonEnc := json.NewEncoder(rw)
 		if r.Method == http.MethodPut {
-			assert.Equal(t, "/api/v1/clients/1314/tunnels?acl=3.4.5.10&check_port=&local=lohost77%3A3303&remote=22&scheme=ssh", r.URL.String())
+			assert.Equal(t, "/api/v1/clients/1314/tunnels?acl=3.4.5.10&check_port=&idle-timeout-minutes=5&local=lohost77%3A3303&remote=22&scheme=ssh", r.URL.String())
 			e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
-				ID:       "777",
-				Lhost:    "lohost77",
-				ClientID: "1314",
-				Lport:    "22",
-				Scheme:   utils.SSH,
+				ID:              "777",
+				Lhost:           "lohost77",
+				ClientID:        "1314",
+				Lport:           "22",
+				Scheme:          utils.SSH,
+				IdleTimeoutMins: 5,
 			}})
 			assert.NoError(t, e)
 			return
@@ -702,17 +708,18 @@ func TestTunnelCreateWithSSH(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID:         "1314",
-		Local:            "lohost77:3303",
-		Scheme:           utils.SSH,
-		config.ServerURL: "http://rport-url.com",
-		LaunchSSH:        "-l root -i somefile",
+		ClientID:           "1314",
+		Local:              "lohost77:3303",
+		Scheme:             utils.SSH,
+		config.ServerURL:   "http://rport-url.com",
+		LaunchSSH:          "-l root -i somefile",
+		IdleTimeoutMinutes: "5",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
 
 	expectedOutput := fmt.Sprintf(
-		`{"id":"777","client_id":"1314","client_name":"","lhost":"lohost77","lport":"22","rhost":"","rport":"","lport_random":false,"scheme":"ssh","acl":"","usage":"ssh -p 22 rport-url.com -l ${USER}","rport_server":"%s"}{"status":"Tunnel successfully deleted"}`,
+		`{"id":"777","client_id":"1314","client_name":"","lhost":"lohost77","lport":"22","rhost":"","rport":"","lport_random":false,"scheme":"ssh","acl":"","usage":"ssh -p 22 rport-url.com -l ${USER}","idle_timeout_minutes":5,"rport_server":"%s"}{"status":"Tunnel successfully deleted"}`,
 		srv.URL,
 	)
 
@@ -787,11 +794,12 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 		if r.Method == http.MethodPut {
 			jsonEnc := json.NewEncoder(rw)
 			e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
-				ID:       "777",
-				Lhost:    "lohost77",
-				ClientID: "1314",
-				Lport:    "3344",
-				Scheme:   utils.RDP,
+				ID:              "777",
+				Lhost:           "lohost77",
+				ClientID:        "1314",
+				Lport:           "3344",
+				Scheme:          utils.RDP,
+				IdleTimeoutMins: 5,
 			}})
 			assert.NoError(t, e)
 		}
@@ -827,14 +835,15 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID:         "1314",
-		Local:            "lohost88:3304",
-		Scheme:           utils.RDP,
-		config.ServerURL: "http://rport-url123.com",
-		LaunchRDP:        "1",
-		RDPUser:          "Administrator",
-		RDPWidth:         "1090",
-		RDPHeight:        "990",
+		ClientID:           "1314",
+		Local:              "lohost88:3304",
+		Scheme:             utils.RDP,
+		config.ServerURL:   "http://rport-url123.com",
+		LaunchRDP:          "1",
+		RDPUser:            "Administrator",
+		RDPWidth:           "1090",
+		RDPHeight:          "990",
+		IdleTimeoutMinutes: "5",
 	})
 	err := tController.Create(context.Background(), params)
 	expectedFileInput := models.FileInput{
@@ -850,7 +859,7 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedOutput := fmt.Sprintf(
-		`{"id":"777","client_id":"1314","client_name":"","lhost":"lohost77","lport":"3344","rhost":"","rport":"","lport_random":false,"scheme":"rdp","acl":"","usage":"rdp://rport-url123.com:3344","rport_server":"%s"}`,
+		`{"id":"777","client_id":"1314","client_name":"","lhost":"lohost77","lport":"3344","rhost":"","rport":"","lport_random":false,"scheme":"rdp","acl":"","usage":"rdp://rport-url123.com:3344","idle_timeout_minutes":5,"rport_server":"%s"}`,
 		srv.URL,
 	)
 	assert.Equal(t, expectedOutput, renderBuf.String())

@@ -146,7 +146,7 @@ func getScriptRequirements() []config.ParameterRequirement {
 			Description: "execute the script concurrently on multiple clients",
 			ShortName:   "r",
 			Type:        config.BoolRequirementType,
-			Default:     "0",
+			Default:     false,
 		},
 		{
 			Field:       controllers.IsFullOutput,
@@ -154,7 +154,7 @@ func getScriptRequirements() []config.ParameterRequirement {
 			Description: "output detailed information of a script execution",
 			ShortName:   "f",
 			Type:        config.BoolRequirementType,
-			Default:     "0",
+			Default:     false,
 		},
 		{
 			Field:       controllers.IsSudo,
@@ -162,7 +162,7 @@ func getScriptRequirements() []config.ParameterRequirement {
 			Description: "execute script as sudo",
 			ShortName:   "u",
 			Type:        config.BoolRequirementType,
-			Default:     "0",
+			Default:     false,
 		},
 		{
 			Field:       controllers.Interpreter,

@@ -23,20 +23,22 @@ import (
 )
 
 const (
-	ClientID      = "client"
-	TunnelID      = "tunnel"
-	Local         = "local"
-	Remote        = "remote"
-	Scheme        = "scheme"
-	ACL           = "acl"
-	CheckPort     = "checkp"
-	LaunchSSH     = "launch-ssh"
-	LaunchRDP     = "launch-rdp"
-	RDPWidth      = "rdp-width"
-	RDPHeight     = "rdp-height"
-	RDPUser       = "rdp-user"
-	DefaultACL    = "<<YOU CURRENT PUBLIC IP>>"
-	ForceDeletion = "force"
+	ClientID           = "client"
+	TunnelID           = "tunnel"
+	Local              = "local"
+	Remote             = "remote"
+	Scheme             = "scheme"
+	ACL                = "acl"
+	CheckPort          = "checkp"
+	IdleTimeoutMinutes = "idle-timeout-minutes"
+	SkipIdleTimeout    = "skip-idle-timeout"
+	LaunchSSH          = "launch-ssh"
+	LaunchRDP          = "launch-rdp"
+	RDPWidth           = "rdp-width"
+	RDPHeight          = "rdp-height"
+	RDPUser            = "rdp-user"
+	DefaultACL         = "<<YOU CURRENT PUBLIC IP>>"
+	ForceDeletion      = "force"
 )
 
 type TunnelRenderer interface {
@@ -191,7 +193,22 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 
 	local := params.ReadString(Local, "")
 	checkPort := params.ReadString(CheckPort, "")
-	tunResp, err := tc.Rport.CreateTunnel(ctx, clientID, local, remotePortAndHostStr, scheme, acl, checkPort)
+	skipIdleTimeout := params.ReadBool(SkipIdleTimeout, false)
+	idleTimeoutMinutes := 0
+	if !skipIdleTimeout {
+		idleTimeoutMinutes = params.ReadInt(IdleTimeoutMinutes, 0)
+	}
+	tunResp, err := tc.Rport.CreateTunnel(
+		ctx,
+		clientID,
+		local,
+		remotePortAndHostStr,
+		scheme,
+		acl,
+		checkPort,
+		idleTimeoutMinutes,
+		skipIdleTimeout,
+	)
 	if err != nil {
 		return err
 	}

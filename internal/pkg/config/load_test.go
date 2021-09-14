@@ -318,7 +318,7 @@ func TestCollectParams(t *testing.T) {
 	assert.Equal(t, "127.1.1.1", actualHost)
 
 	actualHTTPSParam, _ := params.Read("https")
-	assert.Equal(t, "false", actualHTTPSParam)
+	assert.Equal(t, false, actualHTTPSParam)
 
 	actualPassword, _ := params.Read("password")
 	assert.Equal(t, "123", actualPassword)

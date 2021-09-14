@@ -121,6 +121,7 @@ REMOTE_HOST:       rhost
 REMOTE_PORT:       124                             
 LOCAL_PORT RANDOM: false                           
 SCHEME:            ssh                             
+IDLE TIMEOUT MINS: 7                               
 ACL:               0.0.0.0                         
 USAGE:             ssh -p 123 123.22.22.33 -l root 
 `,
@@ -128,7 +129,7 @@ USAGE:             ssh -p 123 123.22.22.33 -l root
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"id":"id22","client_id":"","client_name":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0","usage":"ssh -p 123 123.22.22.33 -l root"}
+			ExpectedOutput: `{"id":"id22","client_id":"","client_name":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0","usage":"ssh -p 123 123.22.22.33 -l root","idle_timeout_minutes":7}
 `,
 			ColCountToGive: 10,
 		},
@@ -145,7 +146,8 @@ USAGE:             ssh -p 123 123.22.22.33 -l root
   "lport_random": false,
   "scheme": "ssh",
   "acl": "0.0.0.0",
-  "usage": "ssh -p 123 123.22.22.33 -l root"
+  "usage": "ssh -p 123 123.22.22.33 -l root",
+  "idle_timeout_minutes": 7
 }
 `,
 			ColCountToGive: 10,
@@ -163,20 +165,22 @@ local_port_random: false
 scheme: ssh
 acl: 0.0.0.0
 usage: ssh -p 123 123.22.22.33 -l root
+idle_timeout_minutes: 7
 `,
 			ColCountToGive: 10,
 		},
 	}
 	tunnel := &models.TunnelCreated{
-		ID:          "id22",
-		Lhost:       "lhost",
-		Lport:       "123",
-		Rhost:       "rhost",
-		Rport:       "124",
-		LportRandom: false,
-		Scheme:      utils.SSH,
-		ACL:         "0.0.0.0",
-		Usage:       "ssh -p 123 123.22.22.33 -l root",
+		ID:              "id22",
+		Lhost:           "lhost",
+		Lport:           "123",
+		Rhost:           "rhost",
+		Rport:           "124",
+		LportRandom:     false,
+		Scheme:          utils.SSH,
+		ACL:             "0.0.0.0",
+		Usage:           "ssh -p 123 123.22.22.33 -l root",
+		IdleTimeoutMins: 7,
 	}
 
 	for _, testCase := range testCases {

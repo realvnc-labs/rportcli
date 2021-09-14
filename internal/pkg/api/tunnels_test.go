@@ -53,6 +53,8 @@ func TestCreateTunnel(t *testing.T) {
 		utils.SSH,
 		"127.0.0.1",
 		"1",
+		0,
+		false,
 	)
 	assert.NoError(t, err)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -180,14 +181,26 @@ func getConfigLocation() (configPath string) {
 
 func DefineCommandInputs(c *cobra.Command, reqs []ParameterRequirement) {
 	for _, req := range reqs {
-		if req.Type == BoolRequirementType {
+		defaultStr := ""
+		if req.Default != nil {
+			defaultStr = fmt.Sprint(req.Default)
+		}
+		switch req.Type {
+		case BoolRequirementType:
 			boolValDefault := true
-			if req.Default == "" || req.Default == "0" || req.Default == "false" {
+			if defaultStr == "" || defaultStr == "0" || defaultStr == "false" {
 				boolValDefault = false
 			}
 			c.Flags().BoolP(req.Field, req.ShortName, boolValDefault, req.Description)
-		} else {
-			c.Flags().StringP(req.Field, req.ShortName, req.Default, req.Description)
+		case IntRequirementType:
+			defaultInt, err := strconv.Atoi(defaultStr)
+			if err == nil {
+				c.Flags().IntP(req.Field, req.ShortName, defaultInt, req.Description)
+			} else {
+				c.Flags().IntP(req.Field, req.ShortName, 0, req.Description)
+			}
+		default:
+			c.Flags().StringP(req.Field, req.ShortName, defaultStr, req.Description)
 		}
 	}
 }
@@ -234,13 +247,20 @@ func CollectParamsFromCommandAndPromptAndEnv(
 			continue
 		}
 
-		if req.Type == BoolRequirementType {
+		switch req.Type {
+		case BoolRequirementType:
 			boolVal, e := c.Flags().GetBool(req.Field)
 			if e != nil {
 				return nil, e
 			}
-			paramsRaw[req.Field] = fmt.Sprint(boolVal)
-		} else {
+			paramsRaw[req.Field] = boolVal
+		case IntRequirementType:
+			intVal, e := c.Flags().GetInt(req.Field)
+			if e != nil {
+				return nil, e
+			}
+			paramsRaw[req.Field] = intVal
+		default:
 			strVal, e := c.Flags().GetString(req.Field)
 			if e != nil {
 				return nil, e
@@ -248,12 +268,16 @@ func CollectParamsFromCommandAndPromptAndEnv(
 			paramsRaw[req.Field] = strVal
 		}
 	}
+
 	valuesProviderFromFlags := options.NewMapValuesProvider(paramsRaw)
+
 	paramsFromFlags := options.New(valuesProviderFromFlags)
+
 	missedRequirements := CheckRequirements(paramsFromFlags, reqs)
 	if len(missedRequirements) == 0 {
 		return valuesProviderFromFlags, nil
 	}
+
 	err = PromptRequiredValues(missedRequirements, paramsRaw, promptReader)
 	if err != nil {
 		return

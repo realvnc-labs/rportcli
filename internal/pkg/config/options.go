@@ -11,6 +11,7 @@ import (
 const (
 	BoolRequirementType   = "bool"
 	StringRequirementType = "string"
+	IntRequirementType    = "int"
 )
 
 // Validate validation callback
@@ -32,7 +33,7 @@ type ParameterRequirement struct {
 	Help        string
 	Validate    Validate
 	IsEnabled   func(providedParams *options.ParameterBag) bool
-	Default     string
+	Default     interface{}
 	Description string
 	IsSecure    bool
 	IsRequired  bool

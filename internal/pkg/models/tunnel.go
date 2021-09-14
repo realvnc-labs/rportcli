@@ -108,18 +108,19 @@ func (t *Tunnel) KeyValues() []testing.KeyValueStr {
 }
 
 type TunnelCreated struct {
-	ID          string `json:"id"`
-	ClientID    string `json:"client_id" yaml:"client_id"`
-	ClientName  string `json:"client_name" yaml:"client_name"`
-	Lhost       string `json:"lhost" yaml:"local_host"`
-	Lport       string `json:"lport" yaml:"local_port"`
-	Rhost       string `json:"rhost" yaml:"remote_host"`
-	Rport       string `json:"rport" yaml:"remote_port"`
-	LportRandom bool   `json:"lport_random" yaml:"local_port_random"`
-	Scheme      string `json:"scheme" yaml:"scheme"`
-	ACL         string `json:"acl" yaml:"acl"`
-	Usage       string `json:"usage" yaml:"usage"`
-	RportServer string `json:"rport_server,omitempty" yaml:"rport_server,omitempty"`
+	ID              string `json:"id"`
+	ClientID        string `json:"client_id" yaml:"client_id"`
+	ClientName      string `json:"client_name" yaml:"client_name"`
+	Lhost           string `json:"lhost" yaml:"local_host"`
+	Lport           string `json:"lport" yaml:"local_port"`
+	Rhost           string `json:"rhost" yaml:"remote_host"`
+	Rport           string `json:"rport" yaml:"remote_port"`
+	LportRandom     bool   `json:"lport_random" yaml:"local_port_random"`
+	Scheme          string `json:"scheme" yaml:"scheme"`
+	ACL             string `json:"acl" yaml:"acl"`
+	Usage           string `json:"usage" yaml:"usage"`
+	IdleTimeoutMins int    `json:"idle_timeout_minutes" yaml:"idle_timeout_minutes"`
+	RportServer     string `json:"rport_server,omitempty" yaml:"rport_server,omitempty"`
 }
 
 func (tc *TunnelCreated) KeyValues() []testing.KeyValueStr {
@@ -159,6 +160,10 @@ func (tc *TunnelCreated) KeyValues() []testing.KeyValueStr {
 		{
 			Key:   "SCHEME",
 			Value: tc.Scheme,
+		},
+		{
+			Key:   "IDLE TIMEOUT MINS",
+			Value: fmt.Sprint(tc.IdleTimeoutMins),
 		},
 		{
 			Key:   "ACL",

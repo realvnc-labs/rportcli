@@ -132,6 +132,21 @@ var tunnelCreateCmd = &cobra.Command{
 	},
 }
 
+func isRemoteEnabled(providedParams *options.ParameterBag) bool {
+	scheme := providedParams.ReadString(controllers.Scheme, "")
+	if scheme != "" && utils.GetPortByScheme(scheme) > 0 {
+		return false
+	}
+
+	launchSSH := providedParams.ReadString(controllers.LaunchSSH, "")
+	if launchSSH != "" {
+		return false
+	}
+
+	launchRDP := providedParams.ReadBool(controllers.LaunchRDP, false)
+	return !launchRDP
+}
+
 func getCreateTunnelRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
 		{
@@ -162,20 +177,7 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 			IsRequired:  true,
 			Validate:    config.RequiredValidate,
 			Help:        "Enter a remote port value",
-			IsEnabled: func(providedParams *options.ParameterBag) bool {
-				scheme := providedParams.ReadString(controllers.Scheme, "")
-				if scheme != "" && utils.GetPortByScheme(scheme) > 0 {
-					return false
-				}
-
-				launchSSH := providedParams.ReadString(controllers.LaunchSSH, "")
-				if launchSSH != "" {
-					return false
-				}
-
-				launchRDP := providedParams.ReadBool(controllers.LaunchRDP, false)
-				return !launchRDP
-			},
+			IsEnabled:   isRemoteEnabled,
 		},
 		{
 			Field:       controllers.Scheme,
@@ -193,7 +195,7 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 			Description: "A flag whether to check availability of a public port. By default check is disabled.",
 			ShortName:   "p",
 			Type:        config.BoolRequirementType,
-			Default:     "0",
+			Default:     false,
 		},
 		{
 			Field:       controllers.LaunchSSH,
@@ -207,21 +209,21 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 Optionally pass the rdp-width and rdp-height params for RDP window size`,
 			ShortName: "d",
 			Type:      config.BoolRequirementType,
-			Default:   "0",
+			Default:   false,
 		},
 		{
 			Field:       controllers.RDPWidth,
 			Description: `RDP window width`,
 			ShortName:   "w",
-			Type:        config.StringRequirementType,
-			Default:     "1024",
+			Type:        config.IntRequirementType,
+			Default:     1024,
 		},
 		{
 			Field:       controllers.RDPHeight,
 			Description: `RDP window height`,
 			ShortName:   "i",
-			Type:        config.StringRequirementType,
-			Default:     "768",
+			Type:        config.IntRequirementType,
+			Default:     768,
 		},
 		{
 			Field:       controllers.RDPUser,
@@ -231,6 +233,19 @@ Optionally pass the rdp-width and rdp-height params for RDP window size`,
 			Validate:    config.RequiredValidate,
 			Help:        "Enter a RDP user name",
 			IsEnabled:   func(providedParams *options.ParameterBag) bool { return IsRDPUserRequired },
+		},
+		{
+			Field:       controllers.SkipIdleTimeout,
+			Description: `if given, a tunnel will be created without an idle timeout`,
+			ShortName:   "k",
+			Type:        config.BoolRequirementType,
+			Default:     false,
+		},
+		{
+			Field:       controllers.IdleTimeoutMinutes,
+			Description: `timeout in minutes for idle tunnels to be closed`,
+			ShortName:   "m",
+			Type:        config.IntRequirementType,
 		},
 	}
 }
@@ -256,7 +271,7 @@ func getDeleteTunnelRequirements() []config.ParameterRequirement {
 		{
 			Field:       controllers.ForceDeletion,
 			ShortName:   "f",
-			Default:     "0",
+			Default:     false,
 			Description: `force tunnel deletion if it has active connections`,
 			Type:        config.BoolRequirementType,
 		},

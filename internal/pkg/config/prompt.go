@@ -26,7 +26,11 @@ func PromptRequiredValues(
 	for i := range missedRequirements {
 		readValue := ""
 		missedReqP := &missedRequirements[i]
-		if missedReqP.Default != "" && missedReqP.Validate == nil {
+		defaultStr := ""
+		if missedReqP.Default != nil {
+			defaultStr = fmt.Sprint(missedReqP.Default)
+		}
+		if defaultStr != "" && missedReqP.Validate == nil {
 			readValue, err = promptValue(missedReqP, promptReader)
 			if err != nil {
 				return err
@@ -66,8 +70,8 @@ func PromptRequiredValues(
 
 func promptValue(req *ParameterRequirement, promptReader PromptReader) (string, error) {
 	promptReader.Output(req.Help + "\n")
-	if req.Default != "" {
-		promptReader.Output(fmt.Sprintf("Default value: %s\n", req.Default))
+	if req.Default != nil {
+		promptReader.Output(fmt.Sprintf("Default value: %v\n", req.Default))
 	}
 
 	promptReader.Output("-> ")
