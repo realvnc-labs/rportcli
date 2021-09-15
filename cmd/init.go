@@ -44,7 +44,7 @@ func manageLogout(ctx context.Context, cmd *cobra.Command) error {
 
 	rportAPI := buildRport(params)
 
-	logoutController := controllers.NewLogoutController(rportAPI, config.WriteConfig)
+	logoutController := controllers.NewLogoutController(rportAPI, config.DeleteConfig)
 
 	return logoutController.Logout(ctx, params)
 }

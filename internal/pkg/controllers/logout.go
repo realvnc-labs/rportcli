@@ -3,6 +3,8 @@ package controllers
 import (
 	"context"
 
+	"github.com/sirupsen/logrus"
+
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 )
@@ -12,14 +14,14 @@ type LogoutAPI interface {
 }
 
 type LogoutController struct {
-	api          LogoutAPI
-	configWriter ConfigWriter
+	api           LogoutAPI
+	configDeleter func() (err error)
 }
 
-func NewLogoutController(api LogoutAPI, configWriter ConfigWriter) *LogoutController {
+func NewLogoutController(api LogoutAPI, configDeleter func() (err error)) *LogoutController {
 	return &LogoutController{
-		api:          api,
-		configWriter: configWriter,
+		api:           api,
+		configDeleter: configDeleter,
 	}
 }
 
@@ -36,15 +38,11 @@ func (lc *LogoutController) Logout(ctx context.Context, params *options.Paramete
 		return nil
 	}
 
-	valuesProvider := options.NewMapValuesProvider(map[string]interface{}{
-		config.ServerURL: params.ReadString(config.ServerURL, ""),
-		config.Token:     "",
-	})
-
-	err = lc.configWriter(options.New(valuesProvider))
+	err = lc.configDeleter()
 	if err != nil {
 		return err
 	}
+	logrus.Info("Logout success")
 
 	return nil
 }

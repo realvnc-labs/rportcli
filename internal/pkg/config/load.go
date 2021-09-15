@@ -119,6 +119,19 @@ func CreateFileValuesProvider() (options.ValuesProvider, error) {
 	return jvp, nil
 }
 
+func DeleteConfig() (err error) {
+	configLocation := getConfigLocation()
+
+	if _, e := os.Stat(configLocation); e == nil {
+		err = os.Remove(configLocation)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // WriteConfig will write config values to file system
 func WriteConfig(params *options.ParameterBag) (err error) {
 	configLocation := getConfigLocation()
@@ -136,11 +149,9 @@ func WriteConfig(params *options.ParameterBag) (err error) {
 		Token:     params.ReadString(Token, ""),
 	}
 
-	if _, e := os.Stat(configLocation); e == nil {
-		err = os.Remove(configLocation)
-		if err != nil {
-			return err
-		}
+	err = DeleteConfig()
+	if err != nil {
+		return err
 	}
 
 	fileToWrite, err := os.OpenFile(configLocation, os.O_CREATE|os.O_RDWR, 0600)

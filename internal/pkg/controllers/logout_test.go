@@ -7,7 +7,6 @@ import (
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
-	"github.com/magiconair/properties/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -38,6 +37,11 @@ func (cwm *ConfigWriterMock) WriteConfig(params *options.ParameterBag) (err erro
 	return args.Error(0)
 }
 
+func (cwm *ConfigWriterMock) DeleteConfig() (err error) {
+	args := cwm.Called()
+	return args.Error(0)
+}
+
 func TestLogoutSuccess(t *testing.T) {
 	ctx := context.Background()
 
@@ -45,18 +49,16 @@ func TestLogoutSuccess(t *testing.T) {
 	apiMock.On("Logout", ctx).Return(nil)
 
 	configWriterMock := &ConfigWriterMock{}
-	configWriterMock.On("WriteConfig", mock.Anything).Return(nil)
+	configWriterMock.On("DeleteConfig").Return(nil)
 
-	cl := NewLogoutController(apiMock, configWriterMock.WriteConfig)
+	cl := NewLogoutController(apiMock, configWriterMock.DeleteConfig)
 
 	err := cl.Logout(ctx, defaultLogoutParams)
 	require.NoError(t, err)
 
 	apiMock.AssertCalled(t, "Logout", ctx)
-	require.NotNil(t, configWriterMock.paramsGiven)
 
-	assert.Equal(t, configWriterMock.paramsGiven.ReadString(config.Token, "some1"), "")
-	assert.Equal(t, configWriterMock.paramsGiven.ReadString(config.ServerURL, "some2"), "some.srv")
+	configWriterMock.AssertCalled(t, "DeleteConfig")
 
 	err = cl.Logout(ctx, &options.ParameterBag{})
 	require.NoError(t, err)
@@ -69,9 +71,9 @@ func TestLogoutWriteConfigError(t *testing.T) {
 	apiMock.On("Logout", ctx).Return(nil)
 
 	configWriterMock := &ConfigWriterMock{}
-	configWriterMock.On("WriteConfig", mock.Anything).Return(errors.New("some config error"))
+	configWriterMock.On("DeleteConfig").Return(errors.New("some config error"))
 
-	cl := NewLogoutController(apiMock, configWriterMock.WriteConfig)
+	cl := NewLogoutController(apiMock, configWriterMock.DeleteConfig)
 
 	err := cl.Logout(ctx, defaultLogoutParams)
 	require.EqualError(t, err, "some config error")
@@ -84,9 +86,9 @@ func TestLogoutAPIError(t *testing.T) {
 	apiMock.On("Logout", ctx).Return(errors.New("some api error"))
 
 	configWriterMock := &ConfigWriterMock{}
-	configWriterMock.On("WriteConfig", mock.Anything).Return(nil)
+	configWriterMock.On("DeleteConfig").Return(nil)
 
-	cl := NewLogoutController(apiMock, configWriterMock.WriteConfig)
+	cl := NewLogoutController(apiMock, configWriterMock.DeleteConfig)
 
 	err := cl.Logout(ctx, defaultLogoutParams)
 	require.EqualError(t, err, "some api error")
