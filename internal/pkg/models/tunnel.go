@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/breathbath/go_utils/v2/pkg/testing"
 )
@@ -20,16 +21,17 @@ func (os *OperationStatus) KeyValues() []testing.KeyValueStr {
 }
 
 type Tunnel struct {
-	ID          string `json:"id"`
-	ClientID    string `json:"client_id" yaml:"client_id"`
-	ClientName  string `json:"client_name" yaml:"client_name"`
-	Lhost       string `json:"lhost" yaml:"local_host"`
-	Lport       string `json:"lport" yaml:"local_port"`
-	Rhost       string `json:"rhost" yaml:"remote_host"`
-	Rport       string `json:"rport" yaml:"remote_port"`
-	LportRandom bool   `json:"lport_random" yaml:"local_port_random"`
-	Scheme      string `json:"scheme" yaml:"scheme"`
-	ACL         string `json:"acl" yaml:"acl"`
+	ID              string `json:"id"`
+	ClientID        string `json:"client_id" yaml:"client_id"`
+	ClientName      string `json:"client_name" yaml:"client_name"`
+	Lhost           string `json:"lhost" yaml:"local_host"`
+	Lport           string `json:"lport" yaml:"local_port"`
+	Rhost           string `json:"rhost" yaml:"remote_host"`
+	Rport           string `json:"rport" yaml:"remote_port"`
+	LportRandom     bool   `json:"lport_random" yaml:"local_port_random"`
+	Scheme          string `json:"scheme" yaml:"scheme"`
+	ACL             string `json:"acl" yaml:"acl"`
+	IdleTimeoutMins int    `json:"idle_timeout_minutes" yaml:"idle_timeout_minutes"`
 }
 
 func (t *Tunnel) Headers() []string {
@@ -44,6 +46,7 @@ func (t *Tunnel) Headers() []string {
 		"LOCAL_PORT_RAND",
 		"SCHEME",
 		"ACL",
+		"TIMEOUT",
 	}
 }
 
@@ -59,6 +62,7 @@ func (t *Tunnel) Row() []string {
 		fmt.Sprint(t.LportRandom),
 		t.Scheme,
 		t.ACL,
+		strconv.Itoa(t.IdleTimeoutMins),
 	}
 }
 
@@ -103,6 +107,10 @@ func (t *Tunnel) KeyValues() []testing.KeyValueStr {
 		{
 			Key:   "ACL",
 			Value: t.ACL,
+		},
+		{
+			Key:   "TIMEOUT MINUTES",
+			Value: strconv.Itoa(t.IdleTimeoutMins),
 		},
 	}
 }

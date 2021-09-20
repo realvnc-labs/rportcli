@@ -14,19 +14,12 @@ type DataProvider interface {
 	GetClients(ctx context.Context) (cls []*models.Client, err error)
 }
 
-type Cache interface {
-	Store(ctx context.Context, cls []*models.Client, params *options.ParameterBag) error
-	Exists(ctx context.Context, params *options.ParameterBag) (bool, error)
-	Load(ctx context.Context, params *options.ParameterBag) (cls []*models.Client, err error)
-}
-
 type Search struct {
 	DataProvider DataProvider
-	Cache        Cache
 }
 
 func (s *Search) Search(ctx context.Context, term string, params *options.ParameterBag) (foundCls []*models.Client, err error) {
-	cls, err := s.getClientsList(ctx, params)
+	cls, err := s.DataProvider.GetClients(ctx)
 	if err != nil {
 		return foundCls, err
 	}
@@ -50,27 +43,6 @@ func (s *Search) FindOne(ctx context.Context, searchTerm string, params *options
 	}
 
 	return &models.Client{}, fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", searchTerm)
-}
-
-func (s *Search) getClientsList(ctx context.Context, params *options.ParameterBag) (cls []*models.Client, err error) {
-	cacheExists, err := s.Cache.Exists(ctx, params)
-	if err != nil {
-		return cls, err
-	}
-
-	if !cacheExists {
-		cls, err = s.DataProvider.GetClients(ctx)
-		if err != nil {
-			return
-		}
-
-		err = s.Cache.Store(ctx, cls, params)
-		return
-	}
-
-	cls, err = s.Cache.Load(ctx, params)
-
-	return cls, err
 }
 
 func (s *Search) findInClientsList(cls []*models.Client, term string) (foundCls []*models.Client) {

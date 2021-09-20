@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cache"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
@@ -47,7 +46,6 @@ var clientsListCmd = &cobra.Command{
 
 		clientSearch := &client.Search{
 			DataProvider: rportAPI,
-			Cache:        &cache.ClientsCache{},
 		}
 
 		clientsController := &controllers.ClientController{
@@ -87,7 +85,6 @@ var clientCmd = &cobra.Command{
 		}
 		clientSearch := &client.Search{
 			DataProvider: rportAPI,
-			Cache:        &cache.ClientsCache{},
 		}
 		clientsController := &controllers.ClientController{
 			Rport:          rportAPI,

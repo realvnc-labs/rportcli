@@ -11,7 +11,6 @@ import (
 	"github.com/breathbath/go_utils/v2/pkg/env"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cache"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
@@ -78,7 +77,6 @@ var executeCmd = &cobra.Command{
 		rportAPI := buildRport(params)
 		clientSearch := &client.Search{
 			DataProvider: rportAPI,
-			Cache:        &cache.ClientsCache{},
 		}
 
 		isFullJobOutput := params.ReadBool(controllers.IsFullOutput, false)

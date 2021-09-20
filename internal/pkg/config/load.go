@@ -85,8 +85,6 @@ func CreateEnvValuesProvider() options.ValuesProvider {
 		Login:               LoginEnvVar,
 		ServerURL:           ServerURLEnvVar,
 		PathForConfigEnvVar: PathForConfigEnvVar,
-		CacheValidityEnvVar: CacheValidityEnvVar,
-		CacheFolderEnvVar:   CacheFolderEnvVar,
 	}
 
 	envMapValues := map[string]interface{}{}

@@ -9,7 +9,6 @@ import (
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/rdp"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/cache"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
@@ -61,7 +60,6 @@ var tunnelListCmd = &cobra.Command{
 
 		clientSearch := &client.Search{
 			DataProvider: rportAPI,
-			Cache:        &cache.ClientsCache{},
 		}
 
 		tunnelController := &controllers.TunnelController{
@@ -297,7 +295,6 @@ func createTunnelController(params *options.ParameterBag) *controllers.TunnelCon
 
 	clientSearch := &client.Search{
 		DataProvider: rportAPI,
-		Cache:        &cache.ClientsCache{},
 	}
 
 	rdpExecutor := &rdp.Executor{
