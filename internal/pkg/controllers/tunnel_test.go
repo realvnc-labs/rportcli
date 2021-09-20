@@ -136,7 +136,7 @@ func TestTunnelsController(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`[{"id":"1","client_id":"123","client_name":"Client 123","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]`,
+		`[{"id":"1","client_id":"123","client_name":"Client 123","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","idle_timeout_minutes":22}]`,
 		buf.String(),
 	)
 }
@@ -184,7 +184,7 @@ func TestTunnelsControllerByClient(t *testing.T) {
 
 	assert.Equal(
 		t,
-		`[{"id":"23","client_id":"cl2","client_name":"client 354351","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":""}]`,
+		`[{"id":"23","client_id":"cl2","client_name":"client 354351","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","idle_timeout_minutes":0}]`,
 		buf.String(),
 	)
 

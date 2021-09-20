@@ -19,14 +19,14 @@ func TestRenderTunnels(t *testing.T) {
 		{
 			Format: FormatHuman,
 			ExpectedOutput: `Tunnels
-ID   CLIENT ID CLIENT NAME LOCAL HOST LOCAL PORT REMOTE HOST REMOTE PORT LOCAL PORT RAND SCHEME ACL     
-id22                       lhost      123        rhost       124         false           ssh    0.0.0.0 
+ID   CLIENT ID CLIENT NAME LOCAL HOST LOCAL PORT REMOTE HOST REMOTE PORT LOCAL PORT RAND SCHEME ACL     TIMEOUT 
+id22                       lhost      123        rhost       124         false           ssh    0.0.0.0 33      
 `,
 			ColCountToGive: 150,
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `[{"id":"id22","client_id":"","client_name":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0"}]
+			ExpectedOutput: `[{"id":"id22","client_id":"","client_name":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0","idle_timeout_minutes":33}]
 `,
 			ColCountToGive: 10,
 		},
@@ -43,7 +43,8 @@ id22                       lhost      123        rhost       124         false  
     "rport": "124",
     "lport_random": false,
     "scheme": "ssh",
-    "acl": "0.0.0.0"
+    "acl": "0.0.0.0",
+    "idle_timeout_minutes": 33
   }
 ]
 `,
@@ -61,6 +62,7 @@ id22                       lhost      123        rhost       124         false  
   local_port_random: false
   scheme: ssh
   acl: 0.0.0.0
+  idle_timeout_minutes: 33
 `,
 			ColCountToGive: 10,
 		},
@@ -68,38 +70,42 @@ id22                       lhost      123        rhost       124         false  
 
 	tunnels := []*models.Tunnel{
 		{
-			ID:          "id22",
-			Lhost:       "lhost",
-			Lport:       "123",
-			Rhost:       "rhost",
-			Rport:       "124",
-			LportRandom: false,
-			Scheme:      utils.SSH,
-			ACL:         "0.0.0.0",
+			ID:              "id22",
+			Lhost:           "lhost",
+			Lport:           "123",
+			Rhost:           "rhost",
+			Rport:           "124",
+			LportRandom:     false,
+			Scheme:          utils.SSH,
+			ACL:             "0.0.0.0",
+			IdleTimeoutMins: 33,
 		},
 	}
 	for _, testCase := range testCases {
-		buf := &bytes.Buffer{}
-		colCountToGive := testCase.ColCountToGive
-		tr := &TunnelRenderer{
-			ColCountCalculator: func() int {
-				return colCountToGive
-			},
-			Writer: buf,
-			Format: testCase.Format,
-		}
+		tc := testCase
+		t.Run(testCase.Format, func(t *testing.T) {
+			buf := &bytes.Buffer{}
+			colCountToGive := tc.ColCountToGive
+			tr := &TunnelRenderer{
+				ColCountCalculator: func() int {
+					return colCountToGive
+				},
+				Writer: buf,
+				Format: tc.Format,
+			}
 
-		err := tr.RenderTunnels(tunnels)
-		assert.NoError(t, err)
-		if err != nil {
-			return
-		}
+			err := tr.RenderTunnels(tunnels)
+			assert.NoError(t, err)
+			if err != nil {
+				return
+			}
 
-		assert.Equal(
-			t,
-			testCase.ExpectedOutput,
-			buf.String(),
-		)
+			assert.Equal(
+				t,
+				tc.ExpectedOutput,
+				buf.String(),
+			)
+		})
 	}
 }
 func TestRenderTunnel(t *testing.T) {
