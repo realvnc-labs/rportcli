@@ -40,7 +40,7 @@ var executeCmd = &cobra.Command{
 	Short: "executes a remote command on an rport client(s)",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := buildContext(context.Background())
 		defer cancel()
 
 		sigs := make(chan os.Signal, 1)

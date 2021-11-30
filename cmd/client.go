@@ -54,7 +54,10 @@ var clientsListCmd = &cobra.Command{
 			ClientSearch:   clientSearch,
 		}
 
-		return clientsController.Clients(context.Background())
+		ctx, cancel := buildContext(context.Background())
+		defer cancel()
+
+		return clientsController.Clients(ctx)
 	},
 }
 
@@ -92,6 +95,9 @@ var clientCmd = &cobra.Command{
 			ClientSearch:   clientSearch,
 		}
 
-		return clientsController.Client(context.Background(), params, clientID, clientName)
+		ctx, cancel := buildContext(context.Background())
+		defer cancel()
+
+		return clientsController.Client(ctx, params, clientID, clientName)
 	},
 }

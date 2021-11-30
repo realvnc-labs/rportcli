@@ -4,13 +4,16 @@ go 1.16
 
 require (
 	github.com/breathbath/go_utils/v2 v2.0.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.10.0
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/magiconair/properties v1.8.4
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/nathan-fiscaletti/consolesize-go v0.0.0-20210105204122-a87d9f614b9d
 	github.com/olekukonko/tablewriter v0.0.4
+	github.com/pkg/errors v0.8.1
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/cobra v1.1.1

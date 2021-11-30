@@ -16,6 +16,7 @@ import (
 var (
 	Verbose      = false
 	OutputFormat = output.FormatHuman
+	Timeout      = ""
 	IsJSONPretty = false
 	rootCmd      = &cobra.Command{
 		Use:           "rportcli",
@@ -64,6 +65,13 @@ func init() {
 		"o",
 		output.FormatHuman,
 		fmt.Sprintf("Output format: %s, %s or %s", output.FormatJSON, output.FormatYAML, output.FormatHuman),
+	)
+	rootCmd.PersistentFlags().StringVarP(
+		&Timeout,
+		"timeout",
+		"t",
+		"",
+		"Timeout value as seconds, e.g. 10s, minutes e.g. 1m or hours e.g. 2h, if not provided no timeout will be set",
 	)
 }
 

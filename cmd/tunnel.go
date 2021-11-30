@@ -75,7 +75,10 @@ var tunnelListCmd = &cobra.Command{
 			},
 		}
 
-		return tunnelController.Tunnels(context.Background(), params)
+		ctx, cancel := buildContext(context.Background())
+		defer cancel()
+
+		return tunnelController.Tunnels(ctx, params)
 	},
 }
 
@@ -91,7 +94,10 @@ var tunnelDeleteCmd = &cobra.Command{
 
 		tunnelController := createTunnelController(params)
 
-		return tunnelController.Delete(context.Background(), params)
+		ctx, cancel := buildContext(context.Background())
+		defer cancel()
+
+		return tunnelController.Delete(ctx, params)
 	},
 }
 
@@ -126,7 +132,10 @@ var tunnelCreateCmd = &cobra.Command{
 
 		tunnelController := createTunnelController(params)
 
-		return tunnelController.Create(context.Background(), params)
+		ctx, cancel := buildContext(context.Background())
+		defer cancel()
+
+		return tunnelController.Create(ctx, params)
 	},
 }
 

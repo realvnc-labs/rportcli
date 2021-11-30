@@ -66,7 +66,7 @@ var executeScript = &cobra.Command{
 			},
 		}
 
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := buildContext(context.Background())
 		defer cancel()
 
 		wsClient, err := utils.NewWsClient(ctx, wsURLBuilder.BuildWsURL)

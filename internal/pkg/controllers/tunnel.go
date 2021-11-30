@@ -178,7 +178,7 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 
 	acl := params.ReadString(ACL, "")
 	if (acl == "" || acl == DefaultACL) && tc.IPProvider != nil {
-		ip, e := tc.IPProvider.GetIP(context.Background())
+		ip, e := tc.IPProvider.GetIP(ctx)
 		if e != nil {
 			logrus.Errorf("failed to fetch IP: %v", e)
 		} else {

@@ -1,8 +1,12 @@
 package utils
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
+	"strings"
+
+	"github.com/pkg/errors"
 
 	http2 "github.com/breathbath/go_utils/v2/pkg/http"
 )
@@ -57,4 +61,23 @@ func (fa *FallbackAuth) AuthRequest(req *http.Request) error {
 	}
 
 	return fa.FallbackAuth.AuthRequest(req)
+}
+
+func ExtractBasicAuthLoginAndPassFromRequest(r *http.Request) (login, pass string, err error) {
+	basicAuthHeader := r.Header.Get("Authorization")
+	loginPassBase64 := strings.TrimPrefix(basicAuthHeader, "Basic ")
+
+	loginPassBytes, err := base64.StdEncoding.DecodeString(loginPassBase64)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to decode basic auth header from base64")
+	}
+	loginPass := string(loginPassBytes)
+
+	loginPassParts := strings.Split(loginPass, ":")
+	const expectedLoginPassPartsCount = 2
+	if len(loginPassParts) < expectedLoginPassPartsCount {
+		return "", "", fmt.Errorf("failed to extract login and passwrod from %s", loginPass)
+	}
+
+	return loginPassParts[0], strings.Join(loginPassParts[1:], ":"), nil
 }

@@ -91,8 +91,7 @@ type MetaPart struct {
 }
 
 type UserResponse struct {
-	MetaPart
-	Data models.User `json:"data"`
+	Data models.Me `json:"data"`
 }
 
 type IPResponse struct {

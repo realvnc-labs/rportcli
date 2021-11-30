@@ -55,9 +55,9 @@ func TestMe(t *testing.T) {
 
 		assert.Equal(t, "/api/v1/me", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(UserResponse{Data: models.User{
-			User:   "someUser",
-			Groups: []string{"group1", "group2"},
+		e := jsonEnc.Encode(UserResponse{Data: models.Me{
+			Username: "someUser",
+			Groups:   []string{"group1", "group2"},
 		}})
 		assert.NoError(t, e)
 	}))
@@ -77,7 +77,7 @@ func TestMe(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, "someUser", usrResp.Data.User)
+	assert.Equal(t, "someUser", usrResp.Data.Username)
 	assert.Equal(t, []string{"group1", "group2"}, usrResp.Data.Groups)
 }
 

@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
+
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
@@ -28,7 +30,7 @@ var initCmd = &cobra.Command{
 	Short: "initialize your connection to the rportd API",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := buildContext(context.Background())
 		defer cancel()
 
 		if isLogout {
@@ -66,6 +68,12 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 	initController := &controllers.InitController{
 		ConfigWriter: config.WriteConfig,
 		PromptReader: promptReader,
+		TotPSecretRenderer: &output.TotPSecretRenderer{
+			ColCountCalculator: utils.CalcTerminalColumnsCount,
+			Writer:             os.Stdout,
+			Format:             getOutputFormat(),
+		},
+		QrImageWriterProvider: output.GetQrImageFsWriter,
 	}
 
 	return initController.InitConfig(ctx, params)
