@@ -18,7 +18,7 @@ func TestCreateTotPSecret(t *testing.T) {
 		authHeader := r.Header.Get("Authorization")
 		assert.Equal(t, "Basic bG9nMTMzMzpwYXNzMTM0MTIzNA==", authHeader)
 
-		assert.Equal(t, TotPSecretURL+"?application-name=some+app", r.URL.String())
+		assert.Equal(t, TotPSecretURL, r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
 		e := jsonEnc.Encode(models.TotPSecretResp{
 			Secret:        "123",
@@ -36,7 +36,7 @@ func TestCreateTotPSecret(t *testing.T) {
 		},
 	})
 
-	createdSecretResp, err := cl.CreateTotPSecret(context.Background(), "some app")
+	createdSecretResp, err := cl.CreateTotPSecret(context.Background())
 	require.NoError(t, err)
 
 	assert.Equal(t, "123", createdSecretResp.Secret)

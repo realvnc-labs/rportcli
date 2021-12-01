@@ -12,7 +12,7 @@ const (
 	TotPSecretURL = "/api/v1/me/totp-secret" //nolint:gosec
 )
 
-func (rp *Rport) CreateTotPSecret(ctx context.Context, appName string) (key *models.TotPSecretResp, err error) {
+func (rp *Rport) CreateTotPSecret(ctx context.Context) (key *models.TotPSecretResp, err error) {
 	var req *http.Request
 	req, err = http.NewRequestWithContext(
 		ctx,
@@ -23,11 +23,6 @@ func (rp *Rport) CreateTotPSecret(ctx context.Context, appName string) (key *mod
 	if err != nil {
 		return
 	}
-
-	q := req.URL.Query()
-	q.Add("application-name", appName)
-
-	req.URL.RawQuery = q.Encode()
 
 	key = &models.TotPSecretResp{}
 	_, err = rp.CallBaseClient(req, key)

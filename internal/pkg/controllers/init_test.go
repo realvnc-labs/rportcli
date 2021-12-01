@@ -191,17 +191,6 @@ func TestInit2FASuccess(t *testing.T) {
 }
 
 func TestInitTotPWithoutSecretSuccess(t *testing.T) {
-	err := os.Setenv(config.TotPSecretAppNameEnvVar, "some_totp_app")
-	require.NoError(t, err)
-	if err == nil {
-		defer func() {
-			e := os.Unsetenv(config.TotPSecretAppNameEnvVar)
-			if e != nil {
-				logrus.Error(e)
-			}
-		}()
-	}
-
 	const qrCodeImageContent = "qrCodeContent"
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		curURL := r.URL.String()
@@ -225,8 +214,6 @@ func TestInitTotPWithoutSecretSuccess(t *testing.T) {
 		}
 
 		if strings.HasPrefix(curURL, "/api/v1/me/totp-secret") {
-			assert.Equal(t, "some_totp_app", r.URL.Query().Get("application-name"))
-
 			assert.Equal(t, "Bearer "+validLoginTokenWith2FaWithoutTotPSecret, r.Header.Get("Authorization"))
 
 			qrCodeContent := base64.StdEncoding.EncodeToString([]byte(qrCodeImageContent))
@@ -291,7 +278,7 @@ func TestInitTotPWithoutSecretSuccess(t *testing.T) {
 		config.Login:     "log1",
 		config.Password:  "pass1",
 	})
-	err = tController.InitConfig(context.Background(), params)
+	err := tController.InitConfig(context.Background(), params)
 	require.NoError(t, err)
 
 	totpSecretRenderer.AssertCalled(

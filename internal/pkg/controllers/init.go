@@ -57,14 +57,12 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 	}
 
 	if loginResp.Data.TwoFA.DeliveryMethod == "totp_authenticator_app" {
-		totPSecretAppNameEnvVar := env.ReadEnv(config.TotPSecretAppNameEnvVar, "")
-
 		cl := api.New(serverURL, &utils.BearerAuth{
 			TokenProvider: func() (string, error) {
 				return loginResp.Data.Token, nil
 			},
 		})
-		loginResp, err = ic.processTotP(ctx, loginResp.Data.Token, cl, login, totPSecretAppNameEnvVar, tokenValidity)
+		loginResp, err = ic.processTotP(ctx, loginResp.Data.Token, cl, login, tokenValidity)
 		if err != nil {
 			return fmt.Errorf("totP secret processing to rport failed: %v", err)
 		}
@@ -141,7 +139,7 @@ func (ic *InitController) processTotP(
 	ctx context.Context,
 	loginToken string,
 	cl *api.Rport,
-	login, totPAppName string,
+	login string,
 	tokenLifetime int,
 ) (li api.LoginResponse, err error) {
 	tok, err := auth.ParseToken(loginToken, "")
@@ -154,7 +152,7 @@ func (ic *InitController) processTotP(
 	totPSecretIsGenerated := ic.totPSecretIsGenerated(tok)
 	if !totPSecretIsGenerated {
 		var totpSecretResp *models.TotPSecretResp
-		totpSecretResp, err = cl.CreateTotPSecret(ctx, totPAppName)
+		totpSecretResp, err = cl.CreateTotPSecret(ctx)
 		if err != nil {
 			return li, err
 		}

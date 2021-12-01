@@ -178,10 +178,4 @@ You can also display help for a certain command:
     <td>http://localhost:3000</td>
     <td>RPORT_SERVER_URL=http://localhost:3000 rportcli client list</td>
     </tr>
-    <tr>
-    <td>TOTP_SECRET_APP_NAME</td>
-    <td>account name visible in Authenticator app</td>
-    <td>rport</td>
-    <td>TOTP_SECRET_APP_NAME=rport rportcli init</td>
-    </tr>
 </table>
