@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	TotPSecretURL = "/api/v1/me/totp-secret" //nolint:gosec
+	TotPSecretURL  = "/api/v1/me/totp-secret" //nolint:gosec
+	TotPKeyPending = "pending"
+	TotPKeyExists  = "exists"
 )
 
 func (rp *Rport) CreateTotPSecret(ctx context.Context) (key *models.TotPSecretResp, err error) {

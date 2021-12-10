@@ -199,6 +199,7 @@ func TestInitTotPWithoutSecretSuccess(t *testing.T) {
 				Token: validLoginTokenWith2FaWithoutTotPSecret,
 				TwoFA: models.TwoFA{
 					DeliveryMethod: "totp_authenticator_app",
+					TotPKeyStatus:  api.TotPKeyPending,
 				},
 			},
 		}
@@ -310,6 +311,7 @@ func TestInitTotPWithSecretSuccess(t *testing.T) {
 					Token: validLoginTokenWith2FaWithTotPSecret,
 					TwoFA: models.TwoFA{
 						DeliveryMethod: "totp_authenticator_app",
+						TotPKeyStatus:  api.TotPKeyExists,
 					},
 				},
 			})

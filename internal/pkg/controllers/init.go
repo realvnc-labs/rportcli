@@ -10,11 +10,9 @@ import (
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/breathbath/go_utils/v2/pkg/env"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/auth"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
 
@@ -62,7 +60,7 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 				return loginResp.Data.Token, nil
 			},
 		})
-		loginResp, err = ic.processTotP(ctx, loginResp.Data.Token, cl, login, tokenValidity)
+		loginResp, err = ic.processTotP(ctx, loginResp.Data.TwoFA.TotPKeyStatus, cl, login, tokenValidity)
 		if err != nil {
 			return fmt.Errorf("totP secret processing to rport failed: %v", err)
 		}
@@ -125,32 +123,14 @@ func (ic *InitController) process2FA(
 	return li, err
 }
 
-func (ic *InitController) totPSecretIsGenerated(token *auth.Token) bool {
-	for _, sc := range token.Claims.Scopes {
-		if sc.URI == "/api/v1/me/totp-secret" {
-			return false
-		}
-	}
-
-	return true
-}
-
 func (ic *InitController) processTotP(
 	ctx context.Context,
-	loginToken string,
+	totPSecretKeyStatus string,
 	cl *api.Rport,
 	login string,
 	tokenLifetime int,
 ) (li api.LoginResponse, err error) {
-	tok, err := auth.ParseToken(loginToken, "")
-	if err != nil {
-		if validationErr, ok := err.(*jwt.ValidationError); !ok || validationErr.Inner != jwt.ErrSignatureInvalid {
-			return li, err
-		}
-	}
-
-	totPSecretIsGenerated := ic.totPSecretIsGenerated(tok)
-	if !totPSecretIsGenerated {
+	if totPSecretKeyStatus == api.TotPKeyPending {
 		var totpSecretResp *models.TotPSecretResp
 		totpSecretResp, err = cl.CreateTotPSecret(ctx)
 		if err != nil {
