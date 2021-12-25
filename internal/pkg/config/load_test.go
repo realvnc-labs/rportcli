@@ -183,8 +183,6 @@ func TestWriteConfig(t *testing.T) {
 		return
 	}
 
-
-
 	defer func() {
 		e := os.Remove("configToCheckAfter.json")
 		if e != nil {
