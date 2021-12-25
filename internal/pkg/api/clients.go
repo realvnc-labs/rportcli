@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"net/http"
+	url2 "net/url"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 
@@ -19,10 +20,18 @@ type ClientsResponse struct {
 
 func (rp *Rport) Clients(ctx context.Context) (cr *ClientsResponse, err error) {
 	var req *http.Request
+	u, err := url2.Parse(url.JoinURL(rp.BaseURL, ClientsURL))
+	if err != nil {
+		return nil, err
+	}
+	q := u.Query()
+	q.Set("fields[clients]", "id,name,timezone,tunnels,address,hostname,os_kernel,connection_state")
+	u.RawQuery = q.Encode()
+
 	req, err = http.NewRequestWithContext(
 		ctx,
 		http.MethodGet,
-		url.JoinURL(rp.BaseURL, ClientsURL),
+		u.String(),
 		nil,
 	)
 	if err != nil {

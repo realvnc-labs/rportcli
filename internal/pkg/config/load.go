@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	io2 "github.com/breathbath/go_utils/v2/pkg/io"
+
 	"github.com/spf13/pflag"
 
 	"github.com/spf13/cobra"
@@ -109,6 +111,8 @@ func CreateFileValuesProvider() (options.ValuesProvider, error) {
 		err = fmt.Errorf("failed to open the file %s: %v", configFilePath, err)
 		return nil, err
 	}
+	defer io2.CloseResourceSecure("config file", f)
+
 	jvp, err := options.NewJSONValuesProvider(f)
 	if err != nil {
 		return nil, err
@@ -156,6 +160,7 @@ func WriteConfig(params *options.ParameterBag) (err error) {
 	if err != nil {
 		return err
 	}
+	defer io2.CloseResourceSecure("config file", fileToWrite)
 
 	encoder := json.NewEncoder(fileToWrite)
 	err = encoder.Encode(configToWrite)
