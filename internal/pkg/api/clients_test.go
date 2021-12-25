@@ -83,7 +83,7 @@ func TestClientsList(t *testing.T) {
 		authHeader := r.Header.Get("Authorization")
 		assert.Equal(t, "Basic bG9nMTE2Njo1NjQzMjI=", authHeader)
 
-		assert.Equal(t, ClientsURL, r.URL.String())
+		assert.Equal(t, ClientsURL + "?fields%5Bclients%5D=id%2Cname%2Ctimezone%2Ctunnels%2Caddress%2Chostname%2Cos_kernel%2Cconnection_state", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
 		e := jsonEnc.Encode(ClientsResponse{Data: clientsStub})
 		assert.NoError(t, e)

@@ -3,13 +3,14 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	io2 "github.com/breathbath/go_utils/v2/pkg/io"
 	"io"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	io2 "github.com/breathbath/go_utils/v2/pkg/io"
 
 	"github.com/spf13/pflag"
 
