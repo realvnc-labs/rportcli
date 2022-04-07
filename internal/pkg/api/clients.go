@@ -11,14 +11,16 @@ import (
 )
 
 const (
-	ClientsURL = "/api/v1/clients"
+	ClientsURL          = "/api/v1/clients"
+	ClientsLimitDefault = 50
+	ClientsLimitMax     = 500
 )
 
 type ClientsResponse struct {
 	Data []*models.Client
 }
 
-func (rp *Rport) Clients(ctx context.Context) (cr *ClientsResponse, err error) {
+func (rp *Rport) Clients(ctx context.Context, pagination Pagination) (cr *ClientsResponse, err error) {
 	var req *http.Request
 	u, err := url2.Parse(url.JoinURL(rp.BaseURL, ClientsURL))
 	if err != nil {
@@ -26,6 +28,7 @@ func (rp *Rport) Clients(ctx context.Context) (cr *ClientsResponse, err error) {
 	}
 	q := u.Query()
 	q.Set("fields[clients]", "id,name,timezone,tunnels,address,hostname,os_kernel,connection_state")
+	pagination.Apply(q)
 	u.RawQuery = q.Encode()
 
 	req, err = http.NewRequestWithContext(
@@ -46,7 +49,7 @@ func (rp *Rport) Clients(ctx context.Context) (cr *ClientsResponse, err error) {
 
 func (rp *Rport) GetClients(ctx context.Context) (cls []*models.Client, err error) {
 	var cr *ClientsResponse
-	cr, err = rp.Clients(ctx)
+	cr, err = rp.Clients(ctx, NewPaginationWithLimit(ClientsLimitMax))
 
 	if err != nil {
 		return

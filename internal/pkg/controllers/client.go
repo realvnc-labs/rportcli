@@ -25,8 +25,8 @@ type ClientController struct {
 	ClientRenderer ClientRenderer
 }
 
-func (cc *ClientController) Clients(ctx context.Context) error {
-	clResp, err := cc.Rport.Clients(ctx)
+func (cc *ClientController) Clients(ctx context.Context, params *options.ParameterBag) error {
+	clResp, err := cc.Rport.Clients(ctx, api.NewPaginationFromParams(params))
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (cc *ClientController) Client(ctx context.Context, params *options.Paramete
 	renderDetails := params.ReadBool("all", false)
 
 	if id != "" {
-		clResp, err := cc.Rport.Clients(ctx)
+		clResp, err := cc.Rport.Clients(ctx, api.NewPaginationWithLimit(api.ClientsLimitMax))
 		if err != nil {
 			return err
 		}

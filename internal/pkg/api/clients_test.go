@@ -83,7 +83,7 @@ func TestClientsList(t *testing.T) {
 		authHeader := r.Header.Get("Authorization")
 		assert.Equal(t, "Basic bG9nMTE2Njo1NjQzMjI=", authHeader)
 
-		assert.Equal(t, ClientsURL+"?fields%5Bclients%5D=id%2Cname%2Ctimezone%2Ctunnels%2Caddress%2Chostname%2Cos_kernel%2Cconnection_state", r.URL.String())
+		assert.Equal(t, ClientsURL+"?fields%5Bclients%5D=id%2Cname%2Ctimezone%2Ctunnels%2Caddress%2Chostname%2Cos_kernel%2Cconnection_state&page%5Blimit%5D=500&page%5Boffset%5D=0", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
 		e := jsonEnc.Encode(ClientsResponse{Data: clientsStub})
 		assert.NoError(t, e)
@@ -98,7 +98,7 @@ func TestClientsList(t *testing.T) {
 		},
 	})
 
-	clientsResp, err := cl.Clients(context.Background())
+	clientsResp, err := cl.Clients(context.Background(), NewPaginationWithLimit(ClientsLimitMax))
 	assert.NoError(t, err)
 	if err != nil {
 		return

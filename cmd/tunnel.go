@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/rdp"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
@@ -31,6 +32,7 @@ func init() {
 	config.DefineCommandInputs(tunnelCreateCmd, getCreateTunnelRequirements())
 	tunnelsCmd.AddCommand(tunnelCreateCmd)
 
+	addPaginationFlags(tunnelListCmd, api.ClientsLimitDefault)
 	tunnelListCmd.Flags().StringP(controllers.ClientNameFlag, "n", "", "Get tunnels of a client by name")
 	tunnelListCmd.Flags().StringP(controllers.ClientID, "c", "", "Get tunnels of a client by client id")
 

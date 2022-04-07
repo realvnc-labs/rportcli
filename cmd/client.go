@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
@@ -17,6 +18,7 @@ import (
 )
 
 func init() {
+	addPaginationFlags(clientsListCmd, api.ClientsLimitDefault)
 	clientsCmd.AddCommand(clientsListCmd)
 	clientCmd.Flags().StringP(controllers.ClientNameFlag, "n", "", "Get client by name")
 	clientCmd.Flags().BoolP("all", "a", false, "Show client info with additional details")
@@ -57,7 +59,7 @@ var clientsListCmd = &cobra.Command{
 		ctx, cancel := buildContext(context.Background())
 		defer cancel()
 
-		return clientsController.Clients(ctx)
+		return clientsController.Clients(ctx, params)
 	},
 }
 

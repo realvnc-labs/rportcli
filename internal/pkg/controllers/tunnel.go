@@ -87,7 +87,7 @@ func (tc *TunnelController) Tunnels(ctx context.Context, params *options.Paramet
 		}
 	} else {
 		var clResp *api.ClientsResponse
-		clResp, err = tc.Rport.Clients(ctx)
+		clResp, err = tc.Rport.Clients(ctx, api.NewPaginationFromParams(params))
 		if err != nil {
 			return err
 		}
