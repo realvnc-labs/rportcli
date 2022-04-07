@@ -24,6 +24,9 @@ linters-settings:
       - octalLiteral
       - whyNoLint
       - wrapperFunc
+      - ioutilDeprecated
+      - httpNoBody
+      - sprintfQuotedString
   gocyclo:
     min-complexity: 15
   goimports:
@@ -33,8 +36,7 @@ linters-settings:
   gomnd:
     settings:
       mnd:
-        # don't include the "operation" and "assign"
-        checks: argument,case,condition,return
+        checks: case,condition,return
   govet:
     check-shadowing: true
     settings:
