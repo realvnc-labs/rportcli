@@ -74,7 +74,7 @@ func (fvp *FlagValuesProvider) ToKeyValues() map[string]interface{} {
 
 func (fvp *FlagValuesProvider) Read(name string) (val interface{}, found bool) {
 	fl := fvp.flags.Lookup(name)
-	if fl == nil || !fl.Changed {
+	if fl == nil {
 		return nil, false
 	}
 
