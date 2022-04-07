@@ -113,10 +113,10 @@ rportcli tunnel create -l 0.0.0.0:3394 -r 22 -d bc0b705d-b5fb-4df5-84e3-82dba437
 this example opens port 3394 on the rport server and forwards to port 22 of the client bc0b705d-b5fb-4df5-84e3-82dba437bbef
 with ssh url scheme and an IP address 10:1:2:3 allowed to access the tunnel
 `
-	createTunnelLocalDescr = `refers to the ports of the rport server address to use for a new tunnel, e.g. '3390' or '0.0.0.0:3390'. 
+	createTunnelLocalDescr = `refers to the ports of the rport server address to use for a new tunnel, e.g. '3390' or '0.0.0.0:3390'.
 If local is not specified, a random server port will be assigned automatically`
 
-	createTunnelLaunchSSHDescr = `Start the ssh client after the tunnel is established and close tunnel on ssh exit. 
+	createTunnelLaunchSSHDescr = `Start the ssh client after the tunnel is established and close tunnel on ssh exit.
 Any parameter passed are append to the ssh command. i.e. -b "-l root"`
 )
 
@@ -212,7 +212,7 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 		},
 		{
 			Field: controllers.LaunchRDP,
-			Description: `Start the default RDP client after the tunnel is established, e.g. -d 1 
+			Description: `Start the default RDP client after the tunnel is established, e.g. -d 1
 Optionally pass the rdp-width and rdp-height params for RDP window size`,
 			ShortName: "d",
 			Type:      config.BoolRequirementType,
@@ -237,7 +237,6 @@ Optionally pass the rdp-width and rdp-height params for RDP window size`,
 			Description: `username for a RDP session`,
 			ShortName:   "u",
 			Type:        config.StringRequirementType,
-			Validate:    config.RequiredValidate,
 			Help:        "Enter a RDP user name",
 			IsEnabled:   func(providedParams *options.ParameterBag) bool { return IsRDPUserRequired },
 		},
@@ -285,7 +284,7 @@ func getDeleteTunnelRequirements() []config.ParameterRequirement {
 		{
 			Field:       controllers.TunnelID,
 			Description: "[required]  tunnel id to delete",
-			ShortName:   "t",
+			ShortName:   "u", // t is used for timeout
 			IsRequired:  true,
 			Validate:    config.RequiredValidate,
 			Help:        "Enter a tunnel id",
