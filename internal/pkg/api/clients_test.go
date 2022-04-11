@@ -83,7 +83,7 @@ func TestClientsList(t *testing.T) {
 		authHeader := r.Header.Get("Authorization")
 		assert.Equal(t, "Basic bG9nMTE2Njo1NjQzMjI=", authHeader)
 
-		assert.Equal(t, ClientsURL+"?fields%5Bclients%5D=id%2Cname%2Ctimezone%2Ctunnels%2Caddress%2Chostname%2Cos_kernel%2Cconnection_state&page%5Blimit%5D=500&page%5Boffset%5D=0", r.URL.String())
+		assert.Equal(t, ClientsURL+"?fields%5Bclients%5D=id%2Cname%2Ctimezone%2Ctunnels%2Caddress%2Chostname%2Cos_kernel%2Cconnection_state%2Cdisconnected_at&filter%5Bname%5D=abc&page%5Blimit%5D=500&page%5Boffset%5D=0", r.URL.String())
 		jsonEnc := json.NewEncoder(rw)
 		e := jsonEnc.Encode(ClientsResponse{Data: clientsStub})
 		assert.NoError(t, e)
@@ -98,36 +98,11 @@ func TestClientsList(t *testing.T) {
 		},
 	})
 
-	clientsResp, err := cl.Clients(context.Background(), NewPaginationWithLimit(ClientsLimitMax))
+	clientsResp, err := cl.Clients(context.Background(), NewPaginationWithLimit(ClientsLimitMax), NewFilters("name", "abc"))
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 
 	assert.Equal(t, clientsStub, clientsResp.Data)
-}
-
-func TestGetClientsList(t *testing.T) {
-	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		jsonEnc := json.NewEncoder(rw)
-		e := jsonEnc.Encode(ClientsResponse{Data: clientsStub})
-		assert.NoError(t, e)
-	}))
-	defer srv.Close()
-
-	cl := New(srv.URL, &utils.StorageBasicAuth{
-		AuthProvider: func() (login, pass string, err error) {
-			login = "log1155"
-			pass = "564314"
-			return
-		},
-	})
-	actualClients, err := cl.GetClients(context.Background())
-	assert.NoError(t, err)
-
-	expectedClients := make([]*models.Client, 0, len(clientsStub))
-
-	expectedClients = append(expectedClients, clientsStub...)
-
-	assert.Equal(t, expectedClients, actualClients)
 }

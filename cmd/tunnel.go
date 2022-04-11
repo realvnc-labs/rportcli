@@ -7,10 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/rdp"
-
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
@@ -24,6 +21,10 @@ import (
 )
 
 func init() {
+	addClientsPaginationFlags(tunnelListCmd)
+	addClientsSearchFlag(tunnelListCmd)
+	tunnelListCmd.Flags().StringP(controllers.ClientNameFlag, "n", "", "Get tunnels of a client by name")
+	tunnelListCmd.Flags().StringP(controllers.ClientID, "c", "", "Get tunnels of a client by client id")
 	tunnelsCmd.AddCommand(tunnelListCmd)
 
 	config.DefineCommandInputs(tunnelDeleteCmd, getDeleteTunnelRequirements())
@@ -31,10 +32,6 @@ func init() {
 
 	config.DefineCommandInputs(tunnelCreateCmd, getCreateTunnelRequirements())
 	tunnelsCmd.AddCommand(tunnelCreateCmd)
-
-	addPaginationFlags(tunnelListCmd, api.ClientsLimitDefault)
-	tunnelListCmd.Flags().StringP(controllers.ClientNameFlag, "n", "", "Get tunnels of a client by name")
-	tunnelListCmd.Flags().StringP(controllers.ClientID, "c", "", "Get tunnels of a client by client id")
 
 	rootCmd.AddCommand(tunnelsCmd)
 }
@@ -60,15 +57,10 @@ var tunnelListCmd = &cobra.Command{
 			Format:             getOutputFormat(),
 		}
 
-		clientSearch := &client.Search{
-			DataProvider: rportAPI,
-		}
-
 		tunnelController := &controllers.TunnelController{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
 			IPProvider:     rportAPI,
-			ClientSearch:   clientSearch,
 			SSHFunc:        utils.RunSSH,
 			RDPWriter:      &rdp.FileWriter{},
 			RDPExecutor: &rdp.Executor{
@@ -303,10 +295,6 @@ func createTunnelController(params *options.ParameterBag) *controllers.TunnelCon
 		Format:             getOutputFormat(),
 	}
 
-	clientSearch := &client.Search{
-		DataProvider: rportAPI,
-	}
-
 	rdpExecutor := &rdp.Executor{
 		CommandProvider: rdp.CommandProvider,
 		StdErr:          os.Stderr,
@@ -316,7 +304,6 @@ func createTunnelController(params *options.ParameterBag) *controllers.TunnelCon
 		Rport:          rportAPI,
 		TunnelRenderer: tr,
 		IPProvider:     rportAPI,
-		ClientSearch:   clientSearch,
 		SSHFunc:        utils.RunSSH,
 		RDPWriter:      &rdp.FileWriter{},
 		RDPExecutor:    rdpExecutor,

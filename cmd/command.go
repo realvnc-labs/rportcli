@@ -11,7 +11,6 @@ import (
 	"github.com/breathbath/go_utils/v2/pkg/env"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
@@ -75,9 +74,6 @@ var executeCmd = &cobra.Command{
 		}
 
 		rportAPI := buildRport(params)
-		clientSearch := &client.Search{
-			DataProvider: rportAPI,
-		}
 
 		isFullJobOutput := params.ReadBool(controllers.IsFullOutput, false)
 		cmdExecutor := &controllers.CommandsController{
@@ -88,7 +84,7 @@ var executeCmd = &cobra.Command{
 					Format:       getOutputFormat(),
 					IsFullOutput: isFullJobOutput,
 				},
-				ClientSearch: clientSearch,
+				Rport: rportAPI,
 			},
 		}
 
@@ -105,10 +101,10 @@ func getCommandRequirements() []config.ParameterRequirement {
 			Help:     "Enter comma separated client IDs",
 			Validate: config.RequiredValidate,
 			Description: "[required] Comma separated client ids for which the command should be executed. " +
-				"Alternatively use -n to execute a command by client name(s)",
+				"Alternatively use -n to execute a command by client name(s), or use --search flag.",
 			ShortName: "d",
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
-				return providedParams.ReadString(controllers.ClientNameFlag, "") == ""
+				return providedParams.ReadString(controllers.ClientNameFlag, "") == "" && providedParams.ReadString(controllers.SearchFlag, "") == ""
 			},
 			IsRequired: true,
 		},
@@ -116,6 +112,10 @@ func getCommandRequirements() []config.ParameterRequirement {
 			Field:       controllers.ClientNameFlag,
 			Description: "Comma separated client names for which the command should be executed",
 			ShortName:   "n",
+		},
+		{
+			Field:       controllers.SearchFlag,
+			Description: "Search clients on all fields, supports wildcards (*).",
 		},
 		{
 			Field:       controllers.Command,

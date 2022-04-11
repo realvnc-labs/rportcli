@@ -131,93 +131,6 @@ func TestCommandExecutionByClientIDsSuccess(t *testing.T) {
 	assert.True(t, rw.isClosed)
 }
 
-func TestCommandExecutionByClientNameSuccess(t *testing.T) {
-	jobResp := models.Job{Jid: "987"}
-	jobRespBytes, err := json.Marshal(jobResp)
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
-
-	rw := &ReadWriterMock{
-		itemsToRead: []ReadChunk{
-			{
-				Output: jobRespBytes,
-			},
-			{
-				Err: io.EOF,
-			},
-		},
-		writtenItems: []string{},
-		isClosed:     false,
-	}
-
-	jr := &JobRendererMock{}
-
-	searchMock := &ClientSearchMock{
-		clientsToGive: []*models.Client{
-			{
-				ID:   "11344",
-				Name: "some client 11344",
-			},
-			{
-				ID:   "11345",
-				Name: "some client 11345",
-			},
-		},
-	}
-
-	ic := &CommandsController{
-		ExecutionHelper: &ExecutionHelper{
-			ReadWriter:   rw,
-			JobRenderer:  jr,
-			ClientSearch: searchMock,
-		},
-	}
-
-	params := config.FromValues(map[string]string{
-		ClientNameFlag:   "some client 11344,some client 11345",
-		Command:          "cmd",
-		Timeout:          "1",
-		ExecConcurrently: "1",
-		Interpreter:      "cmd",
-	})
-	err = ic.Start(context.Background(), params)
-
-	assert.NoError(t, err)
-
-	assert.Len(t, rw.writtenItems, 1)
-	expectedCommandInput := `{"client_ids":["11344","11345"],"is_sudo":false,"execute_concurrently":true,"abort_on_error":false,"timeout_sec":1,"command":"cmd","script":"","cwd":"","interpreter":"cmd"}`
-	assert.Equal(t, expectedCommandInput, rw.writtenItems[0])
-}
-
-func TestCommandExecutionClientNotFoundByName(t *testing.T) {
-	rw := &ReadWriterMock{
-		itemsToRead:  []ReadChunk{{Err: io.EOF}},
-		writtenItems: []string{},
-	}
-
-	jr := &JobRendererMock{}
-
-	searchMock := &ClientSearchMock{clientsToGive: []*models.Client{}}
-
-	ic := &CommandsController{
-		ExecutionHelper: &ExecutionHelper{
-			ReadWriter:   rw,
-			JobRenderer:  jr,
-			ClientSearch: searchMock,
-		},
-	}
-
-	params := config.FromValues(map[string]string{
-		ClientNameFlag: "some client 11349",
-		Command:        "cmd",
-	})
-	err := ic.Start(context.Background(), params)
-
-	assert.EqualError(t, err, "unknown client(s) 'some client 11349'")
-}
-
 func TestInvalidInputForCommand(t *testing.T) {
 	cc := &CommandsController{
 		ExecutionHelper: &ExecutionHelper{},
@@ -231,7 +144,7 @@ func TestInvalidInputForCommand(t *testing.T) {
 		CheckPort:      "1",
 	})
 	err := cc.Start(context.Background(), params)
-	assert.EqualError(t, err, "no client id nor name provided")
+	assert.EqualError(t, err, "no client ids, names or search provided")
 }
 
 func TestCommandExecutionWithInvalidResponse(t *testing.T) {

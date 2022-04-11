@@ -13,6 +13,7 @@ import (
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 	io2 "github.com/breathbath/go_utils/v2/pkg/io"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/sirupsen/logrus"
 )
@@ -55,9 +56,9 @@ type JobRenderer interface {
 }
 
 type ExecutionHelper struct {
-	ClientSearch ClientSearch
-	JobRenderer  JobRenderer
-	ReadWriter   ReadWriter
+	JobRenderer JobRenderer
+	ReadWriter  ReadWriter
+	Rport       *api.Rport
 }
 
 func (eh *ExecutionHelper) execute(ctx context.Context, params *options.ParameterBag, scriptPayload, interpreter string) error {
@@ -127,30 +128,36 @@ func (eh *ExecutionHelper) sendCommand(wsCmd *models.WsScriptCommand) error {
 }
 
 func (eh *ExecutionHelper) getClientIDs(ctx context.Context, params *options.ParameterBag) (clientIDs string, err error) {
-	clientIDs = params.ReadString(ClientIDs, "")
-	clientName := params.ReadString(ClientNameFlag, "")
-
-	if clientIDs == "" && clientName == "" {
-		return "", errors.New("no client id nor name provided")
+	ids := params.ReadString(ClientIDs, "")
+	if ids != "" {
+		return ids, nil
+	}
+	names := params.ReadString(ClientNameFlag, "")
+	search := params.ReadString(SearchFlag, "")
+	if ids == "" && names == "" && search == "" {
+		return "", errors.New("no client ids, names or search provided")
 	}
 
-	if clientIDs == "" {
-		clients, err := eh.ClientSearch.Search(ctx, clientName, params)
-		if err != nil {
-			return "", err
-		}
-
-		if len(clients) == 0 {
-			return "", fmt.Errorf("unknown client(s) '%s'", clientName)
-		}
-
-		for i := range clients {
-			cl := clients[i]
-			clientIDs += cl.ID + ","
-		}
-
-		clientIDs = strings.Trim(clientIDs, ",")
+	clients, err := eh.Rport.Clients(
+		ctx,
+		api.NewPaginationWithLimit(api.ClientsLimitMax),
+		api.NewFilters(
+			"name", names,
+			"*", search,
+		),
+	)
+	if err != nil {
+		return "", err
 	}
+
+	for _, cl := range clients.Data {
+		if cl.DisconnectedAt != "" {
+			continue
+		}
+		clientIDs += cl.ID + ","
+	}
+
+	clientIDs = strings.Trim(clientIDs, ",")
 
 	return clientIDs, nil
 }

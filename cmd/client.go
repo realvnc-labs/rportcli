@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/client"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
@@ -18,7 +17,8 @@ import (
 )
 
 func init() {
-	addPaginationFlags(clientsListCmd, api.ClientsLimitDefault)
+	addClientsPaginationFlags(clientsListCmd)
+	addClientsSearchFlag(clientsListCmd)
 	clientsCmd.AddCommand(clientsListCmd)
 	clientCmd.Flags().StringP(controllers.ClientNameFlag, "n", "", "Get client by name")
 	clientCmd.Flags().BoolP("all", "a", false, "Show client info with additional details")
@@ -46,14 +46,9 @@ var clientsListCmd = &cobra.Command{
 			Format:             getOutputFormat(),
 		}
 
-		clientSearch := &client.Search{
-			DataProvider: rportAPI,
-		}
-
 		clientsController := &controllers.ClientController{
 			Rport:          rportAPI,
 			ClientRenderer: cr,
-			ClientSearch:   clientSearch,
 		}
 
 		ctx, cancel := buildContext(context.Background())
@@ -88,13 +83,9 @@ var clientCmd = &cobra.Command{
 			Writer:             os.Stdout,
 			Format:             getOutputFormat(),
 		}
-		clientSearch := &client.Search{
-			DataProvider: rportAPI,
-		}
 		clientsController := &controllers.ClientController{
 			Rport:          rportAPI,
 			ClientRenderer: cr,
-			ClientSearch:   clientSearch,
 		}
 
 		ctx, cancel := buildContext(context.Background())
@@ -102,4 +93,13 @@ var clientCmd = &cobra.Command{
 
 		return clientsController.Client(ctx, params, clientID, clientName)
 	},
+}
+
+func addClientsPaginationFlags(cmd *cobra.Command) {
+	cmd.Flags().IntP(api.PaginationLimit, "", api.ClientsLimitDefault, "Number of clients to fetch")
+	cmd.Flags().IntP(api.PaginationOffset, "", 0, "Offset for clients fetch")
+}
+
+func addClientsSearchFlag(cmd *cobra.Command) {
+	cmd.Flags().StringP("search", "", "", "Search clients on all fields, supports wildcards (*).")
 }
