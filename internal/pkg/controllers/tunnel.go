@@ -287,7 +287,7 @@ func (tc *TunnelController) launchHelperFlowIfNeeded(
 		return tc.startSSHFlow(ctx, tunnelCreated, params, deleteTunnelParams)
 	}
 
-	return tc.startRDPFlow(ctx, tunnelCreated, params, clientName, clientID)
+	return tc.startRDPFlow(tunnelCreated, params, clientName)
 }
 
 func (tc *TunnelController) finishSSHFlow(ctx context.Context, deleteTunnelParams *options.ParameterBag, prevErr error) error {
@@ -387,10 +387,9 @@ func (tc *TunnelController) extractPortAndHost(
 }
 
 func (tc *TunnelController) startRDPFlow(
-	ctx context.Context,
 	tunnelCreated *models.TunnelCreated,
 	params *options.ParameterBag,
-	clientName, clientID string,
+	clientName string,
 ) error {
 	port, host, err := tc.extractPortAndHost(tunnelCreated, params)
 	if err != nil {
