@@ -11,6 +11,7 @@ import (
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var clientsStub = []*models.Client{
@@ -99,10 +100,33 @@ func TestClientsList(t *testing.T) {
 	})
 
 	clientsResp, err := cl.Clients(context.Background(), NewPaginationWithLimit(ClientsLimitMax), NewFilters("name", "abc"))
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
+	require.NoError(t, err)
 
 	assert.Equal(t, clientsStub, clientsResp.Data)
+}
+
+func TestClientGet(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		assert.Equal(t, "Basic bG9nMTE2Njo1NjQzMjI=", authHeader)
+
+		assert.Equal(t, ClientsURL+"/test-client", r.URL.String())
+		jsonEnc := json.NewEncoder(rw)
+		e := jsonEnc.Encode(ClientResponse{Data: clientsStub[0]})
+		assert.NoError(t, e)
+	}))
+	defer srv.Close()
+
+	cl := New(srv.URL, &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) {
+			login = "log1166"
+			pass = "564322"
+			return
+		},
+	})
+
+	client, err := cl.Client(context.Background(), "test-client")
+	require.NoError(t, err)
+
+	assert.Equal(t, clientsStub[0], client)
 }
