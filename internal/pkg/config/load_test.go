@@ -331,19 +331,20 @@ func TestCollectParams(t *testing.T) {
 
 func TestFlagValuesProvider(t *testing.T) {
 	fl := &pflag.FlagSet{}
-	fl.StringP("somekey", "s", "", "")
+	fl.StringP("somekey", "s", "test-default", "")
 
 	flagValuesProv := CreateFlagValuesProvider(fl)
 
-	_, found := flagValuesProv.Read("somekey")
-	assert.False(t, found)
+	val, found := flagValuesProv.Read("somekey")
+	assert.True(t, found)
+	assert.Equal(t, "test-default", val)
 
 	err := fl.Parse([]string{"--somekey", "someval"})
 	require.NoError(t, err)
 
-	val, found2 := flagValuesProv.Read("somekey")
+	val2, found2 := flagValuesProv.Read("somekey")
 	assert.True(t, found2)
-	assert.Equal(t, "someval", val.(string))
+	assert.Equal(t, "someval", val2)
 
 	actualKeyValues := flagValuesProv.ToKeyValues()
 	assert.Equal(t, map[string]interface{}{"somekey": "someval"}, actualKeyValues)

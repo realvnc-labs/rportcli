@@ -111,7 +111,7 @@ func (rfw *FileWriter) WriteRDPFile(fi models.FileInput) (filePath string, err e
 
 	logrus.Debugf("will write an rdp file %s", file.Name())
 
-	_, err = file.Write([]byte(content))
+	_, err = file.WriteString(content)
 	if err != nil {
 		return "", err
 	}

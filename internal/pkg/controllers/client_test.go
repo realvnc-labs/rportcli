@@ -82,7 +82,7 @@ func TestClientsController(t *testing.T) {
 		ClientRenderer: &ClientRendererMock{Writer: &buf},
 	}
 
-	err := clController.Clients(context.Background())
+	err := clController.Clients(context.Background(), options.New(nil))
 	assert.NoError(t, err)
 	if err != nil {
 		return
