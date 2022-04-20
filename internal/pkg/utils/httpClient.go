@@ -61,14 +61,14 @@ func (c *BaseClient) Call(req *http.Request, target interface{}, errTarget error
 		respBodyBytes, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
 			logrus.Warnf("failed to read response body: %v", err)
-			e := c.convertResponseCodeToError(resp.StatusCode, nil)
+			e := c.convertResponseCodeToError(resp.StatusCode)
 			return resp, e
 		}
 
 		err = json.Unmarshal(respBodyBytes, errTarget)
 		if err != nil {
 			logrus.Warnf("cannot unmarshal error response %s: %v", string(respBodyBytes), err)
-			e := c.convertResponseCodeToError(resp.StatusCode, nil)
+			e := c.convertResponseCodeToError(resp.StatusCode)
 			return resp, e
 		}
 		return resp, errTarget
@@ -96,27 +96,15 @@ func (c *BaseClient) Call(req *http.Request, target interface{}, errTarget error
 	return resp, nil
 }
 
-func (c *BaseClient) convertResponseCodeToError(respCode int, errTarget error) (err error) {
+func (c *BaseClient) convertResponseCodeToError(respCode int) (err error) {
 	if respCode == http.StatusNotFound {
 		err = errors.New("the specified item doesn't exist")
 	} else if respCode == http.StatusInternalServerError {
-		if errTarget != nil {
-			err = fmt.Errorf("operation failed %s", errTarget.Error())
-		} else {
-			err = errors.New("operation failed")
-		}
+		err = errors.New("operation failed")
 	} else if respCode == http.StatusBadRequest {
-		if errTarget != nil {
-			err = fmt.Errorf("invalid input provided: %s", errTarget.Error())
-		} else {
-			err = errors.New("invalid input provided")
-		}
+		err = errors.New("invalid input provided")
 	} else {
-		if errTarget != nil {
-			err = fmt.Errorf("unknown error: %s", errTarget.Error())
-		} else {
-			err = errors.New("unknown error")
-		}
+		err = fmt.Errorf("unknown error: %d %s", respCode, http.StatusText(respCode))
 	}
 
 	return err

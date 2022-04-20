@@ -12,6 +12,7 @@ import (
 
 const (
 	ClientNameFlag = "name"
+	SearchFlag     = "search"
 )
 
 type ClientRenderer interface {
@@ -21,12 +22,15 @@ type ClientRenderer interface {
 
 type ClientController struct {
 	Rport          *api.Rport
-	ClientSearch   ClientSearch
 	ClientRenderer ClientRenderer
 }
 
 func (cc *ClientController) Clients(ctx context.Context, params *options.ParameterBag) error {
-	clResp, err := cc.Rport.Clients(ctx, api.NewPaginationFromParams(params))
+	clResp, err := cc.Rport.Clients(
+		ctx,
+		api.NewPaginationFromParams(params),
+		api.NewFilters("*", params.ReadString(SearchFlag, "")),
+	)
 	if err != nil {
 		return err
 	}
@@ -42,22 +46,23 @@ func (cc *ClientController) Client(ctx context.Context, params *options.Paramete
 	renderDetails := params.ReadBool("all", false)
 
 	if id != "" {
-		clResp, err := cc.Rport.Clients(ctx, api.NewPaginationWithLimit(api.ClientsLimitMax))
+		client, err := cc.Rport.Client(ctx, id)
 		if err != nil {
 			return err
 		}
-		for _, cl := range clResp.Data {
-			if cl.ID == id {
-				return cc.ClientRenderer.RenderClient(cl, renderDetails)
-			}
-		}
-	} else {
-		cl, err := cc.ClientSearch.FindOne(ctx, name, params)
-		if err != nil {
-			return err
-		}
-		return cc.ClientRenderer.RenderClient(cl, renderDetails)
+		return cc.ClientRenderer.RenderClient(client, renderDetails)
 	}
 
-	return fmt.Errorf("client not found by the provided id '%s' or name '%s'", id, name)
+	clients, err := cc.Rport.Clients(ctx, api.NewPaginationWithLimit(2), api.NewFilters("name", name))
+	if err != nil {
+		return err
+	}
+	if len(clients.Data) < 1 {
+		return fmt.Errorf("unknown client with name %q", name)
+	}
+	if len(clients.Data) > 1 {
+		return fmt.Errorf("client with name %q is ambiguous, use a more precise name or use the client id", name)
+	}
+
+	return cc.ClientRenderer.RenderClient(clients.Data[0], renderDetails)
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -96,7 +95,7 @@ func TestClientsController(t *testing.T) {
 }
 
 func TestClientFoundByIDController(t *testing.T) {
-	srv := startClientsServer()
+	srv := startClientServer()
 	defer srv.Close()
 
 	cl := api.New(srv.URL, nil)
@@ -132,15 +131,9 @@ func TestClientFoundByNameController(t *testing.T) {
 	cl := api.New(srv.URL, nil)
 	buf := bytes.Buffer{}
 
-	clSearch := &ClientSearchMock{
-		searchTermGiven: "",
-		clientsToGive:   []*models.Client{clientStub},
-		errorToGive:     nil,
-	}
 	clController := ClientController{
 		Rport:          cl,
 		ClientRenderer: &ClientRendererMock{Writer: &buf},
-		ClientSearch:   clSearch,
 	}
 
 	err := clController.Client(context.Background(), &options.ParameterBag{}, "", "Client 123")
@@ -156,28 +149,6 @@ func TestClientFoundByNameController(t *testing.T) {
 	)
 }
 
-func TestClientNotFoundController(t *testing.T) {
-	srv := startClientsServer()
-	defer srv.Close()
-
-	cl := api.New(srv.URL, nil)
-	buf := bytes.Buffer{}
-
-	clController := ClientController{
-		Rport:          cl,
-		ClientRenderer: &ClientRendererMock{Writer: &buf},
-		ClientSearch: &ClientSearchMock{
-			errorToGive: errors.New("client not found by the provided id '434' or name ''"),
-		},
-	}
-
-	err := clController.Client(context.Background(), &options.ParameterBag{}, "434", "")
-	assert.EqualError(t, err, `client not found by the provided id '434' or name ''`)
-
-	err = clController.Client(context.Background(), &options.ParameterBag{}, "", "some unknown name")
-	assert.EqualError(t, err, `client not found by the provided id '434' or name ''`)
-}
-
 func TestInvalidInputForClients(t *testing.T) {
 	clController := ClientController{}
 
@@ -190,6 +161,18 @@ func startClientsServer() *httptest.Server {
 		jsonEnc := json.NewEncoder(rw)
 		clientsStub := []*models.Client{clientStub}
 		e := jsonEnc.Encode(api.ClientsResponse{Data: clientsStub})
+		if e != nil {
+			rw.WriteHeader(500)
+		}
+	}))
+
+	return srv
+}
+
+func startClientServer() *httptest.Server {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		jsonEnc := json.NewEncoder(rw)
+		e := jsonEnc.Encode(api.ClientResponse{Data: clientStub})
 		if e != nil {
 			rw.WriteHeader(500)
 		}

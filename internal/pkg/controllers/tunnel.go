@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 
@@ -63,36 +62,25 @@ type TunnelController struct {
 	Rport          *api.Rport
 	TunnelRenderer TunnelRenderer
 	IPProvider     IPProvider
-	ClientSearch   ClientSearch
 	SSHFunc        func(sshParams []string) error
 	RDPWriter      RDPFileWriter
 	RDPExecutor    RDPExecutor
 }
 
 func (tc *TunnelController) Tunnels(ctx context.Context, params *options.ParameterBag) error {
-	clientID := params.ReadString(ClientID, "")
-	clientName := params.ReadString(ClientNameFlag, "")
-
-	var err error
-	var clients []*models.Client
-	if clientID != "" || clientName != "" {
-		searchTerm := clientID
-		if clientName != "" {
-			searchTerm = clientName
-		}
-
-		clients, err = tc.ClientSearch.Search(ctx, searchTerm, params)
-		if err != nil {
-			return err
-		}
-	} else {
-		var clResp *api.ClientsResponse
-		clResp, err = tc.Rport.Clients(ctx, api.NewPaginationFromParams(params))
-		if err != nil {
-			return err
-		}
-		clients = clResp.Data
+	clResp, err := tc.Rport.Clients(
+		ctx,
+		api.NewPaginationFromParams(params),
+		api.NewFilters(
+			"id", params.ReadString(ClientID, ""),
+			"name", params.ReadString(ClientNameFlag, ""),
+			"*", params.ReadString(SearchFlag, ""),
+		),
+	)
+	if err != nil {
+		return err
 	}
+	clients := clResp.Data
 
 	tunnels := make([]*models.Tunnel, 0)
 	for _, cl := range clients {
@@ -107,31 +95,13 @@ func (tc *TunnelController) Tunnels(ctx context.Context, params *options.Paramet
 }
 
 func (tc *TunnelController) Delete(ctx context.Context, params *options.ParameterBag) error {
-	clientID := params.ReadString(ClientID, "")
+	clientID, _, err := tc.getClientIDAndClientName(ctx, params)
+	if err != nil {
+		return err
+	}
+
 	tunnelID := params.ReadString(TunnelID, "")
-	clientName := params.ReadString(ClientNameFlag, "")
-
-	if clientID == "" && clientName == "" {
-		return errors.New("no client id nor name provided")
-	}
-
-	if clientID == "" {
-		clients, err := tc.ClientSearch.Search(ctx, clientName, params)
-		if err != nil {
-			return err
-		}
-
-		if len(clients) == 0 {
-			return fmt.Errorf("unknown client '%s'", clientName)
-		}
-
-		if len(clients) != 1 {
-			return fmt.Errorf("client identified by '%s' is ambiguous, use a more precise name or use the client id", clientName)
-		}
-		clientID = clients[0].ID
-	}
-
-	err := tc.Rport.DeleteTunnel(ctx, clientID, tunnelID, params.ReadBool(ForceDeletion, false))
+	err = tc.Rport.DeleteTunnel(ctx, clientID, tunnelID, params.ReadBool(ForceDeletion, false))
 	if err != nil {
 		if strings.Contains(err.Error(), "tunnel is still active") {
 			return fmt.Errorf("%v, use -f to delete it anyway", err)
@@ -157,17 +127,29 @@ func (tc *TunnelController) getClientIDAndClientName(
 		err = errors.New("no client id nor name provided")
 		return
 	}
+	if clientID != "" && clientName != "" {
+		err = errors.New("both client id and name provided")
+		return
+	}
 
 	if clientID != "" {
 		return
 	}
 
-	client, err := tc.ClientSearch.FindOne(ctx, clientName, params)
+	clients, err := tc.Rport.Clients(ctx, api.NewPaginationWithLimit(2), api.NewFilters("name", clientName))
 	if err != nil {
 		return
 	}
 
-	return client.ID, clientName, nil
+	if len(clients.Data) < 1 {
+		return "", "", fmt.Errorf("unknown client with name %q", clientName)
+	}
+	if len(clients.Data) > 1 {
+		return "", "", fmt.Errorf("client with name %q is ambidguous, use a more precise name or use the client id", clientName)
+	}
+
+	client := clients.Data[0]
+	return client.ID, client.Name, nil
 }
 
 func (tc *TunnelController) Create(ctx context.Context, params *options.ParameterBag) error {
@@ -305,7 +287,7 @@ func (tc *TunnelController) launchHelperFlowIfNeeded(
 		return tc.startSSHFlow(ctx, tunnelCreated, params, deleteTunnelParams)
 	}
 
-	return tc.startRDPFlow(ctx, tunnelCreated, params, clientName, clientID)
+	return tc.startRDPFlow(tunnelCreated, params, clientName)
 }
 
 func (tc *TunnelController) finishSSHFlow(ctx context.Context, deleteTunnelParams *options.ParameterBag, prevErr error) error {
@@ -405,29 +387,13 @@ func (tc *TunnelController) extractPortAndHost(
 }
 
 func (tc *TunnelController) startRDPFlow(
-	ctx context.Context,
 	tunnelCreated *models.TunnelCreated,
 	params *options.ParameterBag,
-	clientName, clientID string,
+	clientName string,
 ) error {
 	port, host, err := tc.extractPortAndHost(tunnelCreated, params)
 	if err != nil {
 		return err
-	}
-
-	if clientName == "" {
-		logrus.Debug("since client name is not provided, will try to find a client by id " + clientID)
-		clients, e := tc.ClientSearch.Search(ctx, clientID, params)
-		if e != nil {
-			return e
-		}
-		if len(clients) == 0 || clients[0].Name == "" {
-			clientName = fmt.Sprint(time.Now().Unix())
-		} else {
-			clientName = clients[0].Name
-		}
-
-		logrus.Debugf("found client name %s", clientName)
 	}
 
 	rdpFileInput := models.FileInput{
