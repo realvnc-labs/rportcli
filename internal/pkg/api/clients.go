@@ -25,7 +25,7 @@ func (rp *Rport) Clients(ctx context.Context) (cr *ClientsResponse, err error) {
 		return nil, err
 	}
 	q := u.Query()
-	q.Set("fields[clients]", "id,name,timezone,tunnels,address,hostname,os_kernel,connection_state,os_version,os_family,os,os_arch,ipv4,tags,os_full_name,version,cpu_model,cpu_model_name,cpu_vendor")
+	q.Set("fields[clients]", "id,name,timezone,tunnels,address,hostname,os_kernel,connection_state,disconnected_at,os_version,os_family,os,os_arch,ipv4,tags,os_full_name,version,cpu_model,cpu_model_name,cpu_vendor")
 	u.RawQuery = q.Encode()
 
 	req, err = http.NewRequestWithContext(
