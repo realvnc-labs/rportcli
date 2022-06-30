@@ -131,7 +131,51 @@ func TestLoadConfigFromEnvOrFile(t *testing.T) {
 
 	assert.Equal(t, "somepass", cfg.ReadString(Password, ""))
 	assert.Equal(t, "log1", cfg.ReadString(Login, ""))
+
 	assert.Equal(t, "https://10.10.10.11:3000", cfg.ReadString(ServerURL, ""))
+}
+
+func TestLoadEnvPreferredOverFile(t *testing.T) {
+	rawJSON := []byte(`{"server":"https://10.10.10.11:3000"}`)
+	filePath := "config123.json"
+
+	err := ioutil.WriteFile(filePath, rawJSON, 0600)
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+	defer func() {
+		e := os.Remove(filePath)
+		if e != nil {
+			logrus.Error(e)
+		}
+	}()
+
+	envs := map[string]string{
+		PathForConfigEnvVar: filePath,
+		ServerURLEnvVar:     "https://10.10.10.11:4000",
+	}
+
+	for k, v := range envs {
+		err = os.Setenv(k, v)
+		assert.NoError(t, err)
+		if err != nil {
+			return
+		}
+	}
+
+	defer func() {
+		for k := range envs {
+			e := os.Unsetenv(k)
+			if e != nil {
+				logrus.Error(e)
+			}
+		}
+	}()
+
+	cfg := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
+
+	assert.Equal(t, "https://10.10.10.11:4000", cfg.ReadString(ServerURL, ""))
 }
 
 func TestLoadConfigFromFileError(t *testing.T) {

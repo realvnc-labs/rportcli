@@ -7,9 +7,9 @@ import (
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/applog"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/auth"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -88,25 +88,10 @@ func Execute() error {
 }
 
 func buildRport(params *options.ParameterBag) *api.Rport {
-	auth := &utils.FallbackAuth{
-		PrimaryAuth: &utils.StorageBasicAuth{
-			AuthProvider: func() (login, pass string, err error) {
-				login = params.ReadString(config.Login, "")
-				pass = params.ReadString(config.Password, "")
-				return
-			},
-		},
-		FallbackAuth: &utils.BearerAuth{
-			TokenProvider: func() (string, error) {
-				return params.ReadString(config.Token, ""), nil
-			},
-		},
-	}
-	serverURL := params.ReadString(config.ServerURL, config.DefaultServerURL)
-	if serverURL == "" {
-		serverURL = config.DefaultServerURL
-	}
-	rportAPI := api.New(serverURL, auth)
+	authStrategy := auth.GetAuthStrategy(params)
+
+	serverURL := config.ReadApiURL(params)
+	rportAPI := api.New(serverURL, authStrategy)
 
 	return rportAPI
 }

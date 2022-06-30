@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -55,11 +56,19 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
+	// when the RPORT_API_TOKEN env var is set, we shouldn't allow use of the init command
+	hasApiToken := config.HasApiToken()
+	if hasApiToken {
+		// TODO: is there a test case for this?
+		return errors.New("cannot init config when the RPORT_API_TOKEN is set. Please unset RPORT_API_TOKEN and use RPORT_API_USER and RPORT_API_PASSWORD instead")
+	}
+
 	promptReader := &utils.PromptReader{
 		Sc:              bufio.NewScanner(os.Stdin),
 		SigChan:         sigs,
 		PasswordScanner: utils.ReadPassword,
 	}
+
 	params, err := config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, getInitRequirements(), promptReader)
 	if err != nil {
 		return err
@@ -82,21 +91,21 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 func getInitRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
 		{
-			Field:       config.ServerURL,
+			Field:       config.ApiURL,
 			Help:        "Enter Server Url",
 			Validate:    config.RequiredValidate,
 			Description: "Server address of rport to connect to",
 			ShortName:   "s",
 		},
 		{
-			Field:       config.Login,
+			Field:       config.ApiUser,
 			Help:        "Enter a valid login value",
 			Validate:    config.RequiredValidate,
 			Description: "Login to the rport server",
 			ShortName:   "l",
 		},
 		{
-			Field:       config.Password,
+			Field:       config.ApiPassword,
 			Help:        "Enter a valid password value",
 			Validate:    config.RequiredValidate,
 			Description: "Password to the rport server",

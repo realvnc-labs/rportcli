@@ -313,7 +313,7 @@ func (tc *TunnelController) startSSHFlow(
 	logrus.Debugf("ssh arguments are provided: '%s', will start an ssh session", sshParamsFlat)
 	port, host, err := tc.extractPortAndHost(tunnelCreated, params)
 	if err != nil {
-		prevErr := fmt.Errorf("failed to parse rport URL '%s': %v", params.ReadString(config.ServerURL, ""), err)
+		prevErr := fmt.Errorf("failed to parse rport URL '%s': %v", config.ReadApiURLWithDefault(params, ""), err)
 		return tc.finishSSHFlow(ctx, deleteTunnelParams, prevErr)
 	}
 
@@ -366,7 +366,7 @@ func (tc *TunnelController) extractPortAndHost(
 	tunnelCreated *models.TunnelCreated,
 	params *options.ParameterBag,
 ) (port, host string, err error) {
-	rportHost := params.ReadString(config.ServerURL, "")
+	rportHost := config.ReadApiURLWithDefault(params, "")
 	if rportHost == "" {
 		return
 	}

@@ -30,6 +30,9 @@ func (rp *Rport) CallBaseClient(req *http.Request, target interface{}) (resp *ht
 
 	resp, err = cl.Call(req, target, &errResp)
 	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+			logrus.Warn("The request was unauthorised. The server might have 2FA enabled which prevents authentication by environment variable RPORT_API_PASSWORD. Try with RPORT_API_TOKEN instead.")
+		}
 		return nil, err
 	}
 

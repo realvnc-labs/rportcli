@@ -12,6 +12,7 @@ import (
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/auth"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/controllers"
@@ -57,12 +58,11 @@ var executeCmd = &cobra.Command{
 
 		tokenValidity := env.ReadEnvInt(config.SessionValiditySecondsEnvVar, api.DefaultTokenValiditySeconds)
 
-		baseRportURL := params.ReadString(config.ServerURL, config.DefaultServerURL)
+		baseRportURL := config.ReadApiURL(params)
 		wsURLBuilder := &api.WsCommandURLProvider{
 			WsURLProvider: &api.WsURLProvider{
 				TokenProvider: func() (token string, err error) {
-					token = params.ReadString(config.Token, "")
-					return
+					return auth.GetToken(params)
 				},
 				BaseURL:              baseRportURL,
 				TokenValiditySeconds: tokenValidity,

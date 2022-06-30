@@ -3,10 +3,10 @@ package controllers
 import (
 	"context"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/sirupsen/logrus"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 )
 
 type LogoutAPI interface {
@@ -33,7 +33,7 @@ func (lc *LogoutController) Logout(ctx context.Context, params *options.Paramete
 		return err
 	}
 
-	serverURL := params.ReadString(config.ServerURL, "")
+	serverURL := config.ReadApiURL(params)
 	if serverURL == "" {
 		return nil
 	}

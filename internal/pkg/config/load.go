@@ -30,21 +30,34 @@ const (
 	Token            = "token"
 	Password         = "password"
 	DefaultServerURL = "http://localhost:3000"
+	ApiURL           = "api_url"
+	ApiUser          = "api_user"
+	ApiPassword      = "api_password"
+	ApiToken         = "api_token"
 )
 
 func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBag) {
-	envValuesProvider := CreateEnvValuesProvider()
-	fileValuesProvider, err := CreateFileValuesProvider()
-	if err != nil {
-		logrus.Warn(err)
-		return options.New(envValuesProvider)
-	}
+	var valuesProvider *options.ValuesProviderComposite
 
+	envValuesProvider := CreateEnvValuesProvider()
 	flagValuesProvider := CreateFlagValuesProvider(flags)
 
-	valuesProvider := options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider, fileValuesProvider)
+	if HasApiToken() {
+		// ignore config file if using api token
+		valuesProvider = options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider)
+	} else {
+		fileValuesProvider, err := CreateFileValuesProvider()
+		if err != nil {
+			logrus.Warn(err)
+			valuesProvider = options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider)
+		} else {
+			valuesProvider = options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider, fileValuesProvider)
+		}
+	}
 
 	paramsToReturn := options.New(valuesProvider)
+
+	WarnIfLegacyConfig(paramsToReturn)
 
 	return paramsToReturn
 }
@@ -87,6 +100,10 @@ func CreateEnvValuesProvider() options.ValuesProvider {
 		Login:               LoginEnvVar,
 		ServerURL:           ServerURLEnvVar,
 		PathForConfigEnvVar: PathForConfigEnvVar,
+		ApiURL:              ApiServerURLEnvVar,
+		ApiUser:             ApiUserEnvVar,
+		ApiPassword:         ApiPasswordEnvVar,
+		ApiToken:            ApiTokenEnvVar,
 	}
 
 	envMapValues := map[string]interface{}{}
@@ -95,6 +112,7 @@ func CreateEnvValuesProvider() options.ValuesProvider {
 		if envVarValue != "" {
 			envMapValues[paramName] = envVarValue
 		}
+		// logrus.Debugf("reading env %s = %s", envVarName, envVarValue)
 	}
 
 	return options.NewMapValuesProvider(envMapValues)
@@ -134,7 +152,6 @@ func DeleteConfig() (err error) {
 	return nil
 }
 
-// WriteConfig will write config values to file system
 func WriteConfig(params *options.ParameterBag) (err error) {
 	configLocation := getConfigLocation()
 
@@ -235,11 +252,14 @@ func LoadParamsFromFileAndEnvAndFlagsAndPrompt(
 	}
 	valueProviders = append(valueProviders, valuesProviderFromCommandAndPrompt)
 
-	jvp, err := CreateFileValuesProvider()
-	if err != nil {
-		logrus.Warn(err)
-	} else {
-		valueProviders = append(valueProviders, jvp)
+	// ignore config file if has api token
+	if !HasApiToken() {
+		jvp, err := CreateFileValuesProvider()
+		if err != nil {
+			logrus.Warn(err)
+		} else {
+			valueProviders = append(valueProviders, jvp)
+		}
 	}
 
 	mergedValuesProvider := options.NewValuesProviderComposite(valueProviders...)
@@ -251,11 +271,23 @@ func CollectParamsFromCommandAndPromptAndEnv(
 	c *cobra.Command,
 	reqs []ParameterRequirement,
 	promptReader PromptReader,
-	altValuesProvider options.ValuesProvider,
+	envValuesProvider options.ValuesProvider,
 ) (vp options.ValuesProvider, err error) {
 	paramsRaw := make(map[string]interface{}, len(reqs))
 	for _, req := range reqs {
-		envVal, isFound := altValuesProvider.Read(req.Field)
+		envVal, isFound := envValuesProvider.Read(req.Field)
+		// if the field isn't found in the environment, then depending on the field, check for the legacy versions
+		if !isFound {
+			if req.Field == ApiUser {
+				envVal, isFound = envValuesProvider.Read(Login)
+			}
+			if req.Field == ApiPassword {
+				envVal, isFound = envValuesProvider.Read(Password)
+			}
+			if req.Field == ApiURL {
+				envVal, isFound = envValuesProvider.Read(ServerURL)
+			}
+		}
 		if isFound {
 			paramsRaw[req.Field] = envVal
 			continue
@@ -298,4 +330,18 @@ func CollectParamsFromCommandAndPromptAndEnv(
 	}
 
 	return options.NewMapValuesProvider(paramsRaw), nil
+}
+
+func HasApiToken() (hasApiToken bool) {
+	apiToken := os.Getenv(ApiTokenEnvVar)
+	return apiToken != ""
+}
+
+func WarnIfLegacyConfig(params *options.ParameterBag) {
+	login := params.ReadString(Login, "")
+	pass := params.ReadString(Password, "")
+	serverURL := params.ReadString(ServerURL, "")
+	if login != "" || pass != "" || (serverURL != "" && serverURL != DefaultServerURL) {
+		logrus.Warn("use of RPORT_USER, RPORT_PASSWORD and RPORT_SERVER_URL will be removed in a future release. Please use RPORT_API_USER, RPORT_API_PASSWORD and RPORT_API_URL instead")
+	}
 }

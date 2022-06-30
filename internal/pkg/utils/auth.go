@@ -2,14 +2,17 @@ package utils
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/pkg/errors"
+	// "gopkg.in/errgo.v2/errors"
 
 	http2 "github.com/breathbath/go_utils/v2/pkg/http"
 )
+
+var ErrApiPasswordAndApiTokenAreBothSet = errors.New("RPORT_API_TOKEN and a password cannot be set at the same time. Please choose one and remove use of the other.")
 
 type Auth interface {
 	AuthRequest(r *http.Request) error
@@ -56,11 +59,14 @@ type FallbackAuth struct {
 
 func (fa *FallbackAuth) AuthRequest(req *http.Request) error {
 	err := fa.PrimaryAuth.AuthRequest(req)
-	if err == nil {
-		return nil
+	if err != nil {
+		if errors.Is(err, ErrApiPasswordAndApiTokenAreBothSet) {
+			return err
+		} else {
+			return fa.FallbackAuth.AuthRequest(req)
+		}
 	}
-
-	return fa.FallbackAuth.AuthRequest(req)
+	return nil
 }
 
 func ExtractBasicAuthLoginAndPassFromRequest(r *http.Request) (login, pass string, err error) {
@@ -69,14 +75,14 @@ func ExtractBasicAuthLoginAndPassFromRequest(r *http.Request) (login, pass strin
 
 	loginPassBytes, err := base64.StdEncoding.DecodeString(loginPassBase64)
 	if err != nil {
-		return "", "", errors.Wrap(err, "failed to decode basic auth header from base64")
+		return "", "", fmt.Errorf("failed to decode basic auth header from base64: %w", err)
 	}
 	loginPass := string(loginPassBytes)
 
 	loginPassParts := strings.Split(loginPass, ":")
 	const expectedLoginPassPartsCount = 2
 	if len(loginPassParts) < expectedLoginPassPartsCount {
-		return "", "", fmt.Errorf("failed to extract login and passwrod from %s", loginPass)
+		return "", "", fmt.Errorf("failed to extract login and password from %s", loginPass)
 	}
 
 	return loginPassParts[0], strings.Join(loginPassParts[1:], ":"), nil

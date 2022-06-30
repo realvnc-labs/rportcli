@@ -10,6 +10,7 @@ import (
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/breathbath/go_utils/v2/pkg/env"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/auth"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
@@ -32,13 +33,12 @@ type InitController struct {
 }
 
 func (ic *InitController) InitConfig(ctx context.Context, params *options.ParameterBag) error {
-	login := params.ReadString(config.Login, "")
-	serverURL := params.ReadString(config.ServerURL, config.DefaultServerURL)
+	login := config.ReadApiUser(params)
+	serverURL := config.ReadApiURL(params)
 
 	apiAuth := &utils.StorageBasicAuth{
 		AuthProvider: func() (l, p string, err error) {
-			p = params.ReadString(config.Password, "")
-			return login, p, nil
+			return auth.GetUsernameAndPassword(params)
 		},
 	}
 
@@ -47,7 +47,7 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 	cl := api.New(serverURL, apiAuth)
 	loginResp, err := cl.GetToken(ctx, tokenValidity)
 	if err != nil {
-		return fmt.Errorf("config verification failed against the rport: %v", err)
+		return fmt.Errorf("config verification failed: %v", err)
 	}
 
 	if loginResp.Data.Token == "" {
@@ -82,7 +82,7 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 	}
 
 	valuesProvider := options.NewMapValuesProvider(map[string]interface{}{
-		config.ServerURL: params.ReadString(config.ServerURL, ""),
+		config.ServerURL: config.ReadApiURLWithDefault(params, ""),
 		config.Token:     loginResp.Data.Token,
 	})
 
