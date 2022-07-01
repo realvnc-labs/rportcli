@@ -57,8 +57,8 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	// when the RPORT_API_TOKEN env var is set, we shouldn't allow use of the init command
-	hasApiToken := config.HasApiToken()
-	if hasApiToken {
+	hasAPIToken := config.HasAPIToken()
+	if hasAPIToken {
 		// TODO: is there a test case for this?
 		return errors.New("cannot init config when the RPORT_API_TOKEN is set. Please unset RPORT_API_TOKEN and use RPORT_API_USER and RPORT_API_PASSWORD instead")
 	}
@@ -91,21 +91,21 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 func getInitRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
 		{
-			Field:       config.ApiURL,
+			Field:       config.APIURL,
 			Help:        "Enter Server Url",
 			Validate:    config.RequiredValidate,
 			Description: "Server address of rport to connect to",
 			ShortName:   "s",
 		},
 		{
-			Field:       config.ApiUser,
+			Field:       config.APIUser,
 			Help:        "Enter a valid login value",
 			Validate:    config.RequiredValidate,
 			Description: "Login to the rport server",
 			ShortName:   "l",
 		},
 		{
-			Field:       config.ApiPassword,
+			Field:       config.APIPassword,
 			Help:        "Enter a valid password value",
 			Validate:    config.RequiredValidate,
 			Description: "Password to the rport server",

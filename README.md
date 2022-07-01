@@ -106,7 +106,7 @@ _RPORT_API_USER, RPORT_API_PASSWORD and RPORT_API_URL replace the previous RPORT
 You can also use a hybrid variant, where e.g. user and server url are provided as config options and password as an environment variable.
 
      rportcli init -s http://localhost:3000 -l admin
-     export RPORT_API_URL=http://localhost:3000
+     export RPORT_API_PASSWORD=foobaz
      rportcli client list
 
 After the config initialisation, Rportcli will check the provided options by calling the rport [status API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/cloudradar-monitoring/rport/master/api-doc.yml#/default/get_status).
@@ -119,6 +119,7 @@ If the RPORT_API_TOKEN is set then this will be used instead of the password. Th
 
 For example
 
+    export RPORT_API_USER=admin
     export RPORT_API_TOKEN=xxxxxxxx
     export RPORT_API_URL=http://localhost:3000
     #now you can run any rportcli command without config or 2fa
@@ -182,7 +183,7 @@ You can also display help for a certain command:
     <tr>
     <td>RPORT_API_TOKEN</td>
     <td>Api token for accessing the rport server</td>
-    <td>http://localhost:3000</td>
+    <td></td>
     <td>RPORT_API_TOKEN=xxxxxxxx rportcli client list</td>
     </tr>
 </table>

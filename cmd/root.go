@@ -90,7 +90,7 @@ func Execute() error {
 func buildRport(params *options.ParameterBag) *api.Rport {
 	authStrategy := auth.GetAuthStrategy(params)
 
-	serverURL := config.ReadApiURL(params)
+	serverURL := config.ReadAPIURL(params)
 	rportAPI := api.New(serverURL, authStrategy)
 
 	return rportAPI

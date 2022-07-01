@@ -6,12 +6,12 @@ import (
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 )
 
-func GetUsernameAndPassword(params *options.ParameterBag) (login string, pass string, err error) {
-	login = config.ReadApiUser(params)
-	pass = config.ReadApiPassword(params)
-	apiToken := params.ReadString(config.ApiToken, "")
+func GetUsernameAndPassword(params *options.ParameterBag) (login, pass string, err error) {
+	login = config.ReadAPIUser(params)
+	pass = config.ReadAPIPassword(params)
+	apiToken := params.ReadString(config.APIToken, "")
 	if pass != "" && apiToken != "" {
-		return "", "", utils.ErrApiPasswordAndApiTokenAreBothSet
+		return "", "", utils.ErrAPIPasswordAndAPITokenAreBothSet
 	}
 	if apiToken != "" {
 		return login, apiToken, err

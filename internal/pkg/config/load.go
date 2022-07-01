@@ -30,10 +30,10 @@ const (
 	Token            = "token"
 	Password         = "password"
 	DefaultServerURL = "http://localhost:3000"
-	ApiURL           = "api_url"
-	ApiUser          = "api_user"
-	ApiPassword      = "api_password"
-	ApiToken         = "api_token"
+	APIURL           = "api_url"
+	APIUser          = "api_user"
+	APIPassword      = "api_password"
+	APIToken         = "api_token"
 )
 
 func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBag) {
@@ -42,7 +42,7 @@ func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBa
 	envValuesProvider := CreateEnvValuesProvider()
 	flagValuesProvider := CreateFlagValuesProvider(flags)
 
-	if HasApiToken() {
+	if HasAPIToken() {
 		// ignore config file if using api token
 		valuesProvider = options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider)
 	} else {
@@ -100,10 +100,10 @@ func CreateEnvValuesProvider() options.ValuesProvider {
 		Login:               LoginEnvVar,
 		ServerURL:           ServerURLEnvVar,
 		PathForConfigEnvVar: PathForConfigEnvVar,
-		ApiURL:              ApiServerURLEnvVar,
-		ApiUser:             ApiUserEnvVar,
-		ApiPassword:         ApiPasswordEnvVar,
-		ApiToken:            ApiTokenEnvVar,
+		APIURL:              APIServerURLEnvVar,
+		APIUser:             APIUserEnvVar,
+		APIPassword:         APIPasswordEnvVar,
+		APIToken:            APITokenEnvVar,
 	}
 
 	envMapValues := map[string]interface{}{}
@@ -253,7 +253,7 @@ func LoadParamsFromFileAndEnvAndFlagsAndPrompt(
 	valueProviders = append(valueProviders, valuesProviderFromCommandAndPrompt)
 
 	// ignore config file if has api token
-	if !HasApiToken() {
+	if !HasAPIToken() {
 		jvp, err := CreateFileValuesProvider()
 		if err != nil {
 			logrus.Warn(err)
@@ -263,8 +263,8 @@ func LoadParamsFromFileAndEnvAndFlagsAndPrompt(
 	}
 
 	mergedValuesProvider := options.NewValuesProviderComposite(valueProviders...)
-
-	return options.New(mergedValuesProvider), nil
+	paramsToReturn := options.New(mergedValuesProvider)
+	return paramsToReturn, nil
 }
 
 func CollectParamsFromCommandAndPromptAndEnv(
@@ -278,13 +278,13 @@ func CollectParamsFromCommandAndPromptAndEnv(
 		envVal, isFound := envValuesProvider.Read(req.Field)
 		// if the field isn't found in the environment, then depending on the field, check for the legacy versions
 		if !isFound {
-			if req.Field == ApiUser {
+			if req.Field == APIUser {
 				envVal, isFound = envValuesProvider.Read(Login)
 			}
-			if req.Field == ApiPassword {
+			if req.Field == APIPassword {
 				envVal, isFound = envValuesProvider.Read(Password)
 			}
-			if req.Field == ApiURL {
+			if req.Field == APIURL {
 				envVal, isFound = envValuesProvider.Read(ServerURL)
 			}
 		}
@@ -332,16 +332,16 @@ func CollectParamsFromCommandAndPromptAndEnv(
 	return options.NewMapValuesProvider(paramsRaw), nil
 }
 
-func HasApiToken() (hasApiToken bool) {
-	apiToken := os.Getenv(ApiTokenEnvVar)
+func HasAPIToken() (hasAPIToken bool) {
+	apiToken := os.Getenv(APITokenEnvVar)
 	return apiToken != ""
 }
 
 func WarnIfLegacyConfig(params *options.ParameterBag) {
-	login := params.ReadString(Login, "")
-	pass := params.ReadString(Password, "")
-	serverURL := params.ReadString(ServerURL, "")
-	if login != "" || pass != "" || (serverURL != "" && serverURL != DefaultServerURL) {
+	login := os.Getenv(LoginEnvVar)
+	pass := os.Getenv(PasswordEnvVar)
+	serverURL := os.Getenv(ServerURLEnvVar)
+	if login != "" || pass != "" || (serverURL != "") {
 		logrus.Warn("use of RPORT_USER, RPORT_PASSWORD and RPORT_SERVER_URL will be removed in a future release. Please use RPORT_API_USER, RPORT_API_PASSWORD and RPORT_API_URL instead")
 	}
 }

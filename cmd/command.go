@@ -58,7 +58,7 @@ var executeCmd = &cobra.Command{
 
 		tokenValidity := env.ReadEnvInt(config.SessionValiditySecondsEnvVar, api.DefaultTokenValiditySeconds)
 
-		baseRportURL := config.ReadApiURL(params)
+		baseRportURL := config.ReadAPIURL(params)
 		wsURLBuilder := &api.WsCommandURLProvider{
 			WsURLProvider: &api.WsURLProvider{
 				TokenProvider: func() (token string, err error) {

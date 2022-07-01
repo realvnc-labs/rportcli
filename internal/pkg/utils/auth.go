@@ -7,12 +7,11 @@ import (
 	"net/http"
 	"strings"
 
-	// "gopkg.in/errgo.v2/errors"
-
 	http2 "github.com/breathbath/go_utils/v2/pkg/http"
 )
 
-var ErrApiPasswordAndApiTokenAreBothSet = errors.New("RPORT_API_TOKEN and a password cannot be set at the same time. Please choose one and remove use of the other.")
+//revive:disable-next-line
+var ErrAPIPasswordAndAPITokenAreBothSet = errors.New("RPORT_API_TOKEN and a password cannot be set at the same time. Please choose one and remove use of the other.")
 
 type Auth interface {
 	AuthRequest(r *http.Request) error
@@ -60,11 +59,10 @@ type FallbackAuth struct {
 func (fa *FallbackAuth) AuthRequest(req *http.Request) error {
 	err := fa.PrimaryAuth.AuthRequest(req)
 	if err != nil {
-		if errors.Is(err, ErrApiPasswordAndApiTokenAreBothSet) {
+		if errors.Is(err, ErrAPIPasswordAndAPITokenAreBothSet) {
 			return err
-		} else {
-			return fa.FallbackAuth.AuthRequest(req)
 		}
+		return fa.FallbackAuth.AuthRequest(req)
 	}
 	return nil
 }

@@ -33,8 +33,8 @@ type InitController struct {
 }
 
 func (ic *InitController) InitConfig(ctx context.Context, params *options.ParameterBag) error {
-	login := config.ReadApiUser(params)
-	serverURL := config.ReadApiURL(params)
+	login := config.ReadAPIUser(params)
+	serverURL := config.ReadAPIURL(params)
 
 	apiAuth := &utils.StorageBasicAuth{
 		AuthProvider: func() (l, p string, err error) {
@@ -82,7 +82,7 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 	}
 
 	valuesProvider := options.NewMapValuesProvider(map[string]interface{}{
-		config.ServerURL: config.ReadApiURLWithDefault(params, ""),
+		config.ServerURL: config.ReadAPIURLWithDefault(params, ""),
 		config.Token:     loginResp.Data.Token,
 	})
 

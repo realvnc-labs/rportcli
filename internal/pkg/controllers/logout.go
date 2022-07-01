@@ -33,7 +33,7 @@ func (lc *LogoutController) Logout(ctx context.Context, params *options.Paramete
 		return err
 	}
 
-	serverURL := config.ReadApiURL(params)
+	serverURL := config.ReadAPIURL(params)
 	if serverURL == "" {
 		return nil
 	}

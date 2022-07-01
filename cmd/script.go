@@ -53,7 +53,7 @@ var executeScript = &cobra.Command{
 			return err
 		}
 
-		baseRportURL := config.ReadApiURL(params)
+		baseRportURL := config.ReadAPIURL(params)
 		tokenValidity := env.ReadEnvInt(config.SessionValiditySecondsEnvVar, api.DefaultTokenValiditySeconds)
 		wsURLBuilder := &api.WsScriptsURLProvider{
 			WsURLProvider: &api.WsURLProvider{

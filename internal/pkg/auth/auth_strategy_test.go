@@ -31,16 +31,16 @@ func TestBasicAuthStrategy(t *testing.T) {
 		{
 			name: "WithRegularCredentials",
 			params: ParameterBagInput{
-				config.ApiUser:     "admin",
-				config.ApiPassword: "foobaz",
+				config.APIUser:     "admin",
+				config.APIPassword: "foobaz",
 			},
 			expectedResult: "Basic YWRtaW46Zm9vYmF6",
 		},
 		{
 			name: "WithApiToken",
 			params: ParameterBagInput{
-				config.ApiUser:  "admin",
-				config.ApiToken: "12345678901234567890",
+				config.APIUser:  "admin",
+				config.APIToken: "12345678901234567890",
 			},
 			expectedResult: "Basic YWRtaW46MTIzNDU2Nzg5MDEyMzQ1Njc4OTA=",
 		},
@@ -55,8 +55,8 @@ func TestBasicAuthStrategy(t *testing.T) {
 		{
 			name: "PreferApiCredentials",
 			params: ParameterBagInput{
-				config.ApiUser:     "admin",
-				config.ApiPassword: "foobaz",
+				config.APIUser:     "admin",
+				config.APIPassword: "foobaz",
 				config.Login:       "admin1",
 				config.Password:    "foobaz1",
 			},
@@ -71,8 +71,8 @@ func TestBasicAuthStrategy(t *testing.T) {
 				BaseValuesProvider: options.NewMapValuesProvider(tc.params),
 			}
 
-			auth := auth.GetAuthStrategy(params)
-			primaryAuth := auth.PrimaryAuth
+			authStrategy := auth.GetAuthStrategy(params)
+			primaryAuth := authStrategy.PrimaryAuth
 			assert.NotNil(t, primaryAuth)
 
 			err := primaryAuth.AuthRequest(req)
@@ -92,38 +92,38 @@ func TestBasicAuthStrategyErrors(t *testing.T) {
 		{
 			name: "WhenApiTokenAndPassword",
 			params: ParameterBagInput{
-				config.ApiUser:     "admin",
-				config.ApiPassword: "foobaz",
-				config.ApiToken:    "1234",
+				config.APIUser:     "admin",
+				config.APIPassword: "foobaz",
+				config.APIToken:    "1234",
 			},
-			expectedErr: utils.ErrApiPasswordAndApiTokenAreBothSet,
+			expectedErr: utils.ErrAPIPasswordAndAPITokenAreBothSet,
 		},
 		{
 			name: "WhenApiTokenAndLegacyPassword",
 			params: ParameterBagInput{
-				config.ApiUser:  "admin",
+				config.APIUser:  "admin",
 				config.Password: "foobaz",
-				config.ApiToken: "1234",
+				config.APIToken: "1234",
 			},
-			expectedErr: utils.ErrApiPasswordAndApiTokenAreBothSet,
+			expectedErr: utils.ErrAPIPasswordAndAPITokenAreBothSet,
 		},
 		{
 			name: "WhenApiTokenAndLegacyUser",
 			params: ParameterBagInput{
 				config.Login:       "admin",
-				config.ApiPassword: "foobaz",
-				config.ApiToken:    "1234",
+				config.APIPassword: "foobaz",
+				config.APIToken:    "1234",
 			},
-			expectedErr: utils.ErrApiPasswordAndApiTokenAreBothSet,
+			expectedErr: utils.ErrAPIPasswordAndAPITokenAreBothSet,
 		},
 		{
 			name: "WhenApiTokenAndLegacyUserAndLegacyPassword",
 			params: ParameterBagInput{
 				config.Login:    "admin",
 				config.Password: "foobaz",
-				config.ApiToken: "1234",
+				config.APIToken: "1234",
 			},
-			expectedErr: utils.ErrApiPasswordAndApiTokenAreBothSet,
+			expectedErr: utils.ErrAPIPasswordAndAPITokenAreBothSet,
 		},
 	}
 
@@ -134,8 +134,8 @@ func TestBasicAuthStrategyErrors(t *testing.T) {
 				BaseValuesProvider: options.NewMapValuesProvider(tc.params),
 			}
 
-			auth := auth.GetAuthStrategy(params)
-			primaryAuth := auth.PrimaryAuth
+			authStategy := auth.GetAuthStrategy(params)
+			primaryAuth := authStategy.PrimaryAuth
 			assert.NotNil(t, primaryAuth)
 
 			err := primaryAuth.AuthRequest(req)

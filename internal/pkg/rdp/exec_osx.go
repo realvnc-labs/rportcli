@@ -1,4 +1,6 @@
-// +build darwin
+//go:build darwin
+
+// TODO: check with TH about the above change
 
 package rdp
 

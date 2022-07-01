@@ -85,9 +85,9 @@ func TestInitSuccess(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		config.ApiURL:      srv.URL,
-		config.ApiUser:     "login",
-		config.ApiPassword: "passwords",
+		config.APIURL:      srv.URL,
+		config.APIUser:     "login",
+		config.APIPassword: "passwords",
 	})
 	err = tController.InitConfig(context.Background(), params)
 
@@ -95,7 +95,7 @@ func TestInitSuccess(t *testing.T) {
 	if err != nil {
 		return
 	}
-	assert.Equal(t, srv.URL, config.ReadApiURLWithDefault(writtenParams, ""))
+	assert.Equal(t, srv.URL, config.ReadAPIURLWithDefault(writtenParams, ""))
 	assert.Equal(t, validLoginTokenWithout2Fa, writtenParams.ReadString(config.Token, ""))
 	assert.True(t, statusRequested)
 }
@@ -154,7 +154,7 @@ func TestInitSuccessWithLegacyConfig(t *testing.T) {
 	if err != nil {
 		return
 	}
-	assert.Equal(t, srv.URL, config.ReadApiURLWithDefault(writtenParams, ""))
+	assert.Equal(t, srv.URL, config.ReadAPIURLWithDefault(writtenParams, ""))
 	assert.Equal(t, validLoginTokenWithout2Fa, writtenParams.ReadString(config.Token, ""))
 	assert.True(t, statusRequested)
 }
@@ -237,15 +237,15 @@ func TestInit2FASuccess(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		config.ApiURL:      srv.URL,
-		config.ApiUser:     "log1",
-		config.ApiPassword: "pass1",
+		config.APIURL:      srv.URL,
+		config.APIUser:     "log1",
+		config.APIPassword: "pass1",
 	})
 	err := tController.InitConfig(context.Background(), params)
 
 	require.NoError(t, err)
 
-	assert.Equal(t, srv.URL, config.ReadApiURLWithDefault(writtenParams, ""))
+	assert.Equal(t, srv.URL, config.ReadAPIURLWithDefault(writtenParams, ""))
 	assert.Equal(t, "someTok", writtenParams.ReadString(config.Token, ""))
 }
 
@@ -334,9 +334,9 @@ func TestInitTotPWithoutSecretSuccess(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		config.ApiURL:      srv.URL,
-		config.ApiUser:     "log1",
-		config.ApiPassword: "pass1",
+		config.APIURL:      srv.URL,
+		config.APIUser:     "log1",
+		config.APIPassword: "pass1",
 	})
 	err := tController.InitConfig(context.Background(), params)
 	require.NoError(t, err)
@@ -354,7 +354,7 @@ func TestInitTotPWithoutSecretSuccess(t *testing.T) {
 
 	assert.Equal(t, qrCodeImageContent, qrCodeBuf.String())
 	assert.Equal(t, "qr-*.png", qrCodeFilePatternGiven)
-	assert.Equal(t, srv.URL, config.ReadApiURLWithDefault(writtenParams, ""))
+	assert.Equal(t, srv.URL, config.ReadAPIURLWithDefault(writtenParams, ""))
 	assert.Equal(t, validLoginTokenWithout2Fa, writtenParams.ReadString(config.Token, ""))
 }
 
@@ -419,14 +419,14 @@ func TestInitTotPWithSecretSuccess(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		config.ApiURL:      srv.URL,
-		config.ApiUser:     "somelogin",
-		config.ApiPassword: "somepass",
+		config.APIURL:      srv.URL,
+		config.APIUser:     "somelogin",
+		config.APIPassword: "somepass",
 	})
 	err := tController.InitConfig(context.Background(), params)
 	require.NoError(t, err)
 
-	assert.Equal(t, srv.URL, config.ReadApiURLWithDefault(writtenParams, ""))
+	assert.Equal(t, srv.URL, config.ReadAPIURLWithDefault(writtenParams, ""))
 	assert.Equal(t, validLoginTokenWithout2Fa, writtenParams.ReadString(config.Token, ""))
 }
 
@@ -445,9 +445,9 @@ func TestInitError(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		config.ApiURL:      srv.URL,
-		config.ApiUser:     "log1123",
-		config.ApiPassword: "pass111",
+		config.APIURL:      srv.URL,
+		config.APIUser:     "log1123",
+		config.APIPassword: "pass111",
 	})
 	err := tController.InitConfig(context.Background(), params)
 
@@ -493,10 +493,10 @@ func TestInitErrorWithApiTokenAndPassword(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		config.ApiURL:   srv.URL,
+		config.APIURL:   srv.URL,
 		config.Login:    "log1123",
 		config.Password: "pass111",
-		config.ApiToken: "123123",
+		config.APIToken: "123123",
 	})
 	err := tController.InitConfig(context.Background(), params)
 
