@@ -34,6 +34,9 @@ func init() {
 	tunnelsCmd.AddCommand(tunnelCreateCmd)
 
 	rootCmd.AddCommand(tunnelsCmd)
+
+	// see help.go
+	tunnelsCmd.SetUsageTemplate(usageTemplate + serverAuthenticationRefer)
 }
 
 var tunnelsCmd = &cobra.Command{

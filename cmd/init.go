@@ -24,6 +24,9 @@ func init() {
 	config.DefineCommandInputs(initCmd, getInitRequirements())
 	initCmd.Flags().BoolVarP(&isLogout, "delete", "d", false, "Logout user")
 	rootCmd.AddCommand(initCmd)
+
+	// see help.go
+	initCmd.SetUsageTemplate(usageTemplate + environmentVariables + serverAuthentication)
 }
 
 var initCmd = &cobra.Command{
@@ -40,6 +43,10 @@ var initCmd = &cobra.Command{
 
 		return manageInit(ctx, cmd)
 	},
+	Long: `
+The init command allows the user to authenticate with an rport server and cache the authentication token in a config.json file. The user will not need to re-authenticate until the token expires, at which point the init command must be run again. 
+
+If 2fa is enabled then init will take the user through the 2fa flow and save the final token. The user will not need to complete 2fa until the token expires.`,
 }
 
 func manageLogout(ctx context.Context, cmd *cobra.Command) error {
@@ -59,7 +66,6 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 	// when the RPORT_API_TOKEN env var is set, we shouldn't allow use of the init command
 	hasAPIToken := config.HasAPIToken()
 	if hasAPIToken {
-		// TODO: is there a test case for this?
 		return errors.New("cannot init config when the RPORT_API_TOKEN is set. Please unset RPORT_API_TOKEN and use RPORT_API_USER and RPORT_API_PASSWORD instead")
 	}
 

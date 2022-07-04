@@ -130,6 +130,9 @@ issues:
     - path: internal/pkg/api/rport.go
       linters:
         - lll
+    - path: cmd/help.go
+      linters:
+        - lll
 
 run:
   skip-dirs: []

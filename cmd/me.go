@@ -14,6 +14,9 @@ import (
 
 func init() {
 	rootCmd.AddCommand(meCmd)
+
+	// see help.go
+	meCmd.SetUsageTemplate(usageTemplate + serverAuthenticationRefer)
 }
 
 var meCmd = &cobra.Command{

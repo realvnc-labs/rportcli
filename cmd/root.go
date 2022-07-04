@@ -20,7 +20,7 @@ var (
 	IsJSONPretty = false
 	rootCmd      = &cobra.Command{
 		Use:           "rportcli",
-		Short:         "Rport cli",
+		Short:         "rportcli",
 		Version:       version(),
 		SilenceErrors: true,
 		SilenceUsage:  true,
@@ -73,6 +73,9 @@ func init() {
 		"",
 		"Timeout value as seconds, e.g. 10s, minutes e.g. 1m or hours e.g. 2h, if not provided no timeout will be set",
 	)
+
+	// see help.go
+	rootCmd.SetUsageTemplate(usageTemplate + environmentVariables + serverAuthentication)
 }
 
 func initLog() {

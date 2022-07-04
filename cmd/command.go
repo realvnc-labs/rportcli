@@ -27,6 +27,9 @@ func init() {
 	config.DefineCommandInputs(executeCmd, getCommandRequirements())
 	commandCmd.AddCommand(executeCmd)
 	rootCmd.AddCommand(commandCmd)
+
+	// see help.go
+	commandCmd.SetUsageTemplate(usageTemplate + serverAuthenticationRefer)
 }
 
 var commandCmd = &cobra.Command{
