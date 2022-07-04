@@ -10,7 +10,6 @@ import (
 	http2 "github.com/breathbath/go_utils/v2/pkg/http"
 )
 
-//revive:disable-next-line
 var ErrAPIPasswordAndAPITokenAreBothSet = errors.New("RPORT_API_TOKEN and a password cannot be set at the same time. Please choose one and remove use of the other.")
 
 type Auth interface {

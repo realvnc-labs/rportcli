@@ -112,7 +112,6 @@ func CreateEnvValuesProvider() options.ValuesProvider {
 		if envVarValue != "" {
 			envMapValues[paramName] = envVarValue
 		}
-		// logrus.Debugf("reading env %s = %s", envVarName, envVarValue)
 	}
 
 	return options.NewMapValuesProvider(envMapValues)

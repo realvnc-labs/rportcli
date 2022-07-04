@@ -1,6 +1,5 @@
 //go:build !linux
-
-// TODO: check with TH about the above change
+// +build !linux
 
 package cmd
 
