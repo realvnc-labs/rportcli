@@ -59,9 +59,66 @@ For Windows
 
     go get github.com/cloudradar-monitoring/rportcli
 
-## Config
+## Server Authentication
 
-Rportcli looks for a config file at \$HOME/.config/rportcli/config.json (for Linux and MacOS) or C:\Users\<CurrentUserName>\.config\rportcli\config.json (for Windows).
+The rportcli requires authentication with the rportd server. The most straightforward
+method is to use environment variables with an API token.
+
+Alternatively a username and password can be specified again via environment variables.
+However, if 2fa is enabled then this approach will not work, and it will be necessary to
+use the config.json file and a authentication token (see below).
+
+Finally, a username and password can be provided to the init command which then authorises
+with the rportd server and saves a authentication token locally (to a config file). The authentication token
+is valid for 30 days and will automatically be used by rportcli without further authentication.
+The init command will need to be run again after the 30 days expires to reauthorise the user
+and download a new authentication token.
+
+_Note_
+
+_RPORT_API_USER, RPORT_API_PASSWORD and RPORT_API_URL replace the previous RPORT_USER,
+RPORT_PASSWORD and RPORT_SERVER_URL environment variables. Please update any scripts
+accordingly. Support for RPORT_USER, RPORT_PASSWORD and RPORT_SERVER_URL will be removed
+in a future release._
+
+### Using RPORT_API_TOKEN
+
+The easiest and most flexible way to authenticate with the rportd server is to use an API
+token. Using RPORT_API_TOKEN will bypass 2 factor authentication, allowing the rport cli to
+be used in automated scenarios.
+
+Also, if using RPORT_API_TOKEN then the config file will be ignored completed, so the
+RPORT_API_URL must be used.
+
+For example
+
+    export RPORT_API_URL=http://localhost:3000
+    export RPORT_API_USER=admin
+    export RPORT_API_TOKEN=xxxxxxxx
+    #now you can run any rportcli command without config or 2fa
+    rportcli client list
+
+_Note that it is not possible to use the init commmand (see below) when using an api token._
+
+### Using RPORT_API_PASSWORD
+
+For example
+
+    export RPORT_API_URL=http://localhost:3000
+    export RPORT_API_USER=admin
+    export RPORT_API_PASSWORD=foobaz
+    #now you can run any rportcli command without config
+    rportcli client list
+
+The cli will complain if both the api token and the password are set. Please use one or the other.
+
+### Using config.json and a cached Authentication Token
+
+This method for authentication is useful when not using an API token but 2fa is enabled. The `init` command
+will download an authentication token that will be cached in the config.json until expires. With a valid token
+the user does not need to reauthenticate each use of the cli.
+
+Rportcli looks for the config file at $HOME/.config/rportcli/config.json (for Linux and MacOS) or C:\Users\<CurrentUserName>\.config\rportcli\config.json (for Windows).
 If current user has no home folder, RportCli will look for a config file next to the current binary location.
 
 You can override config path by providing env variable CONFIG_PATH, e.g.
@@ -91,41 +148,15 @@ You can skip the interactive wizard by providing parameters as cli options , e.g
 
      rportcli init -s http://localhost:3000 -l admin -p foobaz
 
-If you prefer to use environment variables instead you can do the following:
-
-    export RPORT_API_USER=admin
-    export RPORT_API_PASSWORD=foobaz
-    export RPORT_API_URL=http://localhost:3000
-    #now you can run any rportcli command without config
-    rportcli client list
-
-_Note_
-
-_RPORT_API_USER, RPORT_API_PASSWORD and RPORT_API_URL replace the previous RPORT_USER, RPORT_PASSWORD and RPORT_SERVER_URL environment variables. Please update any scripts accordingly. Support for RPORT_USER, RPORT_PASSWORD and RPORT_SERVER_URL will be removed in a future release._
-
 You can also use a hybrid variant, where e.g. user and server url are provided as config options and password as an environment variable.
 
      rportcli init -s http://localhost:3000 -l admin
      export RPORT_API_PASSWORD=foobaz
      rportcli client list
 
-After the config initialisation, Rportcli will check the provided options by calling the rport [status API](https://petstore.swagger.io/?url=https://raw.githubusercontent.com/cloudradar-monitoring/rport/master/api-doc.yml#/default/get_status).
+After the authentication token expires, it will be necessary to run `init` again to reauthorise and update the token.
 
-## Use of RPORT_API_TOKEN
-
-As an preferrable alternative to using logging via a password, rport now supports authentication via an api token. Using RPORT_API_TOKEN will bypass 2 factor authentication, allowing the rport cli to be used in automated scenarios.
-
-If the RPORT_API_TOKEN is set then this will be used instead of the password. The cli will complain if both the api token and the password are set. Please only use one. Also, if using RPORT_API_TOKEN then the config file will be ignored completed, so the RPORT_API_URL must be used. It is not possible to use the init commmand when using an api token.
-
-For example
-
-    export RPORT_API_USER=admin
-    export RPORT_API_TOKEN=xxxxxxxx
-    export RPORT_API_URL=http://localhost:3000
-    #now you can run any rportcli command without config or 2fa
-    rportcli client list
-
-## Cli
+## Using the Cli
 
 Trigger this command to see all available commands and their options:
 
@@ -182,7 +213,7 @@ You can also display help for a certain command:
     </tr>
     <tr>
     <td>RPORT_API_TOKEN</td>
-    <td>Api token for accessing the rport server</td>
+    <td>Api token for accessing the rport server. Must be specified with RPORT_API_USER and RPORT_API_URL.</td>
     <td></td>
     <td>RPORT_API_TOKEN=xxxxxxxx rportcli client list</td>
     </tr>
