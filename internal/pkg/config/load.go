@@ -38,6 +38,10 @@ const (
 	NoPrompt         = "no-prompt"
 )
 
+var (
+	ErrAPIURLRequired = errors.New("please set the server API URL, either via RPORT_API_URL or the command line flags (if option available)")
+)
+
 func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBag, err error) {
 	var valuesProvider *options.ValuesProviderComposite
 
@@ -364,7 +368,7 @@ func WarnIfLegacyConfig() {
 func CheckIfMissingAPIURL(params *options.ParameterBag) (err error) {
 	APIURL := ReadAPIURL(params)
 	if APIURL == "" {
-		return errors.New("please set the server URL, either via RPORT_API_URL or the command line flags (if option available)")
+		return ErrAPIURLRequired
 	}
 	return nil
 }

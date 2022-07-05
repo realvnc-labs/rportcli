@@ -17,6 +17,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	ErrNoPromptInUseWhenTwoFA = errors.New("2fa requested when using --no-prompt. Please retry without the --no-prompt option")
+	ErrNoPromptInUseWhenTotP  = errors.New("totP requested when using --no-prompt. Please retry without the --no-prompt option")
+)
+
 type ConfigWriter func(params *options.ParameterBag) (err error)
 
 type QrImageWriterProvider func(namePattern string) (writer io.Writer, closr io.Closer, name string, err error)
@@ -57,7 +62,7 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 	noPrompt := params.ReadBool(config.NoPrompt, false)
 	if loginResp.Data.TwoFA.DeliveryMethod == "totp_authenticator_app" {
 		if noPrompt {
-			return errors.New("totP requested when using --no-prompt. Please retry without the --no-prompt option")
+			return ErrNoPromptInUseWhenTotP
 		}
 		cl := api.New(serverURL, &utils.BearerAuth{
 			TokenProvider: func() (string, error) {
@@ -72,7 +77,7 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 
 	if loginResp.Data.TwoFA.SentTo != "" {
 		if noPrompt {
-			return errors.New("2fa requested when using --no-prompt. Please retry without the --no-prompt option")
+			return ErrNoPromptInUseWhenTwoFA
 		}
 
 		cl := api.New(serverURL, &utils.BearerAuth{
