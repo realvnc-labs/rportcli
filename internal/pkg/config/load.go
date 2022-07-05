@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -29,24 +30,45 @@ const (
 	Login            = "login"
 	Token            = "token"
 	Password         = "password"
-	DefaultServerURL = "http://localhost:3000"
+	DefaultServerURL = ""
+	APIURL           = "api_url"
+	APIUser          = "api_user"
+	APIPassword      = "api_password"
+	APIToken         = "api_token"
+	NoPrompt         = "no-prompt"
 )
 
-func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBag) {
-	envValuesProvider := CreateEnvValuesProvider()
-	fileValuesProvider, err := CreateFileValuesProvider()
-	if err != nil {
-		logrus.Warn(err)
-		return options.New(envValuesProvider)
-	}
+var (
+	ErrAPIURLRequired = errors.New("please set the server API URL, either via RPORT_API_URL or the command line flags (if option available)")
+)
 
+func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBag, err error) {
+	var valuesProvider *options.ValuesProviderComposite
+
+	envValuesProvider := CreateEnvValuesProvider()
 	flagValuesProvider := CreateFlagValuesProvider(flags)
 
-	valuesProvider := options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider, fileValuesProvider)
+	if HasAPIToken() {
+		// ignore config file if using api token
+		valuesProvider = options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider)
+	} else {
+		fileValuesProvider, err := CreateFileValuesProvider()
+		if err != nil {
+			logrus.Warn(err)
+			valuesProvider = options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider)
+		} else {
+			valuesProvider = options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider, fileValuesProvider)
+		}
+	}
 
 	paramsToReturn := options.New(valuesProvider)
 
-	return paramsToReturn
+	if err := CheckIfMissingAPIURL(paramsToReturn); err != nil {
+		return paramsToReturn, err
+	}
+	WarnIfLegacyConfig()
+
+	return paramsToReturn, nil
 }
 
 type FlagValuesProvider struct {
@@ -87,6 +109,10 @@ func CreateEnvValuesProvider() options.ValuesProvider {
 		Login:               LoginEnvVar,
 		ServerURL:           ServerURLEnvVar,
 		PathForConfigEnvVar: PathForConfigEnvVar,
+		APIURL:              APIURLEnvVar,
+		APIUser:             APIUserEnvVar,
+		APIPassword:         APIPasswordEnvVar,
+		APIToken:            APITokenEnvVar,
 	}
 
 	envMapValues := map[string]interface{}{}
@@ -134,7 +160,6 @@ func DeleteConfig() (err error) {
 	return nil
 }
 
-// WriteConfig will write config values to file system
 func WriteConfig(params *options.ParameterBag) (err error) {
 	configLocation := getConfigLocation()
 
@@ -235,27 +260,48 @@ func LoadParamsFromFileAndEnvAndFlagsAndPrompt(
 	}
 	valueProviders = append(valueProviders, valuesProviderFromCommandAndPrompt)
 
-	jvp, err := CreateFileValuesProvider()
-	if err != nil {
-		logrus.Warn(err)
-	} else {
-		valueProviders = append(valueProviders, jvp)
+	// ignore config file if has api token
+	if !HasAPIToken() {
+		jvp, err := CreateFileValuesProvider()
+		if err != nil {
+			logrus.Warn(err)
+		} else {
+			valueProviders = append(valueProviders, jvp)
+		}
 	}
 
 	mergedValuesProvider := options.NewValuesProviderComposite(valueProviders...)
+	paramsToReturn := options.New(mergedValuesProvider)
 
-	return options.New(mergedValuesProvider), nil
+	if err := CheckIfMissingAPIURL(paramsToReturn); err != nil {
+		return paramsToReturn, err
+	}
+	WarnIfLegacyConfig()
+
+	return paramsToReturn, nil
 }
 
 func CollectParamsFromCommandAndPromptAndEnv(
 	c *cobra.Command,
 	reqs []ParameterRequirement,
 	promptReader PromptReader,
-	altValuesProvider options.ValuesProvider,
+	envValuesProvider options.ValuesProvider,
 ) (vp options.ValuesProvider, err error) {
 	paramsRaw := make(map[string]interface{}, len(reqs))
 	for _, req := range reqs {
-		envVal, isFound := altValuesProvider.Read(req.Field)
+		envVal, isFound := envValuesProvider.Read(req.Field)
+		// if the field isn't found in the environment, then depending on the field, check for the legacy versions
+		if !isFound {
+			if req.Field == APIUser {
+				envVal, isFound = envValuesProvider.Read(Login)
+			}
+			if req.Field == APIPassword {
+				envVal, isFound = envValuesProvider.Read(Password)
+			}
+			if req.Field == APIURL {
+				envVal, isFound = envValuesProvider.Read(ServerURL)
+			}
+		}
 		if isFound {
 			paramsRaw[req.Field] = envVal
 			continue
@@ -283,19 +329,46 @@ func CollectParamsFromCommandAndPromptAndEnv(
 		}
 	}
 
-	valuesProviderFromFlags := options.NewMapValuesProvider(paramsRaw)
+	valuesProvider := options.NewMapValuesProvider(paramsRaw)
+	paramsSoFar := options.New(valuesProvider)
 
-	paramsFromFlags := options.New(valuesProviderFromFlags)
+	// if the no-prompt cli flag is set, then do not prompt for missing values
+	noPrompt := paramsSoFar.ReadBool(NoPrompt, false)
+	if noPrompt {
+		return valuesProvider, nil
+	}
 
-	missedRequirements := CheckRequirements(paramsFromFlags, reqs)
+	missedRequirements := CheckRequirements(paramsSoFar, reqs)
 	if len(missedRequirements) == 0 {
-		return valuesProviderFromFlags, nil
+		return valuesProvider, nil
 	}
 
 	err = PromptRequiredValues(missedRequirements, paramsRaw, promptReader)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	return options.NewMapValuesProvider(paramsRaw), nil
+}
+
+func HasAPIToken() (hasAPIToken bool) {
+	apiToken := os.Getenv(APITokenEnvVar)
+	return apiToken != ""
+}
+
+func WarnIfLegacyConfig() {
+	login := os.Getenv(LoginEnvVar)
+	pass := os.Getenv(PasswordEnvVar)
+	serverURL := os.Getenv(ServerURLEnvVar)
+	if login != "" || pass != "" || (serverURL != "") {
+		logrus.Warn("use of RPORT_USER, RPORT_PASSWORD and RPORT_SERVER_URL will be removed in a future release. Please use RPORT_API_USER, RPORT_API_PASSWORD and RPORT_API_URL instead")
+	}
+}
+
+func CheckIfMissingAPIURL(params *options.ParameterBag) (err error) {
+	APIURL := ReadAPIURL(params)
+	if APIURL == "" {
+		return ErrAPIURLRequired
+	}
+	return nil
 }

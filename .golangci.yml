@@ -31,8 +31,6 @@ linters-settings:
     min-complexity: 15
   goimports:
     local-prefixes: github.com/golangci/golangci-lint
-  golint:
-    min-confidence: 0
   gomnd:
     settings:
       mnd:
@@ -48,8 +46,6 @@ linters-settings:
           - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
   lll:
     line-length: 140
-  maligned:
-    suggest-new: true
   misspell:
     locale: US
   nolintlint:
@@ -75,21 +71,19 @@ linters:
     - gocyclo
     - gofmt
     - goimports
-    - golint
+    - revive
     - gomnd
     - goprintffuncname
     - gosec
     - gosimple
     - govet
     - ineffassign
-    - interfacer
-    - lll
     - misspell
     - nakedret
     - noctx
     - nolintlint
     - rowserrcheck
-    - scopelint
+    - exportloopref
     - staticcheck
     - structcheck
     - stylecheck
@@ -99,7 +93,7 @@ linters:
     - unused
     - varcheck
     - whitespace
-    - maligned
+    - lll
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
@@ -115,12 +109,30 @@ issues:
         - funlen
         - gocyclo
         - dupl
-        - lll
         - goconst
+        - lll
     - path: internal/pkg/models/client.go
       linters:
         - funlen
       text: "Function 'KeyValues' is too long" #large model with a lot of fields
+    - path: internal/pkg/utils/auth.go
+      linters:
+        - revive
+        - stylecheck
+        - lll
+      text: "error-strings:|ST1005:|line is"
+    - path: internal/pkg/config/load.go
+      linters:
+        - lll
+    - path: cmd/init.go
+      linters:
+        - lll
+    - path: internal/pkg/api/rport.go
+      linters:
+        - lll
+    - path: cmd/help.go
+      linters:
+        - lll
 
 run:
   skip-dirs: []

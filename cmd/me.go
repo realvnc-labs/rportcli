@@ -14,13 +14,19 @@ import (
 
 func init() {
 	rootCmd.AddCommand(meCmd)
+
+	// see help.go
+	meCmd.SetUsageTemplate(usageTemplate + serverAuthenticationRefer)
 }
 
 var meCmd = &cobra.Command{
 	Use:   "me",
 	Short: "show current user info",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		params := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		params, err := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		if err != nil {
+			return err
+		}
 
 		rportAPI := buildRport(params)
 		rendr := &output.MeRenderer{

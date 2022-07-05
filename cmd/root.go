@@ -7,9 +7,9 @@ import (
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/applog"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/auth"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +20,7 @@ var (
 	IsJSONPretty = false
 	rootCmd      = &cobra.Command{
 		Use:           "rportcli",
-		Short:         "Rport cli",
+		Short:         "rportcli",
 		Version:       version(),
 		SilenceErrors: true,
 		SilenceUsage:  true,
@@ -73,6 +73,9 @@ func init() {
 		"",
 		"Timeout value as seconds, e.g. 10s, minutes e.g. 1m or hours e.g. 2h, if not provided no timeout will be set",
 	)
+
+	// see help.go
+	rootCmd.SetUsageTemplate(usageTemplate + environmentVariables + serverAuthentication)
 }
 
 func initLog() {
@@ -88,25 +91,10 @@ func Execute() error {
 }
 
 func buildRport(params *options.ParameterBag) *api.Rport {
-	auth := &utils.FallbackAuth{
-		PrimaryAuth: &utils.StorageBasicAuth{
-			AuthProvider: func() (login, pass string, err error) {
-				login = params.ReadString(config.Login, "")
-				pass = params.ReadString(config.Password, "")
-				return
-			},
-		},
-		FallbackAuth: &utils.BearerAuth{
-			TokenProvider: func() (string, error) {
-				return params.ReadString(config.Token, ""), nil
-			},
-		},
-	}
-	serverURL := params.ReadString(config.ServerURL, config.DefaultServerURL)
-	if serverURL == "" {
-		serverURL = config.DefaultServerURL
-	}
-	rportAPI := api.New(serverURL, auth)
+	authStrategy := auth.GetAuthStrategy(params)
+
+	serverURL := config.ReadAPIURL(params)
+	rportAPI := api.New(serverURL, authStrategy)
 
 	return rportAPI
 }

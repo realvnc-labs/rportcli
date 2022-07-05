@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -23,6 +24,9 @@ func init() {
 	config.DefineCommandInputs(initCmd, getInitRequirements())
 	initCmd.Flags().BoolVarP(&isLogout, "delete", "d", false, "Logout user")
 	rootCmd.AddCommand(initCmd)
+
+	// see help.go
+	initCmd.SetUsageTemplate(usageTemplate + environmentVariables + serverAuthentication)
 }
 
 var initCmd = &cobra.Command{
@@ -39,10 +43,17 @@ var initCmd = &cobra.Command{
 
 		return manageInit(ctx, cmd)
 	},
+	Long: `
+The init command allows the user to authenticate with an rport server and cache the authentication token in a config.json file. The user will not need to re-authenticate until the token expires, at which point the init command must be run again. 
+
+If 2fa is enabled then init will take the user through the 2fa flow and save the final token. The user will not need to complete 2fa until the token expires.`,
 }
 
 func manageLogout(ctx context.Context, cmd *cobra.Command) error {
-	params := config.LoadParamsFromFileAndEnv(cmd.Flags())
+	params, err := config.LoadParamsFromFileAndEnv(cmd.Flags())
+	if err != nil {
+		return err
+	}
 
 	rportAPI := buildRport(params)
 
@@ -55,11 +66,18 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
+	// when the RPORT_API_TOKEN env var is set, we shouldn't allow use of the init command
+	hasAPIToken := config.HasAPIToken()
+	if hasAPIToken {
+		return errors.New("cannot init config when the RPORT_API_TOKEN is set. If you do not wish to use the API token, please unset RPORT_API_TOKEN and use RPORT_API_USER and RPORT_API_PASSWORD instead")
+	}
+
 	promptReader := &utils.PromptReader{
 		Sc:              bufio.NewScanner(os.Stdin),
 		SigChan:         sigs,
 		PasswordScanner: utils.ReadPassword,
 	}
+
 	params, err := config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, getInitRequirements(), promptReader)
 	if err != nil {
 		return err
@@ -81,22 +99,25 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 
 func getInitRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
+		config.GetNoPromptFlagSpec(),
 		{
-			Field:       config.ServerURL,
+			Field:       config.APIURL,
 			Help:        "Enter Server Url",
 			Validate:    config.RequiredValidate,
 			Description: "Server address of rport to connect to",
 			ShortName:   "s",
+			Default:     "",
+			Type:        config.StringRequirementType,
 		},
 		{
-			Field:       config.Login,
+			Field:       config.APIUser,
 			Help:        "Enter a valid login value",
 			Validate:    config.RequiredValidate,
 			Description: "Login to the rport server",
 			ShortName:   "l",
 		},
 		{
-			Field:       config.Password,
+			Field:       config.APIPassword,
 			Help:        "Enter a valid password value",
 			Validate:    config.RequiredValidate,
 			Description: "Password to the rport server",

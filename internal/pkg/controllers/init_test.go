@@ -85,6 +85,65 @@ func TestInitSuccess(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
+		config.APIURL:      srv.URL,
+		config.APIUser:     "login",
+		config.APIPassword: "passwords",
+	})
+	err = tController.InitConfig(context.Background(), params)
+
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+	assert.Equal(t, srv.URL, config.ReadAPIURLWithDefault(writtenParams, ""))
+	assert.Equal(t, validLoginTokenWithout2Fa, writtenParams.ReadString(config.Token, ""))
+	assert.True(t, statusRequested)
+}
+
+func TestInitSuccessWithLegacyConfig(t *testing.T) {
+	statusRequested := false
+
+	const tokenValidityVal = "90"
+	err := os.Setenv(config.SessionValiditySecondsEnvVar, tokenValidityVal)
+	assert.NoError(t, err)
+	if err == nil {
+		defer func() {
+			e := os.Unsetenv(config.SessionValiditySecondsEnvVar)
+			if e != nil {
+				logrus.Error(e)
+			}
+		}()
+	}
+
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		resp := api.LoginResponse{
+			Data: models.Token{
+				Token: validLoginTokenWithout2Fa,
+			},
+		}
+		statusRequested = true
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "/api/v1/login?token-lifetime="+tokenValidityVal, r.URL.String())
+		assert.Equal(t, "Basic bG9naW46cGFzc3dvcmRz", r.Header.Get("Authorization"))
+
+		rw.WriteHeader(http.StatusOK)
+		jsonEnc := json.NewEncoder(rw)
+		e := jsonEnc.Encode(resp)
+		assert.NoError(t, e)
+	}))
+	defer srv.Close()
+
+	writtenParams := options.New(options.NewMapValuesProvider(map[string]interface{}{}))
+	tController := InitController{
+		ConfigWriter: func(params *options.ParameterBag) (err error) {
+			writtenParams = params
+			return nil
+		},
+		PromptReader:       &PromptReaderMock{},
+		TotPSecretRenderer: &TotPSecretRendererMock{},
+	}
+
+	params := config.FromValues(map[string]string{
 		config.ServerURL: srv.URL,
 		config.Login:     "login",
 		config.Password:  "passwords",
@@ -95,7 +154,7 @@ func TestInitSuccess(t *testing.T) {
 	if err != nil {
 		return
 	}
-	assert.Equal(t, srv.URL, writtenParams.ReadString(config.ServerURL, ""))
+	assert.Equal(t, srv.URL, config.ReadAPIURLWithDefault(writtenParams, ""))
 	assert.Equal(t, validLoginTokenWithout2Fa, writtenParams.ReadString(config.Token, ""))
 	assert.True(t, statusRequested)
 }
@@ -178,16 +237,75 @@ func TestInit2FASuccess(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		config.ServerURL: srv.URL,
-		config.Login:     "log1",
-		config.Password:  "pass1",
+		config.APIURL:      srv.URL,
+		config.APIUser:     "log1",
+		config.APIPassword: "pass1",
 	})
 	err := tController.InitConfig(context.Background(), params)
 
 	require.NoError(t, err)
 
-	assert.Equal(t, srv.URL, writtenParams.ReadString(config.ServerURL, ""))
+	assert.Equal(t, srv.URL, config.ReadAPIURLWithDefault(writtenParams, ""))
 	assert.Equal(t, "someTok", writtenParams.ReadString(config.Token, ""))
+}
+
+func TestInit2FAFailNoPrompt(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		curURL := r.URL.String()
+		resp := api.LoginResponse{
+			Data: models.Token{
+				Token: validLoginTokenWith2FaWithTotPSecret,
+				TwoFA: models.TwoFA{
+					SentTo: "no@mail.me",
+				},
+			},
+		}
+
+		if strings.HasPrefix(curURL, "/api/v1/login") {
+			assertBasicLoginPass(t, "log2", "pass2", r)
+
+			rw.WriteHeader(http.StatusOK)
+			jsonEnc := json.NewEncoder(rw)
+			e := jsonEnc.Encode(resp)
+			assert.NoError(t, e)
+			return
+		}
+
+		assertTwoFaLoginFromRequest(t, r, "log2", "someCode")
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "Bearer "+validLoginTokenWith2FaWithTotPSecret, r.Header.Get("Authorization"))
+
+		resp.Data.Token = "someTok"
+		resp.Data.TwoFA = models.TwoFA{}
+
+		rw.WriteHeader(http.StatusOK)
+		jsonEnc := json.NewEncoder(rw)
+		e := jsonEnc.Encode(resp)
+		assert.NoError(t, e)
+	}))
+	defer srv.Close()
+
+	tController := InitController{
+		ConfigWriter: func(params *options.ParameterBag) (err error) {
+			return nil
+		},
+		PromptReader: &PromptReaderMock{
+			ReadOutputs: []string{
+				"someCode",
+			},
+		},
+		TotPSecretRenderer: &TotPSecretRendererMock{},
+	}
+
+	params := config.FromValues(map[string]string{
+		config.APIURL:      srv.URL,
+		config.APIUser:     "log2",
+		config.APIPassword: "pass2",
+		config.NoPrompt:    "true",
+	})
+	err := tController.InitConfig(context.Background(), params)
+
+	require.ErrorIs(t, err, ErrNoPromptInUseWhenTwoFA)
 }
 
 func TestInitTotPWithoutSecretSuccess(t *testing.T) {
@@ -275,9 +393,9 @@ func TestInitTotPWithoutSecretSuccess(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		config.ServerURL: srv.URL,
-		config.Login:     "log1",
-		config.Password:  "pass1",
+		config.APIURL:      srv.URL,
+		config.APIUser:     "log1",
+		config.APIPassword: "pass1",
 	})
 	err := tController.InitConfig(context.Background(), params)
 	require.NoError(t, err)
@@ -295,8 +413,56 @@ func TestInitTotPWithoutSecretSuccess(t *testing.T) {
 
 	assert.Equal(t, qrCodeImageContent, qrCodeBuf.String())
 	assert.Equal(t, "qr-*.png", qrCodeFilePatternGiven)
-	assert.Equal(t, srv.URL, writtenParams.ReadString(config.ServerURL, ""))
+	assert.Equal(t, srv.URL, config.ReadAPIURLWithDefault(writtenParams, ""))
 	assert.Equal(t, validLoginTokenWithout2Fa, writtenParams.ReadString(config.Token, ""))
+}
+
+func TestInitTotPFailNoPrompt(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		curURL := r.URL.String()
+		resp := api.LoginResponse{
+			Data: models.Token{
+				Token: validLoginTokenWith2FaWithoutTotPSecret,
+				TwoFA: models.TwoFA{
+					DeliveryMethod: "totp_authenticator_app",
+					TotPKeyStatus:  api.TotPKeyPending,
+				},
+			},
+		}
+
+		if strings.HasPrefix(curURL, "/api/v1/login") {
+			assertBasicLoginPass(t, "log1", "pass1", r)
+
+			rw.WriteHeader(http.StatusOK)
+			jsonEnc := json.NewEncoder(rw)
+			e := jsonEnc.Encode(resp)
+			assert.NoError(t, e)
+			return
+		}
+	}))
+	defer srv.Close()
+
+	tController := InitController{
+		ConfigWriter: func(params *options.ParameterBag) (err error) {
+			return nil
+		},
+		PromptReader: &PromptReaderMock{
+			ReadOutputs: []string{
+				"123456",
+			},
+		},
+	}
+
+	params := config.FromValues(map[string]string{
+		config.APIURL:      srv.URL,
+		config.APIUser:     "log1",
+		config.APIPassword: "pass1",
+		config.NoPrompt:    "true",
+	})
+
+	err := tController.InitConfig(context.Background(), params)
+	logrus.Warn(err)
+	require.ErrorIs(t, err, ErrNoPromptInUseWhenTotP)
 }
 
 func TestInitTotPWithSecretSuccess(t *testing.T) {
@@ -360,18 +526,42 @@ func TestInitTotPWithSecretSuccess(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		config.ServerURL: srv.URL,
-		config.Login:     "somelogin",
-		config.Password:  "somepass",
+		config.APIURL:      srv.URL,
+		config.APIUser:     "somelogin",
+		config.APIPassword: "somepass",
 	})
 	err := tController.InitConfig(context.Background(), params)
 	require.NoError(t, err)
 
-	assert.Equal(t, srv.URL, writtenParams.ReadString(config.ServerURL, ""))
+	assert.Equal(t, srv.URL, config.ReadAPIURLWithDefault(writtenParams, ""))
 	assert.Equal(t, validLoginTokenWithout2Fa, writtenParams.ReadString(config.Token, ""))
 }
 
 func TestInitError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	tController := InitController{
+		ConfigWriter: func(params *options.ParameterBag) (err error) {
+			return nil
+		},
+		PromptReader:       &PromptReaderMock{},
+		TotPSecretRenderer: &TotPSecretRendererMock{},
+	}
+
+	params := config.FromValues(map[string]string{
+		config.APIURL:      srv.URL,
+		config.APIUser:     "log1123",
+		config.APIPassword: "pass111",
+	})
+	err := tController.InitConfig(context.Background(), params)
+
+	assert.EqualError(t, err, "config verification failed: operation failed")
+}
+
+func TestInitErrorWithLegacyConfig(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 	}))
@@ -392,5 +582,30 @@ func TestInitError(t *testing.T) {
 	})
 	err := tController.InitConfig(context.Background(), params)
 
-	assert.EqualError(t, err, "config verification failed against the rport: operation failed")
+	assert.EqualError(t, err, "config verification failed: operation failed")
+}
+
+func TestInitErrorWithApiTokenAndPassword(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		rw.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	tController := InitController{
+		ConfigWriter: func(params *options.ParameterBag) (err error) {
+			return nil
+		},
+		PromptReader:       &PromptReaderMock{},
+		TotPSecretRenderer: &TotPSecretRendererMock{},
+	}
+
+	params := config.FromValues(map[string]string{
+		config.APIURL:   srv.URL,
+		config.Login:    "log1123",
+		config.Password: "pass111",
+		config.APIToken: "123123",
+	})
+	err := tController.InitConfig(context.Background(), params)
+
+	assert.EqualError(t, err, "config verification failed: RPORT_API_TOKEN and a password cannot be set at the same time. Please choose one and remove use of the other.")
 }

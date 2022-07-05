@@ -24,6 +24,9 @@ func init() {
 	clientCmd.Flags().BoolP("all", "a", false, "Show client info with additional details")
 	clientsCmd.AddCommand(clientCmd)
 	rootCmd.AddCommand(clientsCmd)
+
+	// see help.go
+	clientsCmd.SetUsageTemplate(usageTemplate + serverAuthenticationRefer)
 }
 
 var clientsCmd = &cobra.Command{
@@ -37,7 +40,10 @@ var clientsListCmd = &cobra.Command{
 	Short: "list all connected and disconnected rport clients",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		params := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		params, err := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		if err != nil {
+			return err
+		}
 
 		rportAPI := buildRport(params)
 		cr := &output.ClientRenderer{
@@ -75,7 +81,10 @@ var clientCmd = &cobra.Command{
 			clientID = args[0]
 		}
 
-		params := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		params, err := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		if err != nil {
+			return err
+		}
 		rportAPI := buildRport(params)
 
 		cr := &output.ClientRenderer{
@@ -96,6 +105,7 @@ var clientCmd = &cobra.Command{
 }
 
 func addClientsPaginationFlags(cmd *cobra.Command) {
+	// TODO: why isn't this getting picked up
 	cmd.Flags().IntP(api.PaginationLimit, "", api.ClientsLimitDefault, "Number of clients to fetch")
 	cmd.Flags().IntP(api.PaginationOffset, "", 0, "Offset for clients fetch")
 }

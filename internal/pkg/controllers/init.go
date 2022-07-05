@@ -10,10 +10,16 @@ import (
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/breathbath/go_utils/v2/pkg/env"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/auth"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"github.com/pkg/errors"
+)
+
+var (
+	ErrNoPromptInUseWhenTwoFA = errors.New("2fa requested when using --no-prompt. Please retry without the --no-prompt option")
+	ErrNoPromptInUseWhenTotP  = errors.New("totP requested when using --no-prompt. Please retry without the --no-prompt option")
 )
 
 type ConfigWriter func(params *options.ParameterBag) (err error)
@@ -32,13 +38,12 @@ type InitController struct {
 }
 
 func (ic *InitController) InitConfig(ctx context.Context, params *options.ParameterBag) error {
-	login := params.ReadString(config.Login, "")
-	serverURL := params.ReadString(config.ServerURL, config.DefaultServerURL)
+	login := config.ReadAPIUser(params)
+	serverURL := config.ReadAPIURL(params)
 
 	apiAuth := &utils.StorageBasicAuth{
 		AuthProvider: func() (l, p string, err error) {
-			p = params.ReadString(config.Password, "")
-			return login, p, nil
+			return auth.GetUsernameAndPassword(params)
 		},
 	}
 
@@ -47,14 +52,18 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 	cl := api.New(serverURL, apiAuth)
 	loginResp, err := cl.GetToken(ctx, tokenValidity)
 	if err != nil {
-		return fmt.Errorf("config verification failed against the rport: %v", err)
+		return fmt.Errorf("config verification failed: %v", err)
 	}
 
 	if loginResp.Data.Token == "" {
 		return fmt.Errorf("no auth token received from rport")
 	}
 
+	noPrompt := params.ReadBool(config.NoPrompt, false)
 	if loginResp.Data.TwoFA.DeliveryMethod == "totp_authenticator_app" {
+		if noPrompt {
+			return ErrNoPromptInUseWhenTotP
+		}
 		cl := api.New(serverURL, &utils.BearerAuth{
 			TokenProvider: func() (string, error) {
 				return loginResp.Data.Token, nil
@@ -67,6 +76,10 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 	}
 
 	if loginResp.Data.TwoFA.SentTo != "" {
+		if noPrompt {
+			return ErrNoPromptInUseWhenTwoFA
+		}
+
 		cl := api.New(serverURL, &utils.BearerAuth{
 			TokenProvider: func() (string, error) {
 				return loginResp.Data.Token, nil
@@ -77,12 +90,13 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 			return fmt.Errorf("2 factor login to rport failed: %v", err)
 		}
 	}
+
 	if loginResp.Data.Token == "" {
 		return fmt.Errorf("no auth token received from rport")
 	}
 
 	valuesProvider := options.NewMapValuesProvider(map[string]interface{}{
-		config.ServerURL: params.ReadString(config.ServerURL, ""),
+		config.ServerURL: config.ReadAPIURLWithDefault(params, ""),
 		config.Token:     loginResp.Data.Token,
 	})
 

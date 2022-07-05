@@ -65,11 +65,18 @@ func TestLoadConfigFromFile(t *testing.T) {
 		}
 	}()
 
+	// required, otherwise an error will be returned by LoadParamsFromFileAndEnv
+	err = os.Setenv(APIURLEnvVar, "http://localhost:3000")
+	assert.NoError(t, err)
+	defer func() {
+		e := os.Unsetenv(APIURLEnvVar)
+		if e != nil {
+			logrus.Error(e)
+		}
+	}()
+
 	err = os.Setenv(PathForConfigEnvVar, "config.json")
 	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
 
 	defer func() {
 		e := os.Unsetenv(PathForConfigEnvVar)
@@ -78,7 +85,7 @@ func TestLoadConfigFromFile(t *testing.T) {
 		}
 	}()
 
-	cfg := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
+	cfg, err := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -127,15 +134,107 @@ func TestLoadConfigFromEnvOrFile(t *testing.T) {
 		}
 	}()
 
-	cfg := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
+	cfg, err := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
+	assert.NoError(t, err)
 
 	assert.Equal(t, "somepass", cfg.ReadString(Password, ""))
 	assert.Equal(t, "log1", cfg.ReadString(Login, ""))
+
 	assert.Equal(t, "https://10.10.10.11:3000", cfg.ReadString(ServerURL, ""))
+}
+
+func TestLoadEnvPreferredOverFile(t *testing.T) {
+	rawJSON := []byte(`{"server":"https://10.10.10.11:3000"}`)
+	filePath := "config123.json"
+
+	err := ioutil.WriteFile(filePath, rawJSON, 0600)
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+	defer func() {
+		e := os.Remove(filePath)
+		if e != nil {
+			logrus.Error(e)
+		}
+	}()
+
+	envs := map[string]string{
+		PathForConfigEnvVar: filePath,
+		ServerURLEnvVar:     "https://10.10.10.11:4000",
+	}
+
+	for k, v := range envs {
+		err = os.Setenv(k, v)
+		assert.NoError(t, err)
+		if err != nil {
+			return
+		}
+	}
+
+	defer func() {
+		for k := range envs {
+			e := os.Unsetenv(k)
+			if e != nil {
+				logrus.Error(e)
+			}
+		}
+	}()
+
+	cfg, err := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
+	assert.NoError(t, err)
+
+	assert.Equal(t, "https://10.10.10.11:4000", cfg.ReadString(ServerURL, ""))
 }
 
 func TestLoadConfigFromFileError(t *testing.T) {
 	err := os.Setenv(PathForConfigEnvVar, "configNotExisting.json")
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	// required, otherwise an error will be returned by LoadParamsFromFileAndEnv
+	err = os.Setenv(APIURLEnvVar, "http://localhost:3000")
+	assert.NoError(t, err)
+	defer func() {
+		e := os.Unsetenv(APIURLEnvVar)
+		if e != nil {
+			logrus.Error(e)
+		}
+	}()
+
+	defer func() {
+		e := os.Unsetenv(PathForConfigEnvVar)
+		if e != nil {
+			logrus.Error(e)
+		}
+	}()
+
+	params, err := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
+	assert.NoError(t, err)
+
+	assert.Equal(t, "", params.ReadString(Token, ""))
+}
+
+func TestLoadConfigErrorWhenNoAPIURL(t *testing.T) {
+	rawJSON := []byte(`{"token":"1234"}`)
+	filePath := "config1234.json"
+
+	err := ioutil.WriteFile(filePath, rawJSON, 0600)
+	assert.NoError(t, err)
+	if err != nil {
+		return
+	}
+
+	defer func() {
+		e := os.Remove(filePath)
+		if e != nil {
+			logrus.Error(e)
+		}
+	}()
+
+	err = os.Setenv(PathForConfigEnvVar, "config1234.json")
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -148,8 +247,8 @@ func TestLoadConfigFromFileError(t *testing.T) {
 		}
 	}()
 
-	params := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
-	assert.Equal(t, "", params.ReadString(Token, ""))
+	_, err = LoadParamsFromFileAndEnv(&pflag.FlagSet{})
+	assert.ErrorIs(t, err, ErrAPIURLRequired)
 }
 
 func TestWriteConfig(t *testing.T) {
