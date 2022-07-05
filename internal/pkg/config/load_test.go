@@ -18,23 +18,12 @@ import (
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestOSFileLocationFromEnv(t *testing.T) {
-	err := os.Setenv(PathForConfigEnvVar, "lala")
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
-
-	defer func() {
-		e := os.Unsetenv(PathForConfigEnvVar)
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
+	SetEnvVar(t, PathForConfigEnvVar, "lala")
+	defer ResetEnvVar(t, PathForConfigEnvVar)
 
 	assert.Equal(t, "lala", getConfigLocation())
 }
@@ -53,37 +42,16 @@ func TestLoadConfigFromFile(t *testing.T) {
 	if err != nil {
 		return
 	}
-	err = ioutil.WriteFile("config.json", rawJSON, 0600)
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
-	defer func() {
-		e := os.Remove("config.json")
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
+
+	WriteTestConfigFile(t, "config.json", rawJSON)
+	defer RemoveTestConfigFile(t, "config.json")
 
 	// required, otherwise an error will be returned by LoadParamsFromFileAndEnv
-	err = os.Setenv(APIURLEnvVar, "http://localhost:3000")
-	assert.NoError(t, err)
-	defer func() {
-		e := os.Unsetenv(APIURLEnvVar)
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
+	SetEnvVar(t, APIURLEnvVar, "http://localhost:3000")
+	defer ResetEnvVar(t, APIURLEnvVar)
 
-	err = os.Setenv(PathForConfigEnvVar, "config.json")
-	assert.NoError(t, err)
-
-	defer func() {
-		e := os.Unsetenv(PathForConfigEnvVar)
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
+	SetEnvVar(t, PathForConfigEnvVar, "config.json")
+	defer ResetEnvVar(t, PathForConfigEnvVar)
 
 	cfg, err := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
 	assert.NoError(t, err)
@@ -99,17 +67,8 @@ func TestLoadConfigFromEnvOrFile(t *testing.T) {
 	rawJSON := []byte(`{"server":"https://10.10.10.11:3000"}`)
 	filePath := "config123.json"
 
-	err := ioutil.WriteFile(filePath, rawJSON, 0600)
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
-	defer func() {
-		e := os.Remove(filePath)
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
+	WriteTestConfigFile(t, filePath, rawJSON)
+	defer RemoveTestConfigFile(t, filePath)
 
 	envs := map[string]string{
 		PathForConfigEnvVar: filePath,
@@ -118,19 +77,12 @@ func TestLoadConfigFromEnvOrFile(t *testing.T) {
 	}
 
 	for k, v := range envs {
-		err = os.Setenv(k, v)
-		assert.NoError(t, err)
-		if err != nil {
-			return
-		}
+		SetEnvVar(t, k, v)
 	}
 
 	defer func() {
 		for k := range envs {
-			e := os.Unsetenv(k)
-			if e != nil {
-				logrus.Error(e)
-			}
+			ResetEnvVar(t, k)
 		}
 	}()
 
@@ -147,17 +99,8 @@ func TestLoadEnvPreferredOverFile(t *testing.T) {
 	rawJSON := []byte(`{"server":"https://10.10.10.11:3000"}`)
 	filePath := "config123.json"
 
-	err := ioutil.WriteFile(filePath, rawJSON, 0600)
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
-	defer func() {
-		e := os.Remove(filePath)
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
+	WriteTestConfigFile(t, filePath, rawJSON)
+	defer RemoveTestConfigFile(t, filePath)
 
 	envs := map[string]string{
 		PathForConfigEnvVar: filePath,
@@ -165,19 +108,12 @@ func TestLoadEnvPreferredOverFile(t *testing.T) {
 	}
 
 	for k, v := range envs {
-		err = os.Setenv(k, v)
-		assert.NoError(t, err)
-		if err != nil {
-			return
-		}
+		SetEnvVar(t, k, v)
 	}
 
 	defer func() {
 		for k := range envs {
-			e := os.Unsetenv(k)
-			if e != nil {
-				logrus.Error(e)
-			}
+			ResetEnvVar(t, k)
 		}
 	}()
 
@@ -187,29 +123,13 @@ func TestLoadEnvPreferredOverFile(t *testing.T) {
 	assert.Equal(t, "https://10.10.10.11:4000", cfg.ReadString(ServerURL, ""))
 }
 
-func TestLoadConfigFromFileError(t *testing.T) {
-	err := os.Setenv(PathForConfigEnvVar, "configNotExisting.json")
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
-
+func TestNoErrorWhenMissingConfigFile(t *testing.T) {
 	// required, otherwise an error will be returned by LoadParamsFromFileAndEnv
-	err = os.Setenv(APIURLEnvVar, "http://localhost:3000")
-	assert.NoError(t, err)
-	defer func() {
-		e := os.Unsetenv(APIURLEnvVar)
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
+	SetEnvVar(t, APIURLEnvVar, "http://localhost:3000")
+	defer ResetEnvVar(t, APIURLEnvVar)
 
-	defer func() {
-		e := os.Unsetenv(PathForConfigEnvVar)
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
+	SetEnvVar(t, PathForConfigEnvVar, "configNotExisting.json")
+	defer ResetEnvVar(t, PathForConfigEnvVar)
 
 	params, err := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
 	assert.NoError(t, err)
@@ -221,42 +141,21 @@ func TestLoadConfigErrorWhenNoAPIURL(t *testing.T) {
 	rawJSON := []byte(`{"token":"1234"}`)
 	filePath := "config1234.json"
 
-	err := ioutil.WriteFile(filePath, rawJSON, 0600)
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
+	WriteTestConfigFile(t, filePath, rawJSON)
+	defer RemoveTestConfigFile(t, filePath)
 
-	defer func() {
-		e := os.Remove(filePath)
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
+	SetEnvVar(t, PathForConfigEnvVar, filePath)
+	defer ResetEnvVar(t, PathForConfigEnvVar)
 
-	err = os.Setenv(PathForConfigEnvVar, "config1234.json")
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
-
-	defer func() {
-		e := os.Unsetenv(PathForConfigEnvVar)
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
-
-	_, err = LoadParamsFromFileAndEnv(&pflag.FlagSet{})
+	_, err := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
 	assert.ErrorIs(t, err, ErrAPIURLRequired)
 }
 
 func TestWriteConfig(t *testing.T) {
-	err := os.Setenv(PathForConfigEnvVar, "configToCheckAfter.json")
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
+	filePath := "configToCheckAfter.json"
+
+	SetEnvVar(t, PathForConfigEnvVar, filePath)
+	defer ResetEnvVar(t, PathForConfigEnvVar)
 
 	params := &options.ParameterBag{
 		BaseValuesProvider: options.NewMapValuesProvider(map[string]interface{}{
@@ -264,33 +163,17 @@ func TestWriteConfig(t *testing.T) {
 			Token:     "123",
 		}),
 	}
+
+	defer RemoveTestConfigFile(t, filePath)
+
+	err := WriteConfig(params)
 	assert.NoError(t, err)
 	if err != nil {
 		return
 	}
 
-	defer func() {
-		e := os.Unsetenv(PathForConfigEnvVar)
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
-
-	err = WriteConfig(params)
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
-
-	defer func() {
-		e := os.Remove("configToCheckAfter.json")
-		if e != nil {
-			logrus.Error(e)
-		}
-	}()
-
-	assert.FileExists(t, "configToCheckAfter.json")
-	fileContents, err := ioutil.ReadFile("configToCheckAfter.json")
+	assert.FileExists(t, filePath)
+	fileContents, err := ioutil.ReadFile(filePath)
 	assert.NoError(t, err)
 
 	if err != nil {
@@ -452,4 +335,24 @@ func TestFlagValuesProvider(t *testing.T) {
 	err = flagValuesProv.Dump(buf)
 	require.NoError(t, err)
 	assert.Equal(t, `{"somekey":"someval"}`+"\n", buf.String())
+}
+
+func SetEnvVar(t *testing.T, envVar, value string) {
+	err := os.Setenv(envVar, value)
+	assert.NoError(t, err)
+}
+
+func ResetEnvVar(t *testing.T, envVar string) {
+	err := os.Unsetenv(envVar)
+	assert.NoError(t, err)
+}
+
+func WriteTestConfigFile(t *testing.T, filePath string, rawJSON []byte) {
+	err := ioutil.WriteFile(filePath, rawJSON, 0600)
+	assert.NoError(t, err)
+}
+
+func RemoveTestConfigFile(t *testing.T, filePath string) {
+	err := os.Remove(filePath)
+	assert.NoError(t, err)
 }
