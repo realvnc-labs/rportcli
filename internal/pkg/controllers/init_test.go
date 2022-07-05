@@ -262,7 +262,7 @@ func TestInit2FAFailNoPrompt(t *testing.T) {
 		}
 
 		if strings.HasPrefix(curURL, "/api/v1/login") {
-			assertBasicLoginPass(t, "log1", "pass1", r)
+			assertBasicLoginPass(t, "log2", "pass2", r)
 
 			rw.WriteHeader(http.StatusOK)
 			jsonEnc := json.NewEncoder(rw)
@@ -271,7 +271,7 @@ func TestInit2FAFailNoPrompt(t *testing.T) {
 			return
 		}
 
-		assertTwoFaLoginFromRequest(t, r, "log1", "someCode")
+		assertTwoFaLoginFromRequest(t, r, "log2", "someCode")
 		assert.Equal(t, http.MethodPost, r.Method)
 		assert.Equal(t, "Bearer "+validLoginTokenWith2FaWithTotPSecret, r.Header.Get("Authorization"))
 
@@ -299,8 +299,8 @@ func TestInit2FAFailNoPrompt(t *testing.T) {
 
 	params := config.FromValues(map[string]string{
 		config.APIURL:      srv.URL,
-		config.APIUser:     "log1",
-		config.APIPassword: "pass1",
+		config.APIUser:     "log2",
+		config.APIPassword: "pass2",
 		config.NoPrompt:    "true",
 	})
 	err := tController.InitConfig(context.Background(), params)
