@@ -1,19 +1,9 @@
 package cmd
 
 import (
-	"bufio"
-	"context"
-	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
-
-	"github.com/breathbath/go_utils/v2/pkg/env"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
-
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/auth"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/controllers"
 
@@ -43,52 +33,23 @@ var executeScript = &cobra.Command{
 	Short: "executes a remote script on rport client(s)",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-		promptReader := &utils.PromptReader{
-			Sc:              bufio.NewScanner(os.Stdin),
-			SigChan:         sigs,
-			PasswordScanner: utils.ReadPassword,
-		}
+		ctx, cancel, sigs := makeRunContext()
+		defer cancel()
 
-		params, err := config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, getScriptRequirements(), promptReader)
+		params, err := loadParams(cmd, sigs, getScriptRequirements())
 		if err != nil {
 			return err
 		}
 
-		baseRportURL := config.ReadAPIURL(params)
-		tokenValidity := env.ReadEnvInt(config.SessionValiditySecondsEnvVar, api.DefaultTokenValiditySeconds)
-		wsURLBuilder := &api.WsScriptsURLProvider{
-			WsURLProvider: &api.WsURLProvider{
-				BaseURL: baseRportURL,
-				TokenProvider: func() (token string, err error) {
-					return auth.GetToken(params)
-				},
-				TokenValiditySeconds: tokenValidity,
-			},
-		}
-
-		ctx, cancel := buildContext(context.Background())
-		defer cancel()
-
-		wsClient, err := utils.NewWsClient(ctx, wsURLBuilder.BuildWsURL)
+		wsClient, err := newWsClient(ctx, makeWsScriptsURLProvider(params))
 		if err != nil {
 			return err
 		}
 
 		rportAPI := buildRport(params)
 
-		isFullJobOutput := params.ReadBool(controllers.IsFullOutput, false)
 		cmdExecutor := &controllers.ScriptsController{
-			ExecutionHelper: &controllers.ExecutionHelper{
-				ReadWriter: wsClient,
-				JobRenderer: &output.JobRenderer{
-					Writer:       os.Stdout,
-					Format:       getOutputFormat(),
-					IsFullOutput: isFullJobOutput,
-				},
-				Rport: rportAPI,
-			},
+			ExecutionHelper: newExecutionHelper(params, wsClient, rportAPI),
 		}
 
 		err = cmdExecutor.Start(ctx, params)
@@ -97,9 +58,19 @@ var executeScript = &cobra.Command{
 	},
 }
 
+func makeWsScriptsURLProvider(params *options.ParameterBag) (wsURLBuilder utils.WsURLBuilder) {
+	baseRportURL := config.ReadAPIURL(params)
+	urlProvider := &api.WsScriptsURLProvider{
+		WsURLProvider: newWsURLProvider(params, baseRportURL),
+	}
+
+	return urlProvider.BuildWsURL
+}
+
 func getScriptRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
 		config.GetNoPromptFlagSpec(),
+		config.GetReadYAMLFlagSpec(),
 		{
 			Field:    controllers.ClientIDs,
 			Help:     "Enter comma separated client IDs",
