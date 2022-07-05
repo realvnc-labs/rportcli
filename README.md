@@ -118,7 +118,7 @@ This method for authentication is useful when not using an API token but 2fa is 
 will download an authentication token that will be cached in the config.json until expires. With a valid token
 the user does not need to reauthenticate each use of the cli.
 
-Rportcli looks for the config file at $HOME/.config/rportcli/config.json (for Linux and MacOS) or C:\Users\<CurrentUserName>\.config\rportcli\config.json (for Windows).
+Rportcli looks for the config file at \$HOME/.config/rportcli/config.json (for Linux and MacOS) or C:\Users\<CurrentUserName>\.config\rportcli\config.json (for Windows).
 If current user has no home folder, RportCli will look for a config file next to the current binary location.
 
 You can override config path by providing env variable CONFIG_PATH, e.g.
@@ -208,7 +208,7 @@ You can also display help for a certain command:
     <tr>
     <td>RPORT_API_URL</td>
     <td>Address of rport server</td>
-    <td>http://localhost:3000</td>
+    <td></td>
     <td>RPORT_API_URL=http://localhost:3000 rportcli client list</td>
     </tr>
     <tr>

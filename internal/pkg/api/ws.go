@@ -27,7 +27,7 @@ func (wup *WsURLProvider) buildWsFullURL(uriPath string) (wsURL string, err erro
 	}
 
 	if token == "" {
-		err = fmt.Errorf("no auth data stored to use this command, please call init to login")
+		err = fmt.Errorf("no auth data stored to use this command, please authenticate with the server. see \"rport_cli --help\" for more info")
 		return
 	}
 

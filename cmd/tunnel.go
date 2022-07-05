@@ -50,7 +50,10 @@ var tunnelListCmd = &cobra.Command{
 	Short: "list all active tunnels created with rport",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		params := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		params, err := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		if err != nil {
+			return err
+		}
 
 		rportAPI := buildRport(params)
 
@@ -153,6 +156,7 @@ func isRemoteEnabled(providedParams *options.ParameterBag) bool {
 
 func getCreateTunnelRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
+		config.GetNoPromptFlagSpec(),
 		{
 			Field:       controllers.ClientID,
 			Description: "[conditionally required] client id, if not provided, client name should be given",

@@ -54,7 +54,11 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 		return fmt.Errorf("no auth token received from rport")
 	}
 
+	noPrompt := params.ReadBool(config.NoPrompt, false)
 	if loginResp.Data.TwoFA.DeliveryMethod == "totp_authenticator_app" {
+		if noPrompt {
+			return errors.New("totP requested when using --no-prompt. Please retry without the --no-prompt option")
+		}
 		cl := api.New(serverURL, &utils.BearerAuth{
 			TokenProvider: func() (string, error) {
 				return loginResp.Data.Token, nil
@@ -67,6 +71,10 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 	}
 
 	if loginResp.Data.TwoFA.SentTo != "" {
+		if noPrompt {
+			return errors.New("2fa requested when using --no-prompt. Please retry without the --no-prompt option")
+		}
+
 		cl := api.New(serverURL, &utils.BearerAuth{
 			TokenProvider: func() (string, error) {
 				return loginResp.Data.Token, nil
@@ -77,6 +85,7 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 			return fmt.Errorf("2 factor login to rport failed: %v", err)
 		}
 	}
+
 	if loginResp.Data.Token == "" {
 		return fmt.Errorf("no auth token received from rport")
 	}

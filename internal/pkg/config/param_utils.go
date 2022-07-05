@@ -32,3 +32,14 @@ func ReadAPIURLWithDefault(params *options.ParameterBag, defaultURL string) (url
 	}
 	return url
 }
+
+func GetNoPromptFlagSpec() (flagSpec ParameterRequirement) {
+	return ParameterRequirement{
+		Field:       NoPrompt,
+		Help:        "Flag to disable prompting when missing values",
+		Description: "Never prompt when missing parameters",
+		ShortName:   "q",
+		Type:        BoolRequirementType,
+		Default:     false,
+	}
+}

@@ -40,7 +40,10 @@ var clientsListCmd = &cobra.Command{
 	Short: "list all connected and disconnected rport clients",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		params := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		params, err := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		if err != nil {
+			return err
+		}
 
 		rportAPI := buildRport(params)
 		cr := &output.ClientRenderer{
@@ -78,7 +81,10 @@ var clientCmd = &cobra.Command{
 			clientID = args[0]
 		}
 
-		params := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		params, err := config.LoadParamsFromFileAndEnv(cmd.Flags())
+		if err != nil {
+			return err
+		}
 		rportAPI := buildRport(params)
 
 		cr := &output.ClientRenderer{

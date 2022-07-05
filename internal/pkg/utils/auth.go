@@ -26,7 +26,7 @@ func (sba *StorageBasicAuth) AuthRequest(req *http.Request) error {
 		return err
 	}
 	if login == "" || pass == "" {
-		return fmt.Errorf("no login or password value provided")
+		return fmt.Errorf("login and/or password missing")
 	}
 
 	basicAuthHeader := http2.BuildBasicAuthString(login, pass)

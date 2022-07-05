@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -29,14 +30,15 @@ const (
 	Login            = "login"
 	Token            = "token"
 	Password         = "password"
-	DefaultServerURL = "http://localhost:3000"
+	DefaultServerURL = ""
 	APIURL           = "api_url"
 	APIUser          = "api_user"
 	APIPassword      = "api_password"
 	APIToken         = "api_token"
+	NoPrompt         = "no-prompt"
 )
 
-func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBag) {
+func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBag, err error) {
 	var valuesProvider *options.ValuesProviderComposite
 
 	envValuesProvider := CreateEnvValuesProvider()
@@ -57,9 +59,12 @@ func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBa
 
 	paramsToReturn := options.New(valuesProvider)
 
-	WarnIfLegacyConfig(paramsToReturn)
+	if err := CheckIfMissingAPIURL(paramsToReturn); err != nil {
+		return paramsToReturn, err
+	}
+	WarnIfLegacyConfig()
 
-	return paramsToReturn
+	return paramsToReturn, nil
 }
 
 type FlagValuesProvider struct {
@@ -100,7 +105,7 @@ func CreateEnvValuesProvider() options.ValuesProvider {
 		Login:               LoginEnvVar,
 		ServerURL:           ServerURLEnvVar,
 		PathForConfigEnvVar: PathForConfigEnvVar,
-		APIURL:              APIServerURLEnvVar,
+		APIURL:              APIURLEnvVar,
 		APIUser:             APIUserEnvVar,
 		APIPassword:         APIPasswordEnvVar,
 		APIToken:            APITokenEnvVar,
@@ -263,6 +268,12 @@ func LoadParamsFromFileAndEnvAndFlagsAndPrompt(
 
 	mergedValuesProvider := options.NewValuesProviderComposite(valueProviders...)
 	paramsToReturn := options.New(mergedValuesProvider)
+
+	if err := CheckIfMissingAPIURL(paramsToReturn); err != nil {
+		return paramsToReturn, err
+	}
+	WarnIfLegacyConfig()
+
 	return paramsToReturn, nil
 }
 
@@ -314,18 +325,23 @@ func CollectParamsFromCommandAndPromptAndEnv(
 		}
 	}
 
-	valuesProviderFromFlags := options.NewMapValuesProvider(paramsRaw)
+	valuesProvider := options.NewMapValuesProvider(paramsRaw)
+	paramsSoFar := options.New(valuesProvider)
 
-	paramsFromFlags := options.New(valuesProviderFromFlags)
+	// if the no-prompt cli flag is set, then do not prompt for missing values
+	noPrompt := paramsSoFar.ReadBool(NoPrompt, false)
+	if noPrompt {
+		return valuesProvider, nil
+	}
 
-	missedRequirements := CheckRequirements(paramsFromFlags, reqs)
+	missedRequirements := CheckRequirements(paramsSoFar, reqs)
 	if len(missedRequirements) == 0 {
-		return valuesProviderFromFlags, nil
+		return valuesProvider, nil
 	}
 
 	err = PromptRequiredValues(missedRequirements, paramsRaw, promptReader)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	return options.NewMapValuesProvider(paramsRaw), nil
@@ -336,11 +352,19 @@ func HasAPIToken() (hasAPIToken bool) {
 	return apiToken != ""
 }
 
-func WarnIfLegacyConfig(params *options.ParameterBag) {
+func WarnIfLegacyConfig() {
 	login := os.Getenv(LoginEnvVar)
 	pass := os.Getenv(PasswordEnvVar)
 	serverURL := os.Getenv(ServerURLEnvVar)
 	if login != "" || pass != "" || (serverURL != "") {
 		logrus.Warn("use of RPORT_USER, RPORT_PASSWORD and RPORT_SERVER_URL will be removed in a future release. Please use RPORT_API_USER, RPORT_API_PASSWORD and RPORT_API_URL instead")
 	}
+}
+
+func CheckIfMissingAPIURL(params *options.ParameterBag) (err error) {
+	APIURL := ReadAPIURL(params)
+	if APIURL == "" {
+		return errors.New("please set the server URL, either via RPORT_API_URL or the command line flags (if option available)")
+	}
+	return nil
 }

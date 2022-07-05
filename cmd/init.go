@@ -50,7 +50,10 @@ If 2fa is enabled then init will take the user through the 2fa flow and save the
 }
 
 func manageLogout(ctx context.Context, cmd *cobra.Command) error {
-	params := config.LoadParamsFromFileAndEnv(cmd.Flags())
+	params, err := config.LoadParamsFromFileAndEnv(cmd.Flags())
+	if err != nil {
+		return err
+	}
 
 	rportAPI := buildRport(params)
 
@@ -66,7 +69,7 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 	// when the RPORT_API_TOKEN env var is set, we shouldn't allow use of the init command
 	hasAPIToken := config.HasAPIToken()
 	if hasAPIToken {
-		return errors.New("cannot init config when the RPORT_API_TOKEN is set. Please unset RPORT_API_TOKEN and use RPORT_API_USER and RPORT_API_PASSWORD instead")
+		return errors.New("cannot init config when the RPORT_API_TOKEN is set. If you do not wish to use the API token, please unset RPORT_API_TOKEN and use RPORT_API_USER and RPORT_API_PASSWORD instead")
 	}
 
 	promptReader := &utils.PromptReader{
@@ -96,12 +99,15 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 
 func getInitRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
+		config.GetNoPromptFlagSpec(),
 		{
 			Field:       config.APIURL,
 			Help:        "Enter Server Url",
 			Validate:    config.RequiredValidate,
 			Description: "Server address of rport to connect to",
 			ShortName:   "s",
+			Default:     "",
+			Type:        config.StringRequirementType,
 		},
 		{
 			Field:       config.APIUser,

@@ -99,6 +99,7 @@ var executeScript = &cobra.Command{
 
 func getScriptRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
+		config.GetNoPromptFlagSpec(),
 		{
 			Field:    controllers.ClientIDs,
 			Help:     "Enter comma separated client IDs",
