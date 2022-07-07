@@ -73,8 +73,8 @@ func (tc *TunnelController) Tunnels(ctx context.Context, params *options.Paramet
 		api.NewPaginationFromParams(params),
 		api.NewFilters(
 			"id", params.ReadString(ClientID, ""),
-			"name", params.ReadString(ClientNameFlag, ""),
-			"*", params.ReadString(SearchFlag, ""),
+			"name", params.ReadString(config.ClientNameFlag, ""),
+			"*", params.ReadString(config.ClientSearchFlag, ""),
 		),
 	)
 	if err != nil {
@@ -122,7 +122,7 @@ func (tc *TunnelController) getClientIDAndClientName(
 	params *options.ParameterBag,
 ) (clientID, clientName string, err error) {
 	clientID = params.ReadString(ClientID, "")
-	clientName = params.ReadString(ClientNameFlag, "")
+	clientName = params.ReadString(config.ClientNameFlag, "")
 	if clientID == "" && clientName == "" {
 		err = errors.New("no client id nor name provided")
 		return

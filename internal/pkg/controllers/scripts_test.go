@@ -42,7 +42,7 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 				IsSudo:              false,
 				ExecuteConcurrently: false,
 				AbortOnError:        false,
-				TimeoutSec:          DefaultCmdTimeoutSeconds,
+				TimeoutSec:          config.DefaultCmdTimeoutSeconds,
 				Command:             "",
 				Script:              scriptToExecuteBase64,
 				Cwd:                 "/home",
@@ -55,7 +55,7 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 			shouldCreateScript: true,
 			commandToExpect: &models.WsScriptCommand{
 				ClientIDs:   []string{"2223"},
-				TimeoutSec:  DefaultCmdTimeoutSeconds,
+				TimeoutSec:  config.DefaultCmdTimeoutSeconds,
 				Script:      scriptToExecuteBase64,
 				Cwd:         "/home2",
 				Interpreter: "cmd",
@@ -67,7 +67,7 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 			shouldCreateScript: true,
 			commandToExpect: &models.WsScriptCommand{
 				ClientIDs:   []string{"2224"},
-				TimeoutSec:  DefaultCmdTimeoutSeconds,
+				TimeoutSec:  config.DefaultCmdTimeoutSeconds,
 				Script:      scriptToExecuteBase64,
 				Cwd:         "/home3",
 				Interpreter: "powershell",
@@ -80,7 +80,7 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 			shouldCreateScript: true,
 			commandToExpect: &models.WsScriptCommand{
 				ClientIDs:   []string{"2225"},
-				TimeoutSec:  DefaultCmdTimeoutSeconds,
+				TimeoutSec:  config.DefaultCmdTimeoutSeconds,
 				Script:      scriptToExecuteBase64,
 				Cwd:         "/home4",
 				Interpreter: "",
@@ -93,7 +93,7 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 			shouldCreateScript: true,
 			commandToExpect: &models.WsScriptCommand{
 				ClientIDs:   []string{"2226"},
-				TimeoutSec:  DefaultCmdTimeoutSeconds,
+				TimeoutSec:  config.DefaultCmdTimeoutSeconds,
 				Script:      scriptToExecuteBase64,
 				Cwd:         "/home6",
 				Interpreter: "",
@@ -139,13 +139,13 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 			}
 
 			params := map[string]string{
-				Interpreter: tc.interpreterToGive,
-				Script:      scriptPath,
+				config.Interpreter: tc.interpreterToGive,
+				config.Script:      scriptPath,
 			}
 
 			if tc.commandToExpect != nil {
-				params[ClientIDs] = strings.Join(tc.commandToExpect.ClientIDs, ",")
-				params[Cwd] = tc.commandToExpect.Cwd
+				params[config.ClientIDs] = strings.Join(tc.commandToExpect.ClientIDs, ",")
+				params[config.Cwd] = tc.commandToExpect.Cwd
 			}
 
 			paramsContainer := config.FromValues(params)

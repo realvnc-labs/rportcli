@@ -23,7 +23,7 @@ import (
 func init() {
 	addClientsPaginationFlags(tunnelListCmd)
 	addClientsSearchFlag(tunnelListCmd)
-	tunnelListCmd.Flags().StringP(controllers.ClientNameFlag, "n", "", "Get tunnels of a client by name")
+	tunnelListCmd.Flags().StringP(config.ClientNameFlag, "n", "", "Get tunnels of a client by name")
 	tunnelListCmd.Flags().StringP(controllers.ClientID, "c", "", "Get tunnels of a client by client id")
 	tunnelsCmd.AddCommand(tunnelListCmd)
 
@@ -164,12 +164,12 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 			ShortName:   "c",
 			IsRequired:  true,
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
-				return providedParams.ReadString(controllers.ClientNameFlag, "") == ""
+				return providedParams.ReadString(config.ClientNameFlag, "") == ""
 			},
 			Help: "Enter a client ID",
 		},
 		{
-			Field:       controllers.ClientNameFlag,
+			Field:       config.ClientNameFlag,
 			Description: `client name, if no client id is provided`,
 			ShortName:   "n",
 		},
@@ -266,12 +266,12 @@ func getDeleteTunnelRequirements() []config.ParameterRequirement {
 			ShortName:   "c",
 			IsRequired:  true,
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
-				return providedParams.ReadString(controllers.ClientNameFlag, "") == ""
+				return providedParams.ReadString(config.ClientNameFlag, "") == ""
 			},
 			Help: "Enter a client id",
 		},
 		{
-			Field:       controllers.ClientNameFlag,
+			Field:       config.ClientNameFlag,
 			Description: `client name, if no client id is provided`,
 			ShortName:   "n",
 		},

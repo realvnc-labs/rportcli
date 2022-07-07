@@ -20,7 +20,7 @@ func init() {
 	addClientsPaginationFlags(clientsListCmd)
 	addClientsSearchFlag(clientsListCmd)
 	clientsCmd.AddCommand(clientsListCmd)
-	clientCmd.Flags().StringP(controllers.ClientNameFlag, "n", "", "Get client by name")
+	clientCmd.Flags().StringP(config.ClientNameFlag, "n", "", "Get client by name")
 	clientCmd.Flags().BoolP("all", "a", false, "Show client info with additional details")
 	clientsCmd.AddCommand(clientCmd)
 	rootCmd.AddCommand(clientsCmd)
@@ -72,7 +72,7 @@ var clientCmd = &cobra.Command{
 		var clientName string
 		var clientID string
 		if len(args) == 0 {
-			cn, err := cmd.Flags().GetString(controllers.ClientNameFlag)
+			cn, err := cmd.Flags().GetString(config.ClientNameFlag)
 			if err != nil {
 				return err
 			}

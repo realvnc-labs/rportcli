@@ -65,7 +65,7 @@ func newWsClient(ctx context.Context, urlBuilder utils.WsURLBuilder) (wsc *utils
 func newExecutionHelper(params *options.ParameterBag,
 	wsc *utils.WsClient,
 	rportAPI *api.Rport) (helper *controllers.ExecutionHelper) {
-	isFullJobOutput := params.ReadBool(controllers.IsFullOutput, false)
+	isFullJobOutput := params.ReadBool(config.IsFullOutput, false)
 	helper = &controllers.ExecutionHelper{
 		ReadWriter: wsc,
 		JobRenderer: &output.JobRenderer{

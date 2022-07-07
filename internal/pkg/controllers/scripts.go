@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 )
 
 var fileExtInterpreterMap = map[string]string{
@@ -21,7 +22,7 @@ type ScriptsController struct {
 }
 
 func (cc *ScriptsController) Start(ctx context.Context, params *options.ParameterBag) error {
-	scriptsFilePath, err := params.ReadRequiredString(Script)
+	scriptsFilePath, err := params.ReadRequiredString(config.Script)
 	if err != nil {
 		return err
 	}
@@ -46,7 +47,7 @@ func (cc *ScriptsController) Start(ctx context.Context, params *options.Paramete
 
 	scriptContentBase64 := base64.StdEncoding.EncodeToString(scriptContent)
 
-	interpreter := cc.resolveInterpreterByFileName(scriptsFilePath, params.ReadString(Interpreter, ""))
+	interpreter := cc.resolveInterpreterByFileName(scriptsFilePath, params.ReadString(config.Interpreter, ""))
 
 	return cc.execute(ctx, params, scriptContentBase64, interpreter)
 }
