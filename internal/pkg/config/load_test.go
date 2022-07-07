@@ -1,22 +1,14 @@
 package config
 
 import (
-	"bytes"
 	"encoding/json"
-	"io"
-	"io/ioutil"
-	"os"
 	"testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/spf13/pflag"
 
-	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/spf13/cobra"
-
-	options "github.com/breathbath/go_utils/v2/pkg/config"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -76,15 +68,8 @@ func TestLoadConfigFromEnvOrFile(t *testing.T) {
 		LoginEnvVar:         "log1",
 	}
 
-	for k, v := range envs {
-		SetEnvVar(t, k, v)
-	}
-
-	defer func() {
-		for k := range envs {
-			ResetEnvVar(t, k)
-		}
-	}()
+	SetEnvSet(t, envs)
+	defer ResetEnvSet(t, envs)
 
 	cfg, err := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
 	assert.NoError(t, err)
@@ -107,15 +92,8 @@ func TestLoadEnvPreferredOverFile(t *testing.T) {
 		ServerURLEnvVar:     "https://10.10.10.11:4000",
 	}
 
-	for k, v := range envs {
-		SetEnvVar(t, k, v)
-	}
-
-	defer func() {
-		for k := range envs {
-			ResetEnvVar(t, k)
-		}
-	}()
+	SetEnvSet(t, envs)
+	defer ResetEnvSet(t, envs)
 
 	cfg, err := LoadParamsFromFileAndEnv(&pflag.FlagSet{})
 	assert.NoError(t, err)
@@ -151,93 +129,6 @@ func TestLoadConfigErrorWhenNoAPIURL(t *testing.T) {
 	assert.ErrorIs(t, err, ErrAPIURLRequired)
 }
 
-func TestWriteConfig(t *testing.T) {
-	filePath := "configToCheckAfter.json"
-
-	SetEnvVar(t, PathForConfigEnvVar, filePath)
-	defer ResetEnvVar(t, PathForConfigEnvVar)
-
-	params := &options.ParameterBag{
-		BaseValuesProvider: options.NewMapValuesProvider(map[string]interface{}{
-			ServerURL: "http://localhost:3000",
-			Token:     "123",
-		}),
-	}
-
-	defer RemoveTestConfigFile(t, filePath)
-
-	err := WriteConfig(params)
-	assert.NoError(t, err)
-	if err != nil {
-		return
-	}
-
-	assert.FileExists(t, filePath)
-	fileContents, err := ioutil.ReadFile(filePath)
-	assert.NoError(t, err)
-
-	if err != nil {
-		return
-	}
-	assert.Equal(t, `{"server":"http://localhost:3000","token":"123"}`+"\n", string(fileContents))
-}
-
-func TestCommandPopulation(t *testing.T) {
-	reqs := []ParameterRequirement{
-		{
-			Field:       "color",
-			ShortName:   "c",
-			Help:        "shows color",
-			Default:     "red",
-			Description: "shows color me",
-			IsSecure:    false,
-			IsRequired:  false,
-			Type:        StringRequirementType,
-		},
-		{
-			Field:       "verbose",
-			ShortName:   "v",
-			Help:        "shows verbose output",
-			Default:     "1",
-			Description: "shows verbose output",
-			IsSecure:    false,
-			IsRequired:  false,
-			Type:        BoolRequirementType,
-		},
-	}
-
-	cmd := &cobra.Command{}
-	DefineCommandInputs(cmd, reqs)
-
-	_, err1 := cmd.Flags().GetBool("verbose")
-	assert.NoError(t, err1)
-
-	_, err2 := cmd.Flags().GetString("color")
-	assert.NoError(t, err2)
-}
-
-type ValueProviderMock struct {
-	mock.Mock
-}
-
-func (vpm *ValueProviderMock) Read(name string) (val interface{}, found bool) {
-	args := vpm.Called(name)
-
-	return args.Get(0), args.Bool(1)
-}
-
-func (vpm *ValueProviderMock) Dump(w io.Writer) (err error) {
-	args := vpm.Called(w)
-
-	return args.Error(0)
-}
-
-func (vpm *ValueProviderMock) ToKeyValues() map[string]interface{} {
-	args := vpm.Called()
-
-	return args.Get(0).(map[string]interface{})
-}
-
 func TestCollectParams(t *testing.T) {
 	prm := &PromptReaderMock{
 		Inputs: []string{},
@@ -254,7 +145,7 @@ func TestCollectParams(t *testing.T) {
 			Field:      "host",
 			ShortName:  "h",
 			IsSecure:   false,
-			IsRequired: true,
+			IsRequired: false, // covered by separate test
 			Type:       StringRequirementType,
 			Validate:   RequiredValidate,
 		},
@@ -272,7 +163,7 @@ func TestCollectParams(t *testing.T) {
 			ShortName:  "p",
 			Help:       "provides password",
 			IsSecure:   true,
-			IsRequired: true,
+			IsRequired: false, // covered by separate test
 			Type:       StringRequirementType,
 			Validate:   RequiredValidate,
 		},
@@ -288,11 +179,15 @@ func TestCollectParams(t *testing.T) {
 	cmd := &cobra.Command{}
 	DefineCommandInputs(cmd, reqs)
 
-	vp := new(ValueProviderMock)
-	vp.On("Read", "token").Return("tokVal", true)
-	vp.On("Read", mock.Anything).Return("", false)
+	fl := cmd.Flags()
+	fp := &FlagValuesProvider{
+		flags: fl,
+	}
 
-	params, err := CollectParamsFromCommandAndPromptAndEnv(cmd, reqs, prm, vp)
+	err := SetCLIFlagString(t, fl, "token", "tokVal")
+	require.NoError(t, err)
+
+	params, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, prm)
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -311,48 +206,219 @@ func TestCollectParams(t *testing.T) {
 	assert.Equal(t, "tokVal", actualToken)
 }
 
-func TestFlagValuesProvider(t *testing.T) {
-	fl := &pflag.FlagSet{}
-	fl.StringP("somekey", "s", "test-default", "")
+func TestErrOnMultipleTargetingOptions(t *testing.T) {
+	cases := []struct {
+		Name            string
+		CIDValue        string
+		GIDValue        string
+		ClientNameValue string
+		ShouldErr       bool
+		ErrValue        error
+	}{
+		{
+			Name:            "CIDs Only",
+			CIDValue:        "1234",
+			GIDValue:        "",
+			ClientNameValue: "",
+			ShouldErr:       false,
+			ErrValue:        nil,
+		},
+		{
+			Name:            "GIDs Only",
+			CIDValue:        "",
+			GIDValue:        "1234",
+			ClientNameValue: "",
+			ShouldErr:       false,
+			ErrValue:        nil,
+		},
+		{
+			Name:            "Name Only",
+			CIDValue:        "",
+			GIDValue:        "",
+			ClientNameValue: "Name",
+			ShouldErr:       false,
+			ErrValue:        nil,
+		},
+		{
+			Name:            "Error on CIDs and GIDs",
+			CIDValue:        "1234",
+			GIDValue:        "4567",
+			ClientNameValue: "",
+			ShouldErr:       true,
+			ErrValue:        ErrMultipleTargetingOptions,
+		},
+		{
+			Name:            "Error on CIDs and Name",
+			CIDValue:        "1234",
+			GIDValue:        "",
+			ClientNameValue: "4567",
+			ShouldErr:       true,
+			ErrValue:        ErrMultipleTargetingOptions,
+		},
+		{
+			Name:            "Error on GIDs and Name",
+			CIDValue:        "",
+			GIDValue:        "1234",
+			ClientNameValue: "4567",
+			ShouldErr:       true,
+			ErrValue:        ErrMultipleTargetingOptions,
+		},
+		{
+			Name:            "Error on All Set",
+			CIDValue:        "1234",
+			GIDValue:        "4567",
+			ClientNameValue: "4321",
+			ShouldErr:       true,
+			ErrValue:        ErrMultipleTargetingOptions,
+		},
+	}
 
-	flagValuesProv := CreateFlagValuesProvider(fl)
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			prm := &PromptReaderMock{
+				Inputs: []string{},
+				ReadOutputs: []string{
+					"127.1.1.1",
+				},
+				PasswordReadOutputs: []string{
+					"123",
+				},
+			}
 
-	val, found := flagValuesProv.Read("somekey")
-	assert.True(t, found)
-	assert.Equal(t, "test-default", val)
+			cmd := &cobra.Command{}
+			reqs := getMultipleTargetFlagSpecs()
+			DefineCommandInputs(cmd, reqs)
 
-	err := fl.Parse([]string{"--somekey", "someval"})
-	require.NoError(t, err)
+			fl := cmd.Flags()
+			fp := &FlagValuesProvider{
+				flags: fl,
+			}
 
-	val2, found2 := flagValuesProv.Read("somekey")
-	assert.True(t, found2)
-	assert.Equal(t, "someval", val2)
+			if tc.CIDValue != "" {
+				err := SetCLIFlagString(t, fl, ClientIDs, tc.CIDValue)
+				require.NoError(t, err)
+			}
 
-	actualKeyValues := flagValuesProv.ToKeyValues()
-	assert.Equal(t, map[string]interface{}{"somekey": "someval"}, actualKeyValues)
+			if tc.GIDValue != "" {
+				err := SetCLIFlagString(t, fl, GroupIDs, tc.GIDValue)
+				require.NoError(t, err)
+			}
 
-	buf := &bytes.Buffer{}
-	err = flagValuesProv.Dump(buf)
-	require.NoError(t, err)
-	assert.Equal(t, `{"somekey":"someval"}`+"\n", buf.String())
+			if tc.ClientNameValue != "" {
+				err := SetCLIFlagString(t, fl, ClientNameFlag, tc.ClientNameValue)
+				require.NoError(t, err)
+			}
+
+			_, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, prm)
+			if tc.ShouldErr {
+				assert.ErrorIs(t, err, ErrMultipleTargetingOptions)
+			} else {
+				assert.NoError(t, err)
+			}
+			if err != nil {
+				return
+			}
+		})
+	}
 }
 
-func SetEnvVar(t *testing.T, envVar, value string) {
-	err := os.Setenv(envVar, value)
-	assert.NoError(t, err)
+func TestCheckRequiredParams(t *testing.T) {
+	cases := []struct {
+		Name          string
+		IncludeParams []string
+		ShouldErr     bool
+		ErrText       string
+	}{
+		{
+			Name:          "Missing Mandatory Params",
+			IncludeParams: []string{},
+			ShouldErr:     true,
+			ErrText:       "missing",
+		},
+		{
+			Name:          "Include Some Mandatory Params",
+			IncludeParams: []string{"--cids"},
+			ShouldErr:     true,
+			ErrText:       "missing",
+		},
+		{
+			Name:          "Include All Mandatory Params",
+			IncludeParams: []string{"--cids", "--command"},
+			ShouldErr:     false,
+			ErrText:       "",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			prm := &PromptReaderMock{
+				Inputs: []string{},
+				ReadOutputs: []string{
+					"127.1.1.1",
+				},
+				PasswordReadOutputs: []string{
+					"123",
+				},
+			}
+
+			cmd := &cobra.Command{}
+			reqs := GetCommandFlagSpecs()
+			DefineCommandInputs(cmd, reqs)
+
+			fl := cmd.Flags()
+			fp := &FlagValuesProvider{
+				flags: fl,
+			}
+
+			if len(tc.IncludeParams) > 0 {
+				for _, p := range tc.IncludeParams {
+					err := fl.Parse([]string{p, "1234"})
+					require.NoError(t, err)
+				}
+			}
+
+			_, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, prm)
+			if tc.ShouldErr {
+				assert.NotNil(t, err)
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.ErrText)
+			} else {
+				assert.NoError(t, err)
+			}
+			if err != nil {
+				return
+			}
+		})
+	}
 }
 
-func ResetEnvVar(t *testing.T, envVar string) {
-	err := os.Unsetenv(envVar)
-	assert.NoError(t, err)
-}
-
-func WriteTestConfigFile(t *testing.T, filePath string, rawJSON []byte) {
-	err := ioutil.WriteFile(filePath, rawJSON, 0600)
-	assert.NoError(t, err)
-}
-
-func RemoveTestConfigFile(t *testing.T, filePath string) {
-	err := os.Remove(filePath)
-	assert.NoError(t, err)
+func getMultipleTargetFlagSpecs() (flagSpecs []ParameterRequirement) {
+	return []ParameterRequirement{
+		GetNoPromptFlagSpec(),
+		GetReadYAMLFlagSpec(),
+		{
+			Field: ClientIDs,
+			Help:  "Enter comma separated client IDs",
+			Description: "[required] Comma separated client ids for which the command should be executed. " +
+				"Alternatively use -n to execute a command by client name(s), or use --search flag.",
+			ShortName: "d",
+		},
+		{
+			Field:       ClientNameFlag,
+			Description: "Comma separated client names for which the command should be executed",
+			ShortName:   "n",
+		},
+		{
+			Field:       Command,
+			Help:        "Enter command",
+			Description: "[required] Command which should be executed on the clients",
+			ShortName:   "c",
+		},
+		{
+			Field:       GroupIDs,
+			Help:        "Enter comma separated group IDs",
+			Description: "Comma separated client group IDs",
+			ShortName:   "g",
+		},
+	}
 }

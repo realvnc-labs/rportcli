@@ -170,10 +170,10 @@ You can also display help for a certain command:
 
 <table>
     <tr>
-    <th>Variable</th>    
-    <th>Description</th>    
-    <th>Default Value</th>    
-    <th>Example</th>    
+    <th>Variable</th>
+    <th>Description</th>
+    <th>Default Value</th>
+    <th>Example</th>
     </tr>
     <tr>
     <td>CONFIG_PATH</td>
@@ -218,3 +218,41 @@ You can also display help for a certain command:
     <td>RPORT_API_TOKEN=xxxxxxxx rportcli client list</td>
     </tr>
 </table>
+
+## Using YAML input for Options (command and script only)
+
+For `command execute` and `script execute`, the CLI supports reading of the required options / parameters
+from yaml files via the `--read-yaml` (short form `-y`) command line option. This will allow users to set the CLI options
+for execution in files, rather than always being required on the command line itself.
+
+Any related options specified on the command line will have precedence over options set in YAML files.
+
+Multiple yaml files are supported but only to set the options for a single execution. The last yaml file
+on the command line with have precedence and any duplication options will overwrite options set in previously included
+yaml files.
+
+For example
+
+```yaml
+# check-clients.yaml
+cids:
+  - cdeb33642b4b43caa13b73ce0045d388
+  - 7ca5718bd76f1bca7a5ee72660d3120c
+  - 42560923b8414a519c7a42047f251fb3
+conc: true
+full-command-response: true
+command: |
+  ls
+```
+
+Can be executed using
+
+```bash
+$ rport_cli -y "check-clients.yml
+```
+
+And the targeted clients can be overridden using:
+
+```bash
+$ `rport_cli -y "check-clients.yml --name "test-server"`
+```

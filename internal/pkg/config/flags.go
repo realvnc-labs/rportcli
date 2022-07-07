@@ -40,7 +40,7 @@ func GetNoPromptFlagSpec() (flagSpec ParameterRequirement) {
 func GetReadYAMLFlagSpec() (flagSpec ParameterRequirement) {
 	return ParameterRequirement{
 		Field:       ReadYAML,
-		Description: "Read parameters from a YAML file",
+		Description: "Read parameters from a YAML file (parameters from the command line will have priority)",
 		ShortName:   "y",
 		Type:        StringSliceRequirementType,
 	}
@@ -54,12 +54,13 @@ func GetCommandFlagSpecs() (flagSpecs []ParameterRequirement) {
 			Field:    ClientIDs,
 			Help:     "Enter comma separated client IDs",
 			Validate: RequiredValidate,
-			Description: "Comma separated client ids for which the command should be executed. " +
+			Description: "[required] Comma separated client ids for which the command should be executed. " +
 				"Alternatively use -n to execute a command by client name(s), or use --search flag.",
 			ShortName: "d",
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
 				return providedParams.ReadString(ClientNameFlag, "") == "" && providedParams.ReadString(ClientSearchFlag, "") == ""
 			},
+			IsRequired: true,
 		},
 		{
 			Field:       ClientNameFlag,
@@ -73,7 +74,7 @@ func GetCommandFlagSpecs() (flagSpecs []ParameterRequirement) {
 		{
 			Field:       Command,
 			Help:        "Enter command",
-			Description: "Command which should be executed on the clients",
+			Description: "[required] Command which should be executed on the clients",
 			ShortName:   "c",
 			IsRequired:  true,
 		},
@@ -148,7 +149,7 @@ func GetScriptFlagSpecs() (flagSpecs []ParameterRequirement) {
 			Field:    ClientIDs,
 			Help:     "Enter comma separated client IDs",
 			Validate: RequiredValidate,
-			Description: "Comma separated client ids on which the script should be executed. " +
+			Description: "[required] Comma separated client ids on which the script should be executed. " +
 				"Alternatively use -n to execute a script by client name(s), or use --search flag.",
 			ShortName: "d",
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
@@ -169,7 +170,7 @@ func GetScriptFlagSpecs() (flagSpecs []ParameterRequirement) {
 			Field:       Script,
 			Help:        "Enter script path",
 			Validate:    RequiredValidate,
-			Description: "Path to the script file",
+			Description: "[required] Path to the script file",
 			ShortName:   "s",
 			IsRequired:  true,
 		},
