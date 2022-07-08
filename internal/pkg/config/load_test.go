@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/spf13/pflag"
 
 	"github.com/stretchr/testify/require"
@@ -390,6 +391,64 @@ func TestCheckRequiredParams(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCheckMultipleYAMLFiles(t *testing.T) {
+	cmd := &cobra.Command{}
+	reqs := GetCommandFlagSpecs()
+	DefineCommandInputs(cmd, reqs)
+
+	fl := cmd.Flags()
+	fp := &FlagValuesProvider{
+		flags: fl,
+	}
+
+	err := SetCLIFlagString(t, fl, ReadYAML, "../../../testdata/test1-ok.yaml")
+	require.NoError(t, err)
+
+	err = SetCLIFlagString(t, fl, ReadYAML, "../../../testdata/test3-ok.yaml")
+	require.NoError(t, err)
+
+	vp, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, nil)
+	assert.NoError(t, err)
+
+	params := options.New(vp)
+
+	assert.False(t, params.ReadBool(IsFullOutput, false))
+	assert.Equal(t, params.ReadString(Command, ""), "pwd")
+
+	cids, found := params.Read(ClientIDs, []string{})
+	assert.True(t, found)
+	assert.Equal(t, cids, "differentserver")
+}
+
+func TestShouldPreferCLIToYAML(t *testing.T) {
+	cmd := &cobra.Command{}
+	reqs := GetCommandFlagSpecs()
+	DefineCommandInputs(cmd, reqs)
+
+	fl := cmd.Flags()
+	fp := &FlagValuesProvider{
+		flags: fl,
+	}
+
+	err := SetCLIFlagString(t, fl, ReadYAML, "../../../testdata/test1-ok.yaml")
+	require.NoError(t, err)
+
+	err = SetCLIFlagString(t, fl, ClientIDs, "anotherserver")
+	require.NoError(t, err)
+
+	vp, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, nil)
+	assert.NoError(t, err)
+
+	params := options.New(vp)
+
+	assert.True(t, params.ReadBool(IsFullOutput, false))
+	assert.Equal(t, params.ReadString("command", ""), "ls")
+
+	cids, found := params.Read("cids", []string{})
+	assert.True(t, found)
+	assert.Equal(t, cids, "anotherserver")
 }
 
 func getMultipleTargetFlagSpecs() (flagSpecs []ParameterRequirement) {

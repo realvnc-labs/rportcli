@@ -173,7 +173,7 @@ func CollectParamsFromCommandAndPromptAndEnv(
 
 	// if the no-prompt cli flag is set, then do not prompt for missing values
 	noPrompt := paramsSoFar.ReadBool(NoPrompt, false)
-	if noPrompt {
+	if noPrompt || promptReader == nil {
 		return vp, nil
 	}
 

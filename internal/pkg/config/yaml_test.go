@@ -89,10 +89,10 @@ func TestNoErrorOnGoodYAML(t *testing.T) {
 	vp := options.NewMapValuesProvider(rawParams)
 	params := options.New(vp)
 
-	assert.True(t, params.ReadBool("conc", false))
-	assert.Equal(t, params.ReadString("command", ""), "ls")
+	assert.True(t, params.ReadBool(ExecConcurrently, false))
+	assert.Equal(t, params.ReadString(Command, ""), "ls")
 
-	cids, found := params.Read("cids", []string{})
+	cids, found := params.Read(ClientIDs, []string{})
 	assert.True(t, found)
 	assert.Equal(t, cids, "cdeb33642b4b43caa13b73ce0045d388,7ca5718bd76f1bca7a5ee72660d3120c,42560923b8414a519c7a42047f251fb3")
 }
