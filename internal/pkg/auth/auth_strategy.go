@@ -20,6 +20,11 @@ func GetUsernameAndPassword(params *options.ParameterBag) (login, pass string, e
 }
 
 func GetToken(params *options.ParameterBag) (token string, err error) {
+	APIToken := params.ReadString(config.APIToken, "")
+	if APIToken != "" {
+		// if APIToken is set, then an regular Basic authorization header will be used instead
+		return "", nil
+	}
 	return params.ReadString(config.Token, ""), nil
 }
 

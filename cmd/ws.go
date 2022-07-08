@@ -3,11 +3,13 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
+
 	"github.com/breathbath/go_utils/v2/pkg/env"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/auth"
@@ -53,13 +55,41 @@ func newWsURLProvider(params *options.ParameterBag, baseRportURL string) (p *api
 	return p
 }
 
-func newWsClient(ctx context.Context, urlBuilder utils.WsURLBuilder) (wsc *utils.WsClient, err error) {
-	wsc, err = utils.NewWsClient(ctx, urlBuilder)
+func newWsClient(ctx context.Context, params *options.ParameterBag, urlBuilder utils.WsURLBuilder) (wsc *utils.WsClient, err error) {
+	var reqHeader http.Header
+
+	if params != nil {
+		reqHeader, err = addAuthHeaderIfAPIToken(params)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	wsc, err = utils.NewWsClient(ctx, urlBuilder, reqHeader)
 	if err != nil {
 		return nil, err
 	}
 
 	return wsc, nil
+}
+
+func addAuthHeaderIfAPIToken(params *options.ParameterBag) (reqHeader http.Header, err error) {
+	APIToken := params.ReadString(config.APIToken, "")
+	if APIToken != "" {
+		authStrategy := utils.StorageBasicAuth{
+			AuthProvider: func() (login, pass string, err error) {
+				return auth.GetUsernameAndPassword(params)
+			},
+		}
+
+		reqHeader = http.Header{}
+		err := authStrategy.AuthRequestHeader(reqHeader)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return reqHeader, err
 }
 
 func newExecutionHelper(params *options.ParameterBag,

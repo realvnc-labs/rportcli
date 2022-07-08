@@ -39,7 +39,7 @@ var executeScript = &cobra.Command{
 			return err
 		}
 
-		wsClient, err := newWsClient(ctx, makeWsScriptsURLProvider(params))
+		wsClient, err := newWsClient(ctx, params, makeWsScriptsURLProvider(params))
 		if err != nil {
 			return err
 		}

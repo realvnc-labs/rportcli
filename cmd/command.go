@@ -39,7 +39,7 @@ var executeCmd = &cobra.Command{
 			return err
 		}
 
-		wsClient, err := newWsClient(ctx, makeWsCommandURLProvider(params))
+		wsClient, err := newWsClient(ctx, params, makeWsCommandURLProvider(params))
 		if err != nil {
 			return err
 		}

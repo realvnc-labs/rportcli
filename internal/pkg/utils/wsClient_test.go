@@ -23,7 +23,7 @@ func TestReadWrite(t *testing.T) {
 	wsCl, err := NewWsClient(ctx, func(ctx context.Context) (url string, err error) {
 		u := strings.Replace(srv.URL, "http:", "ws:", 1)
 		return u, nil
-	})
+	}, nil)
 	assert.NoError(t, err)
 	if err != nil {
 		return

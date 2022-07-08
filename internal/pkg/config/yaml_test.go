@@ -8,21 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// type flagsChecker struct {
-// 	fvp *FlagValuesProvider
-// }
-
-// func NewUsedFlagsChecker(flagsProvider *FlagValuesProvider) (checker UsedFlagsChecker) {
-// 	checker = flagsChecker{
-// 		fvp: flagsProvider,
-// 	}
-// 	return checker
-// }
-
-// func (fp flagsChecker) ChangedFlag(flagName string) (isFound bool) {
-// 	return fp.fvp.ChangedFlag(flagName)
-// }
-
 func getStructElements(epv reflect.Value) (elementList map[string]bool) {
 	elementList = make(map[string]bool, expectedMaxYAMLParams)
 	for i := 0; i < epv.NumField(); i++ {

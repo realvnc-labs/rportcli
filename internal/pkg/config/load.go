@@ -37,7 +37,9 @@ const (
 )
 
 var (
-	ErrAPIURLRequired = errors.New("please set the server API URL, either via RPORT_API_URL or the command line flags (if option available)")
+	ErrAPIURLRequired = errors.New("please set the server API URL, either via RPORT_API_URL or the command line flags. " +
+		"If command line flags not available and not using RPORT_API_TOKEN, then you may need to create a config.json file " +
+		"via \"rport_cli init\"")
 )
 
 func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBag, err error) {
