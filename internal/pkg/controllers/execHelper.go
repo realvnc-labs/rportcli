@@ -14,24 +14,13 @@ import (
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 	io2 "github.com/breathbath/go_utils/v2/pkg/io"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	DefaultCmdTimeoutSeconds = 30
-	ClientIDs                = "cids"
-	Command                  = "command"
-	Script                   = "script"
-	GroupIDs                 = "gids"
-	Timeout                  = "timeout"
-	ExecConcurrently         = "conc"
-	AbortOnError             = "abort"
-	Cwd                      = "cwd"
-	IsSudo                   = "is_sudo"
-	Interpreter              = "interpreter"
-	IsFullOutput             = "full-command-response"
-	waitingMsg               = "waiting for the command to finish"
+	waitingMsg = "waiting for the command to finish"
 )
 
 type CliReader interface {
@@ -88,22 +77,22 @@ func (eh *ExecutionHelper) buildExecInput(
 ) *models.WsScriptCommand {
 	wsCmd := &models.WsScriptCommand{
 		ClientIDs:           strings.Split(clientIDs, ","),
-		TimeoutSec:          params.ReadInt(Timeout, DefaultCmdTimeoutSeconds),
-		ExecuteConcurrently: params.ReadBool(ExecConcurrently, false),
+		TimeoutSec:          params.ReadInt(config.Timeout, config.DefaultCmdTimeoutSeconds),
+		ExecuteConcurrently: params.ReadBool(config.ExecConcurrently, false),
 		GroupIDs:            nil,
-		AbortOnError:        params.ReadBool(AbortOnError, false),
-		Cwd:                 params.ReadString(Cwd, ""),
-		IsSudo:              params.ReadBool(IsSudo, false),
+		AbortOnError:        params.ReadBool(config.AbortOnError, false),
+		Cwd:                 params.ReadString(config.Cwd, ""),
+		IsSudo:              params.ReadBool(config.IsSudo, false),
 		Interpreter:         interpreter,
 	}
 
 	if scriptPayload != "" {
 		wsCmd.Script = scriptPayload
 	} else {
-		wsCmd.Command = params.ReadString(Command, "")
+		wsCmd.Command = params.ReadString(config.Command, "")
 	}
 
-	groupIDsStr := params.ReadString(GroupIDs, "")
+	groupIDsStr := params.ReadString(config.GroupIDs, "")
 	if groupIDsStr != "" {
 		groupIDsList := strings.Split(groupIDsStr, ",")
 		wsCmd.GroupIDs = groupIDsList
@@ -128,12 +117,12 @@ func (eh *ExecutionHelper) sendCommand(wsCmd *models.WsScriptCommand) error {
 }
 
 func (eh *ExecutionHelper) getClientIDs(ctx context.Context, params *options.ParameterBag) (clientIDs string, err error) {
-	ids := params.ReadString(ClientIDs, "")
+	ids := params.ReadString(config.ClientIDs, "")
 	if ids != "" {
 		return ids, nil
 	}
-	names := params.ReadString(ClientNameFlag, "")
-	search := params.ReadString(SearchFlag, "")
+	names := config.ReadNames(params)
+	search := params.ReadString(config.ClientSearchFlag, "")
 	if ids == "" && names == "" && search == "" {
 		return "", errors.New("no client ids, names or search provided")
 	}

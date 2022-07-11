@@ -1,0 +1,5 @@
+cids:
+  - differentserver
+full-command-response: false
+command: |
+  pwd

@@ -99,7 +99,7 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 
 func getInitRequirements() []config.ParameterRequirement {
 	return []config.ParameterRequirement{
-		config.GetNoPromptFlagSpec(),
+		config.GetNoPromptParamReq(),
 		{
 			Field:       config.APIURL,
 			Help:        "Enter Server Url",

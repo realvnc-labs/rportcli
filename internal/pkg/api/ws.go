@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/breathbath/go_utils/v2/pkg/url"
@@ -26,11 +25,6 @@ func (wup *WsURLProvider) buildWsFullURL(uriPath string) (wsURL string, err erro
 		return "", err
 	}
 
-	if token == "" {
-		err = fmt.Errorf("no auth data stored to use this command, please authenticate with the server. see \"rport_cli --help\" for more info")
-		return
-	}
-
 	wsURL = wup.buildWsURL(token, wup.BaseURL, uriPath)
 
 	return
@@ -38,7 +32,10 @@ func (wup *WsURLProvider) buildWsFullURL(uriPath string) (wsURL string, err erro
 
 func (wup *WsURLProvider) buildWsURL(token, baseURL, uriPath string) string {
 	baseURL = wup.replaceHTTPWithWsProtocolPrefix(baseURL)
-	return url.JoinURL(baseURL, uriPath) + "?access_token=" + token
+	if token != "" {
+		return url.JoinURL(baseURL, uriPath) + "?access_token=" + token
+	}
+	return url.JoinURL(baseURL, uriPath)
 }
 
 func (wup *WsURLProvider) replaceHTTPWithWsProtocolPrefix(u string) string {

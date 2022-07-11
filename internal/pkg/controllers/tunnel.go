@@ -73,8 +73,8 @@ func (tc *TunnelController) Tunnels(ctx context.Context, params *options.Paramet
 		api.NewPaginationFromParams(params),
 		api.NewFilters(
 			"id", params.ReadString(ClientID, ""),
-			"name", params.ReadString(ClientNameFlag, ""),
-			"*", params.ReadString(SearchFlag, ""),
+			"name", config.ReadNames(params),
+			"*", params.ReadString(config.ClientSearchFlag, ""),
 		),
 	)
 	if err != nil {
@@ -120,14 +120,17 @@ func (tc *TunnelController) Delete(ctx context.Context, params *options.Paramete
 func (tc *TunnelController) getClientIDAndClientName(
 	ctx context.Context,
 	params *options.ParameterBag,
-) (clientID, clientName string, err error) {
+) (clientID, clientNames string, err error) {
 	clientID = params.ReadString(ClientID, "")
-	clientName = params.ReadString(ClientNameFlag, "")
-	if clientID == "" && clientName == "" {
+	clientNames = params.ReadString(config.ClientNamesFlag, "")
+	if clientNames == "" {
+		clientNames = params.ReadString(config.ClientNameFlag, "")
+	}
+	if clientID == "" && clientNames == "" {
 		err = errors.New("no client id nor name provided")
 		return
 	}
-	if clientID != "" && clientName != "" {
+	if clientID != "" && clientNames != "" {
 		err = errors.New("both client id and name provided")
 		return
 	}
@@ -136,16 +139,16 @@ func (tc *TunnelController) getClientIDAndClientName(
 		return
 	}
 
-	clients, err := tc.Rport.Clients(ctx, api.NewPaginationWithLimit(2), api.NewFilters("name", clientName))
+	clients, err := tc.Rport.Clients(ctx, api.NewPaginationWithLimit(2), api.NewFilters("name", clientNames))
 	if err != nil {
 		return
 	}
 
 	if len(clients.Data) < 1 {
-		return "", "", fmt.Errorf("unknown client with name %q", clientName)
+		return "", "", fmt.Errorf("unknown client with name %q", clientNames)
 	}
 	if len(clients.Data) > 1 {
-		return "", "", fmt.Errorf("client with name %q is ambidguous, use a more precise name or use the client id", clientName)
+		return "", "", fmt.Errorf("client with name %q is ambidguous, use a more precise name or use the client id", clientNames)
 	}
 
 	client := clients.Data[0]

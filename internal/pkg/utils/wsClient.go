@@ -2,7 +2,10 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"net/http"
+	"strings"
 
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
@@ -20,14 +23,18 @@ type WsClient struct {
 	Conn         *websocket.Conn
 }
 
-func NewWsClient(ctx context.Context, wsURLBuilder WsURLBuilder) (wsc *WsClient, err error) {
+func NewWsClient(ctx context.Context, wsURLBuilder WsURLBuilder, reqHeader http.Header) (wsc *WsClient, err error) {
 	wsURL, err := wsURLBuilder(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	conn, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	conn, _, err := websocket.DefaultDialer.Dial(wsURL, reqHeader)
 	if err != nil {
+		if strings.Contains(err.Error(), "bad handshake") {
+			return nil, fmt.Errorf("%v. This error can be caused by missing client auth data or an outdated server version. "+
+				"Upgrade your server to 0.8.1 or newer", err)
+		}
 		return nil, err
 	}
 

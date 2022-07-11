@@ -106,15 +106,15 @@ func TestCommandExecutionByClientIDsSuccess(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientIDs:        "1235",
-		Command:          "cmd",
-		Timeout:          "1",
-		GroupIDs:         "333",
-		ExecConcurrently: "1",
-		Cwd:              "here",
-		IsSudo:           "1",
-		AbortOnError:     "1",
-		Interpreter:      "bash",
+		config.ClientIDs:        "1235",
+		config.Command:          "cmd",
+		config.Timeout:          "1",
+		config.GroupIDs:         "333",
+		config.ExecConcurrently: "1",
+		config.Cwd:              "here",
+		config.IsSudo:           "1",
+		config.AbortOnError:     "1",
+		config.Interpreter:      "bash",
 	})
 	err = ic.Start(context.Background(), params)
 
@@ -136,12 +136,12 @@ func TestInvalidInputForCommand(t *testing.T) {
 		ExecutionHelper: &ExecutionHelper{},
 	}
 	params := config.FromValues(map[string]string{
-		ClientID:       "",
-		ClientNameFlag: "",
-		Local:          "lohost1:3300",
-		Remote:         "rhost2:3344",
-		Scheme:         utils.SSH,
-		CheckPort:      "1",
+		ClientID:               "",
+		config.ClientNamesFlag: "",
+		Local:                  "lohost1:3300",
+		Remote:                 "rhost2:3344",
+		Scheme:                 utils.SSH,
+		CheckPort:              "1",
 	})
 	err := cc.Start(context.Background(), params)
 	assert.EqualError(t, err, "no client ids, names or search provided")
@@ -185,8 +185,8 @@ func TestCommandExecutionWithInvalidResponse(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientIDs: "123",
-		Command:   "ls",
+		config.ClientIDs: "123",
+		config.Command:   "ls",
 	})
 	err = ic.Start(context.Background(), params)
 

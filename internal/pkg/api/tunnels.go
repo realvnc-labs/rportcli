@@ -93,7 +93,7 @@ func (rp *Rport) DeleteTunnel(ctx context.Context, clientID, tunnelID string, fo
 	if resp.StatusCode == http.StatusNoContent {
 		return
 	}
-	err = fmt.Errorf("unexpeted result received")
+	err = fmt.Errorf("unexpected result received")
 
 	return
 }

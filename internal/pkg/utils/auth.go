@@ -20,17 +20,40 @@ type StorageBasicAuth struct {
 	AuthProvider func() (login, pass string, err error)
 }
 
-func (sba *StorageBasicAuth) AuthRequest(req *http.Request) error {
-	login, pass, err := sba.AuthProvider()
-	if err != nil {
-		return err
-	}
+func (sba *StorageBasicAuth) AddHeader(reqHeader http.Header, login, pass string) (err error) {
 	if login == "" || pass == "" {
 		return fmt.Errorf("login and/or password missing")
 	}
 
 	basicAuthHeader := http2.BuildBasicAuthString(login, pass)
-	req.Header.Add("Authorization", "Basic "+basicAuthHeader)
+	reqHeader.Add("Authorization", "Basic "+basicAuthHeader)
+	return nil
+}
+
+func (sba *StorageBasicAuth) AuthRequest(req *http.Request) error {
+	login, pass, err := sba.AuthProvider()
+	if err != nil {
+		return err
+	}
+
+	err = sba.AddHeader(req.Header, login, pass)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (sba *StorageBasicAuth) AuthRequestHeader(reqHeader http.Header) error {
+	login, pass, err := sba.AuthProvider()
+	if err != nil {
+		return err
+	}
+
+	err = sba.AddHeader(reqHeader, login, pass)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

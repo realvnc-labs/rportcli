@@ -20,7 +20,8 @@ func init() {
 	addClientsPaginationFlags(clientsListCmd)
 	addClientsSearchFlag(clientsListCmd)
 	clientsCmd.AddCommand(clientsListCmd)
-	clientCmd.Flags().StringP(controllers.ClientNameFlag, "n", "", "Get client by name")
+	clientCmd.Flags().StringP(config.ClientNameFlag, "n", "", "[deprecated] Get client by name")
+	clientCmd.Flags().StringP(config.ClientNamesFlag, "", "", "Get client by name(s)")
 	clientCmd.Flags().BoolP("all", "a", false, "Show client info with additional details")
 	clientsCmd.AddCommand(clientCmd)
 	rootCmd.AddCommand(clientsCmd)
@@ -66,15 +67,21 @@ var clientsListCmd = &cobra.Command{
 
 var clientCmd = &cobra.Command{
 	Use:   "get <ID>",
-	Short: "get all details about a specific client identified by its id or flags like name",
+	Short: "get all details about a specific client identified by its id or flags like names",
 	Args:  cobra.ArbitraryArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var clientName string
 		var clientID string
 		if len(args) == 0 {
-			cn, err := cmd.Flags().GetString(controllers.ClientNameFlag)
+			cn, err := cmd.Flags().GetString(config.ClientNamesFlag)
 			if err != nil {
 				return err
+			}
+			if cn == "" {
+				cn, err = cmd.Flags().GetString(config.ClientNameFlag)
+				if err != nil {
+					return err
+				}
 			}
 			clientName = cn
 		} else {

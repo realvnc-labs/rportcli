@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	BoolRequirementType   = "bool"
-	StringRequirementType = "string"
-	IntRequirementType    = "int"
+	BoolRequirementType        = "bool"
+	StringRequirementType      = "string"
+	IntRequirementType         = "int"
+	StringSliceRequirementType = "stringslice"
 )
 
 // Validate validation callback

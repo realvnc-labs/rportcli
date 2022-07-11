@@ -26,23 +26,24 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 	scriptToExecuteBase64 := base64.StdEncoding.EncodeToString([]byte(scriptToExecute))
 
 	testCases := []struct {
-		scriptPathToGive   string
 		name               string
+		scriptPathToGive   string
 		interpreterToGive  string
 		commandToExpect    *models.WsScriptCommand
 		errorToExpect      string
 		shouldCreateScript bool
+		embeddedScript     string
 	}{
 		{
+			name:               "exec_powershell_script",
 			scriptPathToGive:   "some_powershell_script.ps1",
 			shouldCreateScript: true,
-			name:               "exec_powershell_script",
 			commandToExpect: &models.WsScriptCommand{
 				ClientIDs:           []string{"2222"},
 				IsSudo:              false,
 				ExecuteConcurrently: false,
 				AbortOnError:        false,
-				TimeoutSec:          DefaultCmdTimeoutSeconds,
+				TimeoutSec:          config.DefaultCmdTimeoutSeconds,
 				Command:             "",
 				Script:              scriptToExecuteBase64,
 				Cwd:                 "/home",
@@ -50,24 +51,24 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 			},
 		},
 		{
-			scriptPathToGive:   "some_cmd_script.bat",
 			name:               "exec_cmd_script",
+			scriptPathToGive:   "some_cmd_script.bat",
 			shouldCreateScript: true,
 			commandToExpect: &models.WsScriptCommand{
 				ClientIDs:   []string{"2223"},
-				TimeoutSec:  DefaultCmdTimeoutSeconds,
+				TimeoutSec:  config.DefaultCmdTimeoutSeconds,
 				Script:      scriptToExecuteBase64,
 				Cwd:         "/home2",
 				Interpreter: "cmd",
 			},
 		},
 		{
-			scriptPathToGive:   "some_cmd_script.bat",
 			name:               "exec_script_from_param",
+			scriptPathToGive:   "some_cmd_script.bat",
 			shouldCreateScript: true,
 			commandToExpect: &models.WsScriptCommand{
 				ClientIDs:   []string{"2224"},
-				TimeoutSec:  DefaultCmdTimeoutSeconds,
+				TimeoutSec:  config.DefaultCmdTimeoutSeconds,
 				Script:      scriptToExecuteBase64,
 				Cwd:         "/home3",
 				Interpreter: "powershell",
@@ -75,12 +76,12 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 			interpreterToGive: "powershell",
 		},
 		{
-			scriptPathToGive:   "some_cmd_script",
 			name:               "empty_script_file_ext",
+			scriptPathToGive:   "some_cmd_script",
 			shouldCreateScript: true,
 			commandToExpect: &models.WsScriptCommand{
 				ClientIDs:   []string{"2225"},
-				TimeoutSec:  DefaultCmdTimeoutSeconds,
+				TimeoutSec:  config.DefaultCmdTimeoutSeconds,
 				Script:      scriptToExecuteBase64,
 				Cwd:         "/home4",
 				Interpreter: "",
@@ -88,12 +89,12 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 			interpreterToGive: "",
 		},
 		{
-			scriptPathToGive:   "some_cmd_script.txt",
 			name:               "unknown_script_file_ext",
+			scriptPathToGive:   "some_cmd_script.txt",
 			shouldCreateScript: true,
 			commandToExpect: &models.WsScriptCommand{
 				ClientIDs:   []string{"2226"},
-				TimeoutSec:  DefaultCmdTimeoutSeconds,
+				TimeoutSec:  config.DefaultCmdTimeoutSeconds,
 				Script:      scriptToExecuteBase64,
 				Cwd:         "/home6",
 				Interpreter: "",
@@ -101,16 +102,23 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 			interpreterToGive: "",
 		},
 		{
-			scriptPathToGive:   "some_unknown_script.sh",
 			name:               "non_existing_script_path",
+			scriptPathToGive:   "some_unknown_script.sh",
 			shouldCreateScript: false,
 			errorToExpect:      "script file doesn't exist: some_unknown_script.sh",
 		},
 		{
+			name:               "embedded_script",
 			scriptPathToGive:   "",
-			name:               "empty_existing_script_path",
 			shouldCreateScript: false,
-			errorToExpect:      "required option script is empty",
+			embeddedScript:     "pwd\nls",
+			commandToExpect: &models.WsScriptCommand{
+				ClientIDs:   []string{"2226"},
+				TimeoutSec:  config.DefaultCmdTimeoutSeconds,
+				Script:      base64.StdEncoding.EncodeToString([]byte("pwd\nls")),
+				Cwd:         "/home6",
+				Interpreter: "",
+			},
 		},
 	}
 
@@ -138,14 +146,23 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 				scriptPath = tc.scriptPathToGive
 			}
 
-			params := map[string]string{
-				Interpreter: tc.interpreterToGive,
-				Script:      scriptPath,
+			var params map[string]string
+
+			if tc.embeddedScript != "" {
+				params = map[string]string{
+					config.Interpreter:    tc.interpreterToGive,
+					config.EmbeddedScript: tc.embeddedScript,
+				}
+			} else {
+				params = map[string]string{
+					config.Interpreter: tc.interpreterToGive,
+					config.Script:      scriptPath,
+				}
 			}
 
 			if tc.commandToExpect != nil {
-				params[ClientIDs] = strings.Join(tc.commandToExpect.ClientIDs, ",")
-				params[Cwd] = tc.commandToExpect.Cwd
+				params[config.ClientIDs] = strings.Join(tc.commandToExpect.ClientIDs, ",")
+				params[config.Cwd] = tc.commandToExpect.Cwd
 			}
 
 			paramsContainer := config.FromValues(params)
