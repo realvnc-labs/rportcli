@@ -13,6 +13,7 @@ const (
 	ClientIDs        = "cids"
 	Command          = "command"
 	Script           = "script"
+	EmbeddedScript   = "exec"
 	GroupIDs         = "gids"
 	Timeout          = "timeout"
 	ExecConcurrently = "conc"
@@ -170,9 +171,23 @@ func GetScriptFlagSpecs() (flagSpecs []ParameterRequirement) {
 			Field:       Script,
 			Help:        "Enter script path",
 			Validate:    RequiredValidate,
-			Description: "[required] Path to the script file",
+			Description: "Path to the script file",
 			ShortName:   "s",
 			IsRequired:  true,
+			IsEnabled: func(providedParams *options.ParameterBag) bool {
+				return providedParams.ReadString(EmbeddedScript, "") == ""
+			},
+		},
+		{
+			Field:       EmbeddedScript,
+			Help:        "Enter script content",
+			Validate:    RequiredValidate,
+			Description: "Script content to be executed on the clients",
+			ShortName:   "c",
+			IsRequired:  true,
+			IsEnabled: func(providedParams *options.ParameterBag) bool {
+				return providedParams.ReadString(Script, "") == ""
+			},
 		},
 		{
 			Field:       Timeout,

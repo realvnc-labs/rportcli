@@ -21,35 +21,52 @@ type ScriptsController struct {
 	*ExecutionHelper
 }
 
-func (cc *ScriptsController) Start(ctx context.Context, params *options.ParameterBag) error {
-	scriptsFilePath, err := params.ReadRequiredString(config.Script)
-	if err != nil {
-		return err
-	}
+func (cc *ScriptsController) Start(ctx context.Context, params *options.ParameterBag) (err error) {
+	var scriptContent []byte
+	var interpreter string
 
-	info, err := os.Stat(scriptsFilePath)
-	if os.IsNotExist(err) {
-		return fmt.Errorf("script file doesn't exist: %s", scriptsFilePath)
-	}
-	if info.IsDir() {
-		return fmt.Errorf("script file %s is a directory", scriptsFilePath)
-	}
+	scriptsFilePath := params.ReadString(config.Script, "")
+	if scriptsFilePath != "" {
+		scriptContent, err = cc.ReadScriptContent(scriptsFilePath)
+		if err != nil {
+			return err
+		}
 
-	scriptFile, err := os.Open(scriptsFilePath)
-	if err != nil {
-		return fmt.Errorf("failed to read file %s: %w", scriptsFilePath, err)
-	}
-
-	scriptContent, err := ioutil.ReadAll(scriptFile)
-	if err != nil {
-		return fmt.Errorf("failed to read file %s: %w", scriptsFilePath, err)
+		interpreter = cc.resolveInterpreterByFileName(scriptsFilePath, params.ReadString(config.Interpreter, ""))
+	} else {
+		embeddedScriptContent := params.ReadString(config.EmbeddedScript, "")
+		if embeddedScriptContent != "" {
+			scriptContent = []byte(embeddedScriptContent)
+		} else {
+			scriptContent = []byte("")
+		}
 	}
 
 	scriptContentBase64 := base64.StdEncoding.EncodeToString(scriptContent)
 
-	interpreter := cc.resolveInterpreterByFileName(scriptsFilePath, params.ReadString(config.Interpreter, ""))
-
 	return cc.execute(ctx, params, scriptContentBase64, interpreter)
+}
+
+func (cc *ScriptsController) ReadScriptContent(scriptsFilePath string) (scriptContent []byte, err error) {
+	info, err := os.Stat(scriptsFilePath)
+	if os.IsNotExist(err) {
+		return nil, fmt.Errorf("script file doesn't exist: %s", scriptsFilePath)
+	}
+	if info.IsDir() {
+		return nil, fmt.Errorf("script file %s is a directory", scriptsFilePath)
+	}
+
+	scriptFile, err := os.Open(scriptsFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", scriptsFilePath, err)
+	}
+
+	scriptContent, err = ioutil.ReadAll(scriptFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", scriptsFilePath, err)
+	}
+
+	return scriptContent, nil
 }
 
 func (cc *ScriptsController) resolveInterpreterByFileName(scriptFilePath, scriptsFilePathFromArgs string) string {

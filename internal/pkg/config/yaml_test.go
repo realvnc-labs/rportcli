@@ -88,3 +88,16 @@ func TestErrorOnBadYAML(t *testing.T) {
 	_, err := ReadYAMLExecuteParams([]string{testFile}, nil)
 	assert.Error(t, err)
 }
+
+func TestNoErrorOnScriptExecYAML(t *testing.T) {
+	testFile := "../../../testdata/test4-ok.yaml"
+
+	rawParams, err := ReadYAMLExecuteParams([]string{testFile}, nil)
+	assert.NoError(t, err)
+
+	vp := options.NewMapValuesProvider(rawParams)
+	params := options.New(vp)
+
+	assert.True(t, params.ReadBool(ExecConcurrently, false))
+	assert.Equal(t, params.ReadString(EmbeddedScript, ""), "pwd\nls\nls -la")
+}

@@ -13,6 +13,7 @@ type YAMLExecuteParams struct {
 	Name                []string `yaml:"name,omitempty"`
 	Search              string   `yaml:"search,omitempty"`
 	Command             string   `yaml:"command,omitempty"`
+	EmbeddedScript      string   `yaml:"exec,omitempty"`
 	Script              string   `yaml:"script,omitempty"`
 	Timeout             string   `yaml:"timeout,omitempty"`
 	Gids                []string `yaml:"gids,omitempty"`
