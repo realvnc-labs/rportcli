@@ -32,8 +32,8 @@ func NewWsClient(ctx context.Context, wsURLBuilder WsURLBuilder, reqHeader http.
 	conn, _, err := websocket.DefaultDialer.Dial(wsURL, reqHeader)
 	if err != nil {
 		if strings.Contains(err.Error(), "bad handshake") {
-			return nil, fmt.Errorf("%v. This error can be caused by an outdated server version. "+
-				"Upgrade you server to 0.8.1 or newer", err)
+			return nil, fmt.Errorf("%v. This error can be caused by missing client auth data or an outdated server version. "+
+				"Upgrade your server to 0.8.1 or newer", err)
 		}
 		return nil, err
 	}
