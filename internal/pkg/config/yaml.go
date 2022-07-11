@@ -11,6 +11,7 @@ import (
 type YAMLExecuteParams struct {
 	Cids                []string `yaml:"cids,omitempty"`
 	Name                []string `yaml:"name,omitempty"`
+	Names               []string `yaml:"names,omitempty"`
 	Search              string   `yaml:"search,omitempty"`
 	Command             string   `yaml:"command,omitempty"`
 	EmbeddedScript      string   `yaml:"exec,omitempty"`

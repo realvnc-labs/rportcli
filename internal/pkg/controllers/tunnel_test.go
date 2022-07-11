@@ -170,10 +170,10 @@ func TestTunnelDeleteByClientIDController(t *testing.T) {
 	assert.False(t, isSSHExecuted)
 
 	params := options.New(options.NewMapValuesProvider(map[string]interface{}{
-		ClientID:              "cl1",
-		TunnelID:              "tun2",
-		config.ClientNameFlag: "",
-		ForceDeletion:         "1",
+		ClientID:               "cl1",
+		TunnelID:               "tun2",
+		config.ClientNamesFlag: "",
+		ForceDeletion:          "1",
 	}))
 	err := tController.Delete(context.Background(), params)
 	assert.NoError(t, err)
@@ -183,9 +183,9 @@ func TestTunnelDeleteByClientIDController(t *testing.T) {
 func TestInvalidInputForTunnelDelete(t *testing.T) {
 	tController := TunnelController{}
 	params := options.New(options.NewMapValuesProvider(map[string]interface{}{
-		ClientID:              "",
-		TunnelID:              "tunnel11",
-		config.ClientNameFlag: "",
+		ClientID:               "",
+		TunnelID:               "tunnel11",
+		config.ClientNamesFlag: "",
 	}))
 	err := tController.Delete(context.Background(), params)
 	assert.EqualError(t, err, "no client id nor name provided")
@@ -260,12 +260,12 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 func TestInvalidInputForTunnelCreate(t *testing.T) {
 	tController := TunnelController{}
 	params := config.FromValues(map[string]string{
-		ClientID:              "",
-		config.ClientNameFlag: "",
-		Local:                 "lohost1:3300",
-		Remote:                "rhost2:3344",
-		Scheme:                utils.SSH,
-		CheckPort:             "1",
+		ClientID:               "",
+		config.ClientNamesFlag: "",
+		Local:                  "lohost1:3300",
+		Remote:                 "rhost2:3344",
+		Scheme:                 utils.SSH,
+		CheckPort:              "1",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.EqualError(t, err, "no client id nor name provided")

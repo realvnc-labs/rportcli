@@ -10,6 +10,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func ReadNames(params *options.ParameterBag) (names string) {
+	names = params.ReadString(ClientNamesFlag, "")
+	if names == "" {
+		names = params.ReadString(ClientNameFlag, "")
+		logrus.Warn("please use the --names option, the --name option has been deprecated and support will be removed in a future release")
+	}
+	return names
+}
+
 func ReadAPIUser(params *options.ParameterBag) (user string) {
 	user = params.ReadString(APIUser, "")
 	if user == "" {
@@ -77,28 +86,23 @@ func HasYAMLParams(flagParams map[string]interface{}) (yFileList []string, hasYA
 }
 
 var (
-	ErrMultipleTargetingOptions = errors.New("multiple targeting option. Please only specify one of --cids, --gids, --name")
+	ErrMultipleTargetingOptions = errors.New("multiple targeting options. Please only specify one of --cids, --gids, --name or --names")
 )
 
 func CheckTargetingParams(params *options.ParameterBag) (err error) {
-	// TODO: be nice to find more elegant way of doing this
-	hasCids := params.ReadString(ClientIDs, "") != ""
-	hasGids := params.ReadString(GroupIDs, "") != ""
-	hasName := params.ReadString(ClientNameFlag, "") != ""
+	paramList := []string{ClientIDs, GroupIDs, ClientNameFlag, ClientNamesFlag}
 
-	hasOption := hasCids
-	if hasGids {
-		if !hasOption {
-			hasOption = hasGids
-		} else {
-			return ErrMultipleTargetingOptions
+	count := 0
+	for _, param := range paramList {
+		if params.ReadString(param, "") != "" {
+			count++
 		}
 	}
-	if hasName {
-		if hasOption {
-			return ErrMultipleTargetingOptions
-		}
+
+	if count > 1 {
+		return ErrMultipleTargetingOptions
 	}
+
 	return nil
 }
 

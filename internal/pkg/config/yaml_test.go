@@ -38,11 +38,11 @@ func TestStructHasRequirements(t *testing.T) {
 	}{
 		{
 			Name: "Command",
-			Reqs: GetCommandFlagSpecs(),
+			Reqs: GetCommandParamReqs(),
 		},
 		{
 			Name: "Script",
-			Reqs: GetScriptFlagSpecs(),
+			Reqs: GetScriptParamReqs(),
 		},
 	}
 	for _, tc := range cases {

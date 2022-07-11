@@ -66,5 +66,5 @@ func makeWsScriptsURLProvider(params *options.ParameterBag) (wsURLBuilder utils.
 }
 
 func getScriptRequirements() []config.ParameterRequirement {
-	return config.GetScriptFlagSpecs()
+	return config.GetScriptParamReqs()
 }

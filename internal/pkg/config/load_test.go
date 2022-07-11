@@ -209,68 +209,85 @@ func TestCollectParams(t *testing.T) {
 
 func TestErrOnMultipleTargetingOptions(t *testing.T) {
 	cases := []struct {
-		Name            string
-		CIDValue        string
-		GIDValue        string
-		ClientNameValue string
-		ShouldErr       bool
-		ErrValue        error
+		Name             string
+		CIDValue         string
+		GIDValue         string
+		ClientNameValue  string
+		ClientNamesValue string
+		ShouldErr        bool
+		ErrValue         error
 	}{
 		{
-			Name:            "CIDs Only",
-			CIDValue:        "1234",
-			GIDValue:        "",
-			ClientNameValue: "",
-			ShouldErr:       false,
-			ErrValue:        nil,
+			Name:             "CIDs Only",
+			CIDValue:         "1234",
+			GIDValue:         "",
+			ClientNameValue:  "",
+			ClientNamesValue: "",
+			ShouldErr:        false,
+			ErrValue:         nil,
 		},
 		{
-			Name:            "GIDs Only",
-			CIDValue:        "",
-			GIDValue:        "1234",
-			ClientNameValue: "",
-			ShouldErr:       false,
-			ErrValue:        nil,
+			Name:             "GIDs Only",
+			CIDValue:         "",
+			GIDValue:         "1234",
+			ClientNameValue:  "",
+			ClientNamesValue: "",
+			ShouldErr:        false,
+			ErrValue:         nil,
 		},
 		{
-			Name:            "Name Only",
-			CIDValue:        "",
-			GIDValue:        "",
-			ClientNameValue: "Name",
-			ShouldErr:       false,
-			ErrValue:        nil,
+			Name:             "Name Only",
+			CIDValue:         "",
+			GIDValue:         "",
+			ClientNameValue:  "Name",
+			ClientNamesValue: "",
+			ShouldErr:        false,
+			ErrValue:         nil,
 		},
 		{
-			Name:            "Error on CIDs and GIDs",
-			CIDValue:        "1234",
-			GIDValue:        "4567",
-			ClientNameValue: "",
-			ShouldErr:       true,
-			ErrValue:        ErrMultipleTargetingOptions,
+			Name:             "Names Only",
+			CIDValue:         "",
+			GIDValue:         "",
+			ClientNameValue:  "",
+			ClientNamesValue: "Name1,Name2",
+			ShouldErr:        false,
+			ErrValue:         nil,
 		},
 		{
-			Name:            "Error on CIDs and Name",
-			CIDValue:        "1234",
-			GIDValue:        "",
-			ClientNameValue: "4567",
-			ShouldErr:       true,
-			ErrValue:        ErrMultipleTargetingOptions,
+			Name:             "Error on CIDs and GIDs",
+			CIDValue:         "1234",
+			GIDValue:         "4567",
+			ClientNameValue:  "",
+			ClientNamesValue: "",
+			ShouldErr:        true,
+			ErrValue:         ErrMultipleTargetingOptions,
 		},
 		{
-			Name:            "Error on GIDs and Name",
-			CIDValue:        "",
-			GIDValue:        "1234",
-			ClientNameValue: "4567",
-			ShouldErr:       true,
-			ErrValue:        ErrMultipleTargetingOptions,
+			Name:             "Error on CIDs and Names",
+			CIDValue:         "1234",
+			GIDValue:         "",
+			ClientNameValue:  "",
+			ClientNamesValue: "4567",
+			ShouldErr:        true,
+			ErrValue:         ErrMultipleTargetingOptions,
 		},
 		{
-			Name:            "Error on All Set",
-			CIDValue:        "1234",
-			GIDValue:        "4567",
-			ClientNameValue: "4321",
-			ShouldErr:       true,
-			ErrValue:        ErrMultipleTargetingOptions,
+			Name:             "Error on GIDs and Name",
+			CIDValue:         "",
+			GIDValue:         "1234",
+			ClientNameValue:  "4567",
+			ClientNamesValue: "",
+			ShouldErr:        true,
+			ErrValue:         ErrMultipleTargetingOptions,
+		},
+		{
+			Name:             "Error on All Set",
+			CIDValue:         "1234",
+			GIDValue:         "4567",
+			ClientNameValue:  "4321",
+			ClientNamesValue: "4321",
+			ShouldErr:        true,
+			ErrValue:         ErrMultipleTargetingOptions,
 		},
 	}
 
@@ -287,7 +304,7 @@ func TestErrOnMultipleTargetingOptions(t *testing.T) {
 			}
 
 			cmd := &cobra.Command{}
-			reqs := getMultipleTargetFlagSpecs()
+			reqs := getMultipleTargetParamReqs()
 			DefineCommandInputs(cmd, reqs)
 
 			fl := cmd.Flags()
@@ -307,6 +324,11 @@ func TestErrOnMultipleTargetingOptions(t *testing.T) {
 
 			if tc.ClientNameValue != "" {
 				err := SetCLIFlagString(t, fl, ClientNameFlag, tc.ClientNameValue)
+				require.NoError(t, err)
+			}
+
+			if tc.ClientNamesValue != "" {
+				err := SetCLIFlagString(t, fl, ClientNamesFlag, tc.ClientNamesValue)
 				require.NoError(t, err)
 			}
 
@@ -363,7 +385,7 @@ func TestCheckRequiredParams(t *testing.T) {
 			}
 
 			cmd := &cobra.Command{}
-			reqs := GetCommandFlagSpecs()
+			reqs := GetCommandParamReqs()
 			DefineCommandInputs(cmd, reqs)
 
 			fl := cmd.Flags()
@@ -395,7 +417,7 @@ func TestCheckRequiredParams(t *testing.T) {
 
 func TestCheckMultipleYAMLFiles(t *testing.T) {
 	cmd := &cobra.Command{}
-	reqs := GetCommandFlagSpecs()
+	reqs := GetCommandParamReqs()
 	DefineCommandInputs(cmd, reqs)
 
 	fl := cmd.Flags()
@@ -424,7 +446,7 @@ func TestCheckMultipleYAMLFiles(t *testing.T) {
 
 func TestShouldPreferCLIToYAML(t *testing.T) {
 	cmd := &cobra.Command{}
-	reqs := GetCommandFlagSpecs()
+	reqs := GetCommandParamReqs()
 	DefineCommandInputs(cmd, reqs)
 
 	fl := cmd.Flags()
@@ -451,10 +473,10 @@ func TestShouldPreferCLIToYAML(t *testing.T) {
 	assert.Equal(t, cids, "anotherserver")
 }
 
-func getMultipleTargetFlagSpecs() (flagSpecs []ParameterRequirement) {
+func getMultipleTargetParamReqs() (paramReqs []ParameterRequirement) {
 	return []ParameterRequirement{
-		GetNoPromptFlagSpec(),
-		GetReadYAMLFlagSpec(),
+		GetNoPromptParamReq(),
+		GetReadYAMLParamReq(),
 		{
 			Field: ClientIDs,
 			Help:  "Enter comma separated client IDs",
@@ -466,6 +488,11 @@ func getMultipleTargetFlagSpecs() (flagSpecs []ParameterRequirement) {
 			Field:       ClientNameFlag,
 			Description: "Comma separated client names for which the command should be executed",
 			ShortName:   "n",
+		},
+		{
+			Field:       ClientNamesFlag,
+			Description: "Comma separated client names for which the command should be executed",
+			ShortName:   "",
 		},
 		{
 			Field:       Command,

@@ -141,6 +141,9 @@ issues:
     - path: cmd/script.go
       linters:
         - dupl
+    - path: internal/pkg/config/flags_tunnel.go
+      linters:
+        - funlen
 
 run:
   skip-dirs: []

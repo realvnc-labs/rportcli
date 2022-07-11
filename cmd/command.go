@@ -66,5 +66,5 @@ func makeWsCommandURLProvider(params *options.ParameterBag) (wsURLBuilder utils.
 }
 
 func getCommandRequirements() []config.ParameterRequirement {
-	return config.GetCommandFlagSpecs()
+	return config.GetCommandParamReqs()
 }
