@@ -151,7 +151,7 @@ func GetDeleteTunnelParamReqs() []ParameterRequirement {
 			ShortName:   "c",
 			IsRequired:  true,
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
-				return providedParams.ReadString(ClientNameFlag, "") == "" && providedParams.ReadString(ClientNamesFlag, "") == ""
+				return providedParams.ReadString(ClientNameFlag, "") == ""
 			},
 			Help: "Enter a client id",
 		},
