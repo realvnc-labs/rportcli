@@ -170,10 +170,10 @@ func TestTunnelDeleteByClientIDController(t *testing.T) {
 	assert.False(t, isSSHExecuted)
 
 	params := options.New(options.NewMapValuesProvider(map[string]interface{}{
-		ClientID:               "cl1",
-		TunnelID:               "tun2",
+		config.ClientID:        "cl1",
+		config.TunnelID:        "tun2",
 		config.ClientNamesFlag: "",
-		ForceDeletion:          "1",
+		config.ForceDeletion:   "1",
 	}))
 	err := tController.Delete(context.Background(), params)
 	assert.NoError(t, err)
@@ -183,8 +183,8 @@ func TestTunnelDeleteByClientIDController(t *testing.T) {
 func TestInvalidInputForTunnelDelete(t *testing.T) {
 	tController := TunnelController{}
 	params := options.New(options.NewMapValuesProvider(map[string]interface{}{
-		ClientID:               "",
-		TunnelID:               "tunnel11",
+		config.ClientID:        "",
+		config.TunnelID:        "tunnel11",
 		config.ClientNamesFlag: "",
 	}))
 	err := tController.Delete(context.Background(), params)
@@ -239,13 +239,13 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 	assert.False(t, isSSHExecuted)
 
 	params := config.FromValues(map[string]string{
-		ClientID:           "334",
-		Local:              "lohost1:3300",
-		Remote:             "rhost2:3344",
-		Scheme:             utils.SSH,
-		CheckPort:          "1",
-		config.ServerURL:   "https://localhost.com:34",
-		IdleTimeoutMinutes: "7",
+		config.ClientID:           "334",
+		config.Local:              "lohost1:3300",
+		config.Remote:             "rhost2:3344",
+		config.Scheme:             utils.SSH,
+		config.CheckPort:          "1",
+		config.ServerURL:          "https://localhost.com:34",
+		config.IdleTimeoutMinutes: "7",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
@@ -260,12 +260,12 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 func TestInvalidInputForTunnelCreate(t *testing.T) {
 	tController := TunnelController{}
 	params := config.FromValues(map[string]string{
-		ClientID:               "",
+		config.ClientID:        "",
 		config.ClientNamesFlag: "",
-		Local:                  "lohost1:3300",
-		Remote:                 "rhost2:3344",
-		Scheme:                 utils.SSH,
-		CheckPort:              "1",
+		config.Local:           "lohost1:3300",
+		config.Remote:          "rhost2:3344",
+		config.Scheme:          utils.SSH,
+		config.CheckPort:       "1",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.EqualError(t, err, "no client id nor name provided")
@@ -310,9 +310,9 @@ func TestTunnelCreateWithSchemeDiscovery(t *testing.T) {
 	}
 
 	params := map[string]string{
-		ClientID:         "32312",
-		Local:            "lohost33:3301",
-		Remote:           "rhost5:22",
+		config.ClientID:  "32312",
+		config.Local:     "lohost33:3301",
+		config.Remote:    "rhost5:22",
 		config.ServerURL: "http://ya.ru",
 	}
 	err := tController.Create(context.Background(), config.FromValues(params))
@@ -371,9 +371,9 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 	}
 
 	params := map[string]string{
-		ClientID:         "1313",
-		Local:            "lohost44:3302",
-		Scheme:           utils.SSH,
+		config.ClientID:  "1313",
+		config.Local:     "lohost44:3302",
+		config.Scheme:    utils.SSH,
 		config.ServerURL: "http://some.com",
 	}
 	err := tController.Create(context.Background(), config.FromValues(params))
@@ -391,8 +391,8 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 	)
 	buf = bytes.Buffer{}
 
-	delete(params, Scheme)
-	params[LaunchSSH] = "-l root"
+	delete(params, config.Scheme)
+	params[config.LaunchSSH] = "-l root"
 	err = tController.Create(context.Background(), config.FromValues(params))
 	assert.NoError(t, err)
 
@@ -458,12 +458,12 @@ func TestTunnelCreateWithSSH(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID:           "1314",
-		Local:              "lohost77:3303",
-		Scheme:             utils.SSH,
-		config.ServerURL:   "http://rport-url.com",
-		LaunchSSH:          "-l root -i somefile",
-		IdleTimeoutMinutes: "5",
+		config.ClientID:           "1314",
+		config.Local:              "lohost77:3303",
+		config.Scheme:             utils.SSH,
+		config.ServerURL:          "http://rport-url.com",
+		config.LaunchSSH:          "-l root -i somefile",
+		config.IdleTimeoutMinutes: "5",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
@@ -528,10 +528,10 @@ func TestTunnelCreateWithSSHFailure(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID:         "1316",
-		Local:            "lohost776:3306",
+		config.ClientID:  "1316",
+		config.Local:     "lohost776:3306",
 		config.ServerURL: "http://rport-url2.com",
-		LaunchSSH:        "-l root",
+		config.LaunchSSH: "-l root",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.EqualError(t, err, "ssh failure")
@@ -583,15 +583,15 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID:           "1314",
-		Local:              "lohost88:3304",
-		Scheme:             utils.RDP,
-		config.ServerURL:   "http://rport-url123.com",
-		LaunchRDP:          "1",
-		RDPUser:            "Administrator",
-		RDPWidth:           "1090",
-		RDPHeight:          "990",
-		IdleTimeoutMinutes: "5",
+		config.ClientID:           "1314",
+		config.Local:              "lohost88:3304",
+		config.Scheme:             utils.RDP,
+		config.ServerURL:          "http://rport-url123.com",
+		config.LaunchRDP:          "1",
+		config.RDPUser:            "Administrator",
+		config.RDPWidth:           "1090",
+		config.RDPHeight:          "990",
+		config.IdleTimeoutMinutes: "5",
 	})
 	err := tController.Create(context.Background(), params)
 	assert.NoError(t, err)
@@ -636,15 +636,15 @@ func TestTunnelCreateWithRDPIncompatibleFlags(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID:         "1319",
-		Local:            "lohost88:3305",
-		Scheme:           utils.RDP,
+		config.ClientID:  "1319",
+		config.Local:     "lohost88:3305",
+		config.Scheme:    utils.RDP,
 		config.ServerURL: "http://rport-url123.com",
-		LaunchSSH:        "-l root",
-		ACL:              "0.0.0.0",
+		config.LaunchSSH: "-l root",
+		config.ACL:       "0.0.0.0",
 	})
 	err := tController.Create(context.Background(), params)
-	assert.EqualError(t, err, fmt.Sprintf("scheme rdp is not compatible with the %s option", LaunchSSH))
+	assert.EqualError(t, err, fmt.Sprintf("scheme rdp is not compatible with the %s option", config.LaunchSSH))
 }
 
 func TestTunnelCreateWithSSHIncompatibleFlags(t *testing.T) {
@@ -668,14 +668,14 @@ func TestTunnelCreateWithSSHIncompatibleFlags(t *testing.T) {
 	}
 
 	params := config.FromValues(map[string]string{
-		ClientID:         "1320",
-		Local:            "lohost88:3309",
-		Scheme:           utils.SSH,
+		config.ClientID:  "1320",
+		config.Local:     "lohost88:3309",
+		config.Scheme:    utils.SSH,
 		config.ServerURL: "http://rport-url125.com",
-		LaunchRDP:        "1",
+		config.LaunchRDP: "1",
 	})
 	err := tController.Create(context.Background(), params)
-	assert.EqualError(t, err, fmt.Sprintf("scheme ssh is not compatible with the %s option", LaunchRDP))
+	assert.EqualError(t, err, fmt.Sprintf("scheme ssh is not compatible with the %s option", config.LaunchRDP))
 	assert.False(t, isSSHCalled)
 }
 
@@ -715,8 +715,8 @@ func TestTunnelDeleteFailureWithActiveConnections(t *testing.T) {
 		},
 	}
 	params := options.New(options.NewMapValuesProvider(map[string]interface{}{
-		ClientID: "cl1",
-		TunnelID: "tun2",
+		config.ClientID: "cl1",
+		config.TunnelID: "tun2",
 	}))
 	err := tController.Delete(context.Background(), params)
 	assert.EqualError(t, err, "tunnel is still active: it has 1 active connection(s), code: 123, details: , use -f to delete it anyway")
