@@ -153,7 +153,7 @@ func TestInvalidInputForClients(t *testing.T) {
 	clController := ClientController{}
 
 	err := clController.Client(context.Background(), &options.ParameterBag{}, "", "")
-	assert.EqualError(t, err, "no client id nor name provided")
+	assert.EqualError(t, err, "no client id or name provided")
 }
 
 func startClientsServer() *httptest.Server {

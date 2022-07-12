@@ -188,7 +188,7 @@ func TestInvalidInputForTunnelDelete(t *testing.T) {
 		config.ClientNamesFlag: "",
 	}))
 	err := tController.Delete(context.Background(), params)
-	assert.EqualError(t, err, "no client id nor name provided")
+	assert.EqualError(t, err, "no client id or name provided")
 }
 
 func TestTunnelCreateWithClientID(t *testing.T) {
@@ -268,7 +268,7 @@ func TestInvalidInputForTunnelCreate(t *testing.T) {
 		config.CheckPort:       "1",
 	})
 	err := tController.Create(context.Background(), params)
-	assert.EqualError(t, err, "no client id nor name provided")
+	assert.EqualError(t, err, "no client id or name provided")
 }
 
 func TestTunnelCreateWithSchemeDiscovery(t *testing.T) {
