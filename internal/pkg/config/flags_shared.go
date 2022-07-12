@@ -3,7 +3,7 @@ package config
 import options "github.com/breathbath/go_utils/v2/pkg/config"
 
 const (
-	ClientNameFlag   = "name" // to be deprecated
+	ClientNameFlag   = "name"
 	ClientNamesFlag  = "names"
 	ClientSearchFlag = "search"
 

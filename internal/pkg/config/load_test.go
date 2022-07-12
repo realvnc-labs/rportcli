@@ -486,7 +486,7 @@ func getMultipleTargetParamReqs() (paramReqs []ParameterRequirement) {
 		},
 		{
 			Field:       ClientNameFlag,
-			Description: "Comma separated client names for which the command should be executed",
+			Description: "Client name for which the command should be executed",
 			ShortName:   "",
 		},
 		{

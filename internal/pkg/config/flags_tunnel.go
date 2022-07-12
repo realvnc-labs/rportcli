@@ -157,13 +157,8 @@ func GetDeleteTunnelParamReqs() []ParameterRequirement {
 		},
 		{
 			Field:       ClientNameFlag,
-			Description: `[deprecated] client name, if no client id is provided`,
+			Description: `client name, if no client id is provided`,
 			ShortName:   "n",
-		},
-		{
-			Field:       ClientNamesFlag,
-			Description: `client name(s), if no client id is provided`,
-			ShortName:   "",
 		},
 		{
 			Field:       ForceDeletion,

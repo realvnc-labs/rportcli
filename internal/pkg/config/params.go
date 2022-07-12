@@ -14,9 +14,6 @@ func ReadClientNames(params *options.ParameterBag) (names string) {
 	names = params.ReadString(ClientNamesFlag, "")
 	if names == "" {
 		names = params.ReadString(ClientNameFlag, "")
-		if names != "" {
-			logrus.Warn("please use the --names option, the --name option has been deprecated and support will be removed in a future release")
-		}
 	}
 	return names
 }
