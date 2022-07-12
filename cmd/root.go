@@ -50,7 +50,11 @@ func getOutputFormat() string {
 }
 
 func init() {
-	cobra.OnInitialize(initLog)
+	applog.Init()
+	cobra.OnInitialize(func() {
+		applog.SetLogLevel(Verbose)
+	})
+
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
 	rootCmd.PersistentFlags().BoolVarP(
 		&IsJSONPretty,
@@ -76,10 +80,6 @@ func init() {
 
 	// see help.go
 	rootCmd.SetUsageTemplate(usageTemplate + environmentVariables + serverAuthentication)
-}
-
-func initLog() {
-	applog.Init(Verbose)
 }
 
 func Execute() error {

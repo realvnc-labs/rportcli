@@ -2,61 +2,67 @@ package applog
 
 import (
 	"fmt"
+	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
-// Init logging entry point
-func Init(isVerbose bool) {
-	f := &MultiLineFormatter{
-		TextFormatter: log.TextFormatter{
-			TimestampFormat: "2006-01-02T15:04:05.000000",
-			FullTimestamp:   true,
-		},
-	}
-	log.SetFormatter(f)
-
-	logLevel := log.InfoLevel
-	if isVerbose {
-		logLevel = log.DebugLevel
-	}
-
-	log.SetLevel(logLevel)
-
-	log.Debugf("will set log level to %v", logLevel)
+type CleanFormatter struct {
+	TextFormatter logrus.TextFormatter
 }
 
-type MultiLineFormatter struct {
-	log.TextFormatter
+func (f *CleanFormatter) getLine(entry *logrus.Entry) (msg []byte) {
+	msg = []byte(fmt.Sprintf("%s: %s\n", strings.ToUpper(entry.Level.String()), entry.Message))
+	return msg
 }
 
-func (f *MultiLineFormatter) Format(entry *log.Entry) ([]byte, error) {
+func (f *CleanFormatter) getDebugLine(entry *logrus.Entry) (msg []byte, err error) {
+	msg, err = f.TextFormatter.Format(entry)
+	return msg, err
+}
+
+// TODO: Not sure if this multiline support is required.
+func (f *CleanFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	multiline, ok := entry.Data["multiline"]
 	if ok {
 		delete(entry.Data, "multiline")
 	}
-	res, err := f.TextFormatter.Format(entry)
+	var res []byte
+	if entry.Level == logrus.FatalLevel || entry.Level == logrus.WarnLevel {
+		res = f.getLine(entry)
+	} else {
+		var err error
+		res, err = f.getDebugLine(entry)
+		if err != nil {
+			return nil, err
+		}
+	}
 	if multiline, ok := multiline.(string); ok && multiline != "" {
 		res = append(res, []byte(multiline)...)
 	}
-	return res, err
+	return res, nil
 }
 
-type BufferedLogs struct {
-	Messages []string
-}
-
-func (bl *BufferedLogs) Fire(entry *log.Entry) error {
-	bl.Messages = append(bl.Messages, entry.Message)
-	if len(entry.Data) > 0 {
-		for _, dataItem := range entry.Data {
-			bl.Messages = append(bl.Messages, fmt.Sprint(dataItem))
-		}
+func Init() (f *CleanFormatter) {
+	f = &CleanFormatter{
+		TextFormatter: logrus.TextFormatter{
+			TimestampFormat: "2006-01-02T15:04:05.000000",
+			FullTimestamp:   true,
+		},
 	}
 
-	return nil
+	logrus.SetFormatter(f)
+
+	return f
 }
 
-func (bl *BufferedLogs) Levels() []log.Level {
-	return log.AllLevels
+func SetLogLevel(isVerbose bool) {
+	logLevel := logrus.InfoLevel
+	if isVerbose {
+		logLevel = logrus.DebugLevel
+	}
+
+	logrus.SetLevel(logLevel)
+
+	logrus.Debugf("will set log level to %v", logLevel)
 }
