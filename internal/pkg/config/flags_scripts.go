@@ -19,12 +19,12 @@ func GetScriptParamReqs() (paramReqs []ParameterRequirement) {
 		{
 			Field:       ClientNameFlag,
 			Description: "[deprecated] Comma separated client names on which the script should be executed",
-			ShortName:   "n",
+			ShortName:   "",
 		},
 		{
 			Field:       ClientNamesFlag,
 			Description: `Comma separated client names for which the command should be executed"`,
-			ShortName:   "",
+			ShortName:   "n",
 		},
 		{
 			Field:       ClientSearchFlag,
