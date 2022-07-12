@@ -36,7 +36,7 @@ func (cc *ClientController) Clients(ctx context.Context, params *options.Paramet
 
 func (cc *ClientController) Client(ctx context.Context, params *options.ParameterBag, id, name string) error {
 	if id == "" && name == "" {
-		return fmt.Errorf("no client id nor name provided")
+		return fmt.Errorf("no client id or name provided")
 	}
 
 	renderDetails := params.ReadBool("all", false)

@@ -21,25 +21,6 @@ import (
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
 )
 
-const (
-	ClientID           = "client"
-	TunnelID           = "tunnel"
-	Local              = "local"
-	Remote             = "remote"
-	Scheme             = "scheme"
-	ACL                = "acl"
-	CheckPort          = "checkp"
-	IdleTimeoutMinutes = "idle-timeout-minutes"
-	SkipIdleTimeout    = "skip-idle-timeout"
-	LaunchSSH          = "launch-ssh"
-	LaunchRDP          = "launch-rdp"
-	RDPWidth           = "rdp-width"
-	RDPHeight          = "rdp-height"
-	RDPUser            = "rdp-user"
-	DefaultACL         = "<<YOU CURRENT PUBLIC IP>>"
-	ForceDeletion      = "force"
-)
-
 type TunnelRenderer interface {
 	RenderTunnels(tunnels []*models.Tunnel) error
 	RenderTunnel(t output.KvProvider) error
@@ -72,8 +53,8 @@ func (tc *TunnelController) Tunnels(ctx context.Context, params *options.Paramet
 		ctx,
 		api.NewPaginationFromParams(params),
 		api.NewFilters(
-			"id", params.ReadString(ClientID, ""),
-			"name", config.ReadNames(params),
+			"id", params.ReadString(config.ClientID, ""),
+			"name", params.ReadString(config.ClientNameFlag, ""),
 			"*", params.ReadString(config.ClientSearchFlag, ""),
 		),
 	)
@@ -100,8 +81,8 @@ func (tc *TunnelController) Delete(ctx context.Context, params *options.Paramete
 		return err
 	}
 
-	tunnelID := params.ReadString(TunnelID, "")
-	err = tc.Rport.DeleteTunnel(ctx, clientID, tunnelID, params.ReadBool(ForceDeletion, false))
+	tunnelID := params.ReadString(config.TunnelID, "")
+	err = tc.Rport.DeleteTunnel(ctx, clientID, tunnelID, params.ReadBool(config.ForceDeletion, false))
 	if err != nil {
 		if strings.Contains(err.Error(), "tunnel is still active") {
 			return fmt.Errorf("%v, use -f to delete it anyway", err)
@@ -120,18 +101,15 @@ func (tc *TunnelController) Delete(ctx context.Context, params *options.Paramete
 func (tc *TunnelController) getClientIDAndClientName(
 	ctx context.Context,
 	params *options.ParameterBag,
-) (clientID, clientNames string, err error) {
-	clientID = params.ReadString(ClientID, "")
-	clientNames = params.ReadString(config.ClientNamesFlag, "")
-	if clientNames == "" {
-		clientNames = params.ReadString(config.ClientNameFlag, "")
-	}
-	if clientID == "" && clientNames == "" {
-		err = errors.New("no client id nor name provided")
+) (clientID, clientName string, err error) {
+	clientID = params.ReadString(config.ClientID, "")
+	clientName = params.ReadString(config.ClientNameFlag, "")
+	if clientID == "" && clientName == "" {
+		err = errors.New("no client id or name provided")
 		return
 	}
-	if clientID != "" && clientNames != "" {
-		err = errors.New("both client id and name provided")
+	if clientID != "" && clientName != "" {
+		err = errors.New("both client id and name provided. Please provide one or the other")
 		return
 	}
 
@@ -139,16 +117,16 @@ func (tc *TunnelController) getClientIDAndClientName(
 		return
 	}
 
-	clients, err := tc.Rport.Clients(ctx, api.NewPaginationWithLimit(2), api.NewFilters("name", clientNames))
+	clients, err := tc.Rport.Clients(ctx, api.NewPaginationWithLimit(2), api.NewFilters("name", clientName))
 	if err != nil {
 		return
 	}
 
 	if len(clients.Data) < 1 {
-		return "", "", fmt.Errorf("unknown client with name %q", clientNames)
+		return "", "", fmt.Errorf("unknown client with name %q", clientName)
 	}
 	if len(clients.Data) > 1 {
-		return "", "", fmt.Errorf("client with name %q is ambidguous, use a more precise name or use the client id", clientNames)
+		return "", "", fmt.Errorf("client with name %q is ambidguous, use a more precise name or use the client id", clientName)
 	}
 
 	client := clients.Data[0]
@@ -161,8 +139,8 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 		return err
 	}
 
-	acl := params.ReadString(ACL, "")
-	if (acl == "" || acl == DefaultACL) && tc.IPProvider != nil {
+	acl := params.ReadString(config.ACL, "")
+	if (acl == "" || acl == config.DefaultACL) && tc.IPProvider != nil {
 		ip, e := tc.IPProvider.GetIP(ctx)
 		if e != nil {
 			logrus.Errorf("failed to fetch IP: %v", e)
@@ -176,12 +154,12 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 		return err
 	}
 
-	local := params.ReadString(Local, "")
-	checkPort := params.ReadString(CheckPort, "")
-	skipIdleTimeout := params.ReadBool(SkipIdleTimeout, false)
+	local := params.ReadString(config.Local, "")
+	checkPort := params.ReadString(config.CheckPort, "")
+	skipIdleTimeout := params.ReadBool(config.SkipIdleTimeout, false)
 	idleTimeoutMinutes := 0
 	if !skipIdleTimeout {
-		idleTimeoutMinutes = params.ReadInt(IdleTimeoutMinutes, 0)
+		idleTimeoutMinutes = params.ReadInt(config.IdleTimeoutMinutes, 0)
 	}
 	tunResp, err := tc.Rport.CreateTunnel(
 		ctx,
@@ -217,17 +195,17 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 		return err
 	}
 
-	launchSSHStr := params.ReadString(LaunchSSH, "")
-	shouldLaunchRDP := params.ReadBool(LaunchRDP, false)
+	launchSSHStr := params.ReadString(config.LaunchSSH, "")
+	shouldLaunchRDP := params.ReadBool(config.LaunchRDP, false)
 
 	return tc.launchHelperFlowIfNeeded(ctx, launchSSHStr, clientID, clientName, shouldLaunchRDP, tunnelCreated, params)
 }
 
 func (tc *TunnelController) resolveRemoteAddrAndScheme(params *options.ParameterBag) (remotePortAndHostStr, scheme string, err error) {
-	remotePortAndHostStr = params.ReadString(Remote, "")
+	remotePortAndHostStr = params.ReadString(config.Remote, "")
 	remotePortInt, _ := utils.ExtractPortAndHost(remotePortAndHostStr)
 
-	scheme = params.ReadString(Scheme, "")
+	scheme = params.ReadString(config.Scheme, "")
 	if scheme == "" && remotePortInt > 0 {
 		scheme = utils.GetSchemeByPort(remotePortInt)
 	}
@@ -236,13 +214,13 @@ func (tc *TunnelController) resolveRemoteAddrAndScheme(params *options.Parameter
 		remotePortInt = utils.GetPortByScheme(scheme)
 	}
 
-	launchSSHStr := params.ReadString(LaunchSSH, "")
+	launchSSHStr := params.ReadString(config.LaunchSSH, "")
 	if launchSSHStr != "" {
 		if scheme == "" {
 			scheme = utils.SSH
 		}
 		if scheme != utils.SSH {
-			err = fmt.Errorf("scheme %s is not compatible with the %s option", scheme, LaunchSSH)
+			err = fmt.Errorf("scheme %s is not compatible with the %s option", scheme, config.LaunchSSH)
 			return
 		}
 		if remotePortInt == 0 {
@@ -250,13 +228,13 @@ func (tc *TunnelController) resolveRemoteAddrAndScheme(params *options.Parameter
 		}
 	}
 
-	shouldLaunchRDP := params.ReadBool(LaunchRDP, false)
+	shouldLaunchRDP := params.ReadBool(config.LaunchRDP, false)
 	if shouldLaunchRDP {
 		if scheme == "" {
 			scheme = utils.RDP
 		}
 		if scheme != utils.RDP {
-			err = fmt.Errorf("scheme %s is not compatible with the %s option", scheme, LaunchRDP)
+			err = fmt.Errorf("scheme %s is not compatible with the %s option", scheme, config.LaunchRDP)
 			return
 		}
 		if remotePortInt == 0 {
@@ -284,8 +262,8 @@ func (tc *TunnelController) launchHelperFlowIfNeeded(
 
 	if launchSSHStr != "" {
 		deleteTunnelParams := options.New(options.NewMapValuesProvider(map[string]interface{}{
-			ClientID: clientID,
-			TunnelID: tunnelCreated.ID,
+			config.ClientID: clientID,
+			config.TunnelID: tunnelCreated.ID,
 		}))
 		return tc.startSSHFlow(ctx, tunnelCreated, params, deleteTunnelParams)
 	}
@@ -312,7 +290,7 @@ func (tc *TunnelController) startSSHFlow(
 	tunnelCreated *models.TunnelCreated,
 	params, deleteTunnelParams *options.ParameterBag,
 ) error {
-	sshParamsFlat := params.ReadString(LaunchSSH, "")
+	sshParamsFlat := params.ReadString(config.LaunchSSH, "")
 	logrus.Debugf("ssh arguments are provided: '%s', will start an ssh session", sshParamsFlat)
 	port, host, err := tc.extractPortAndHost(tunnelCreated, params)
 	if err != nil {
@@ -338,7 +316,7 @@ func (tc *TunnelController) startSSHFlow(
 }
 
 func (tc *TunnelController) generateUsage(tunnelCreated *models.TunnelCreated, params *options.ParameterBag) string {
-	shouldLaunchRDP := params.ReadBool(LaunchRDP, false)
+	shouldLaunchRDP := params.ReadBool(config.LaunchRDP, false)
 
 	if !shouldLaunchRDP {
 		port, host, err := tc.extractPortAndHost(tunnelCreated, params)
@@ -401,9 +379,9 @@ func (tc *TunnelController) startRDPFlow(
 
 	rdpFileInput := models.FileInput{
 		Address:      fmt.Sprintf("%s:%s", host, port),
-		ScreenHeight: params.ReadInt(RDPHeight, 0),
-		ScreenWidth:  params.ReadInt(RDPWidth, 0),
-		UserName:     params.ReadString(RDPUser, ""),
+		ScreenHeight: params.ReadInt(config.RDPHeight, 0),
+		ScreenWidth:  params.ReadInt(config.RDPWidth, 0),
+		UserName:     params.ReadString(config.RDPUser, ""),
 		FileName:     fmt.Sprintf("%s.rdp", clientName),
 	}
 

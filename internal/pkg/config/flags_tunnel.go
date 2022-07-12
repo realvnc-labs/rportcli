@@ -34,19 +34,14 @@ func GetCreateTunnelParamReqs(isRDPUserRequired bool) []ParameterRequirement {
 			ShortName:   "c",
 			IsRequired:  true,
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
-				return providedParams.ReadString(ClientNameFlag, "") == "" && providedParams.ReadString(ClientNamesFlag, "") == ""
+				return providedParams.ReadString(ClientNameFlag, "") == ""
 			},
 			Help: "Enter a client ID",
 		},
 		{
 			Field:       ClientNameFlag,
-			Description: `[deprecated] client name, if no client id is provided`,
+			Description: `client name, if no client id is provided`,
 			ShortName:   "n",
-		},
-		{
-			Field:       ClientNamesFlag,
-			Description: `client name(s), if no client id is provided`,
-			ShortName:   "",
 		},
 		{
 			Field:       Local,
@@ -156,19 +151,14 @@ func GetDeleteTunnelParamReqs() []ParameterRequirement {
 			ShortName:   "c",
 			IsRequired:  true,
 			IsEnabled: func(providedParams *options.ParameterBag) bool {
-				return providedParams.ReadString(ClientNameFlag, "") == "" && providedParams.ReadString(ClientNamesFlag, "") == ""
+				return providedParams.ReadString(ClientNameFlag, "") == ""
 			},
 			Help: "Enter a client id",
 		},
 		{
 			Field:       ClientNameFlag,
-			Description: `[deprecated] client name, if no client id is provided`,
+			Description: `client name, if no client id is provided`,
 			ShortName:   "n",
-		},
-		{
-			Field:       ClientNamesFlag,
-			Description: `client name(s), if no client id is provided`,
-			ShortName:   "",
 		},
 		{
 			Field:       ForceDeletion,

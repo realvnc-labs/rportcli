@@ -23,9 +23,8 @@ import (
 func init() {
 	addClientsPaginationFlags(tunnelListCmd)
 	addClientsSearchFlag(tunnelListCmd)
-	tunnelListCmd.Flags().StringP(config.ClientNameFlag, "n", "", "[deprecated] Get tunnels of a client by name")
-	tunnelListCmd.Flags().StringP(config.ClientNamesFlag, "", "", "Get tunnels of a client by name(s)")
-	tunnelListCmd.Flags().StringP(controllers.ClientID, "c", "", "Get tunnels of a client by client id")
+	tunnelListCmd.Flags().StringP(config.ClientNameFlag, "n", "", "Get tunnels of a client by name")
+	tunnelListCmd.Flags().StringP(config.ClientID, "c", "", "Get tunnels of a client by client id")
 	tunnelsCmd.AddCommand(tunnelListCmd)
 
 	config.DefineCommandInputs(tunnelDeleteCmd, getDeleteTunnelRequirements())

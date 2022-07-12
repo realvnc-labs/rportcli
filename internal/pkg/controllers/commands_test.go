@@ -136,12 +136,12 @@ func TestInvalidInputForCommand(t *testing.T) {
 		ExecutionHelper: &ExecutionHelper{},
 	}
 	params := config.FromValues(map[string]string{
-		ClientID:               "",
+		config.ClientID:        "",
 		config.ClientNamesFlag: "",
-		Local:                  "lohost1:3300",
-		Remote:                 "rhost2:3344",
-		Scheme:                 utils.SSH,
-		CheckPort:              "1",
+		config.Local:           "lohost1:3300",
+		config.Remote:          "rhost2:3344",
+		config.Scheme:          utils.SSH,
+		config.CheckPort:       "1",
 	})
 	err := cc.Start(context.Background(), params)
 	assert.EqualError(t, err, "no client ids, names or search provided")
