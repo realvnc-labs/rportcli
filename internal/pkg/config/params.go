@@ -10,11 +10,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func ReadNames(params *options.ParameterBag) (names string) {
+func ReadClientNames(params *options.ParameterBag) (names string) {
 	names = params.ReadString(ClientNamesFlag, "")
 	if names == "" {
 		names = params.ReadString(ClientNameFlag, "")
-		logrus.Warn("please use the --names option, the --name option has been deprecated and support will be removed in a future release")
+		if names != "" {
+			logrus.Warn("please use the --names option, the --name option has been deprecated and support will be removed in a future release")
+		}
 	}
 	return names
 }

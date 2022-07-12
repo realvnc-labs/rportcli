@@ -121,7 +121,7 @@ func (eh *ExecutionHelper) getClientIDs(ctx context.Context, params *options.Par
 	if ids != "" {
 		return ids, nil
 	}
-	names := config.ReadNames(params)
+	names := config.ReadClientNames(params)
 	search := params.ReadString(config.ClientSearchFlag, "")
 	if ids == "" && names == "" && search == "" {
 		return "", errors.New("no client ids, names or search provided")
