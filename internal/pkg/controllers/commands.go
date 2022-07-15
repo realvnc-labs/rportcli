@@ -11,6 +11,9 @@ type CommandsController struct {
 	*ExecutionHelper
 }
 
-func (cc *CommandsController) Start(ctx context.Context, params *options.ParameterBag) error {
-	return cc.execute(ctx, params, "", params.ReadString(config.Interpreter, ""))
+func (cc *CommandsController) Start(ctx context.Context,
+	params *options.ParameterBag,
+	promptReader config.PromptReader,
+	hostInfo *config.HostInfo) error {
+	return cc.execute(ctx, params, "", params.ReadString(config.Interpreter, ""), promptReader, hostInfo)
 }

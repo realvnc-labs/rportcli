@@ -19,6 +19,8 @@ const (
 	IsSudo           = "is_sudo"
 	Interpreter      = "interpreter"
 	IsFullOutput     = "full-command-response"
+	WriteExecLog     = "writeexeclog"
+	ReadExecLog      = "readexeclog"
 
 	ClientID           = "client"
 	TunnelID           = "tunnel"
@@ -74,5 +76,28 @@ func GetClientIDsParamReq(desc string) (paramReq ParameterRequirement) {
 				providedParams.ReadString(ClientSearchFlag, "") == ""
 		},
 		IsRequired: true,
+	}
+}
+
+func GetWriteExecutionLogParamReq() (paramReq ParameterRequirement) {
+	return ParameterRequirement{
+		Field:       WriteExecLog,
+		Help:        "keep a log of the current execution",
+		Description: "write a log of the execution output",
+		ShortName:   "",
+		Type:        StringRequirementType,
+		Default:     "",
+	}
+}
+
+func GetReadExecutionLogParamReq() (paramReq ParameterRequirement) {
+	return ParameterRequirement{
+		Field: ReadExecLog,
+		Help:  "use client ids with failed runs from specified execution log",
+		Description: "read execution log from which to extract failed client ids, " +
+			"which will be used to target clients for the next run",
+		ShortName: "",
+		Type:      StringRequirementType,
+		Default:   "",
 	}
 }

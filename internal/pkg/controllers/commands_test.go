@@ -15,51 +15,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type ReadChunk struct {
-	Output []byte
-	Err    error
-}
-
-type ReadWriterMock struct {
-	itemsToRead   []ReadChunk
-	itemReadIndex int
-	writtenItems  []string
-	writeError    error
-	isClosed      bool
-	closeError    error
-}
-
-func (rwm *ReadWriterMock) Read() (msg []byte, err error) {
-	item := rwm.itemsToRead[rwm.itemReadIndex]
-
-	msg = item.Output
-	err = item.Err
-
-	rwm.itemReadIndex++
-
-	return
-}
-
-func (rwm *ReadWriterMock) Write(inputMsg []byte) (n int, err error) {
-	rwm.writtenItems = append(rwm.writtenItems, string(inputMsg))
-	return 0, rwm.writeError
-}
-
-func (rwm *ReadWriterMock) Close() error {
-	rwm.isClosed = true
-	return rwm.closeError
-}
-
-type JobRendererMock struct {
-	jobToRender *models.Job
-	err         error
-}
-
-func (jrm *JobRendererMock) RenderJob(j *models.Job) error {
-	jrm.jobToRender = j
-	return jrm.err
-}
-
 func TestCommandExecutionByClientIDsSuccess(t *testing.T) {
 	jobResp := models.Job{
 		Jid:         "123",
@@ -116,7 +71,7 @@ func TestCommandExecutionByClientIDsSuccess(t *testing.T) {
 		config.AbortOnError:     "1",
 		config.Interpreter:      "bash",
 	})
-	err = ic.Start(context.Background(), params)
+	err = ic.Start(context.Background(), params, nil, nil)
 
 	assert.NoError(t, err)
 
@@ -143,7 +98,7 @@ func TestInvalidInputForCommand(t *testing.T) {
 		config.Scheme:          utils.SSH,
 		config.CheckPort:       "1",
 	})
-	err := cc.Start(context.Background(), params)
+	err := cc.Start(context.Background(), params, nil, nil)
 	assert.EqualError(t, err, "no client ids, names or search provided")
 }
 
@@ -188,7 +143,7 @@ func TestCommandExecutionWithInvalidResponse(t *testing.T) {
 		config.ClientIDs: "123",
 		config.Command:   "ls",
 	})
-	err = ic.Start(context.Background(), params)
+	err = ic.Start(context.Background(), params, nil, nil)
 
 	assert.Error(t, err)
 	if err == nil {

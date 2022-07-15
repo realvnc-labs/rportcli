@@ -39,6 +39,10 @@ func (prm *PromptReaderMock) Output(text string) {
 	prm.Inputs = append(prm.Inputs, text)
 }
 
+func (prm *PromptReaderMock) ReadConfirmation(prompt string) (confirmed bool, err error) {
+	return false, nil
+}
+
 func TestPromptRequiredValues(t *testing.T) {
 	readerMock := &PromptReaderMock{
 		ReadCount: 0,

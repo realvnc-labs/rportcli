@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bufio"
 	"context"
 	"net/http"
 	"os"
@@ -30,14 +29,8 @@ func makeRunContext() (ctx context.Context, cancel context.CancelFunc, sigs chan
 }
 
 func loadParams(cmd *cobra.Command,
-	sigs chan os.Signal,
-	reqs []config.ParameterRequirement) (params *options.ParameterBag, err error) {
-	promptReader := &utils.PromptReader{
-		Sc:              bufio.NewScanner(os.Stdin),
-		SigChan:         sigs,
-		PasswordScanner: utils.ReadPassword,
-	}
-
+	reqs []config.ParameterRequirement,
+	promptReader config.PromptReader) (params *options.ParameterBag, err error) {
 	params, err = config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, reqs, promptReader)
 	return params, err
 }

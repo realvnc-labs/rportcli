@@ -1,0 +1,28 @@
+executed_at: 2022-07-13T05:57:06.777202262Z
+executed_by: test user
+executed_on: test machine
+api_user: Test API User
+api_url: http://test-server.com
+api_auth: bearer+jwt
+num_clients: 1
+failed: 0
+jobs:
+  - jid: 2c31a80f-389f-40aa-9eb0-98f907dee16e
+    status: successful
+    finishedat: 2022-07-13T05:57:07.778244133Z
+    clientid: 76376f704ab0429eb6cb141e6f34ed75
+    clientname: Kathy-Daniels
+    command: pwd
+    cwd: ""
+    pid: 124058
+    startedat: 2022-07-13T05:57:07.777202262Z
+    createdby: rs
+    multijobid: 350e22cb-79f7-4032-9155-c8a647f76020
+    timeoutsec: 30
+    error: ""
+    result:
+      stdout: /
+      stderr: ""
+    issudo: false
+    isscript: false
+    interpreter: ""

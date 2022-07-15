@@ -15,6 +15,8 @@ func GetScriptParamReqs() (paramReqs []ParameterRequirement) {
 	return []ParameterRequirement{
 		GetNoPromptParamReq(),
 		GetReadYAMLParamReq(),
+		GetWriteExecutionLogParamReq(),
+		GetReadExecutionLogParamReq(),
 		GetClientIDsParamReq(scriptsClientIDsDescription),
 		{
 			Field:       ClientNameFlag,

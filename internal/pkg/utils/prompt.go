@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 type Scanner interface {
@@ -32,6 +33,20 @@ func (pr *PromptReader) ReadString() (string, error) {
 
 		return "", io.EOF
 	})
+}
+
+func (pr *PromptReader) ReadConfirmation(prompt string) (confirmed bool, err error) {
+	pr.Output(prompt)
+	response, err := pr.ReadString()
+	if err != nil {
+		return false, err
+	}
+	if response == "" {
+		return false, nil
+	}
+	responseChar := response[0:1]
+	confirmed = strings.EqualFold(strings.ToUpper(responseChar), "Y")
+	return confirmed, nil
 }
 
 func (pr *PromptReader) ReadPassword() (string, error) {
