@@ -13,23 +13,23 @@ type JobResult struct {
 }
 
 type Job struct {
-	Jid         string    `json:"jid"`
-	Status      string    `json:"status"`
-	FinishedAt  time.Time `json:"finished_at"`
-	ClientID    string    `json:"client_id"`
-	ClientName  string    `json:"client_name,omitempty"`
-	Command     string    `json:"command"`
-	Cwd         string    `json:"cwd"`
-	Pid         int       `json:"pid"`
-	StartedAt   time.Time `json:"started_at"`
-	CreatedBy   string    `json:"created_by"`
-	MultiJobID  string    `json:"multi_job_id"`
-	TimeoutSec  int       `json:"timeout_sec"`
-	Error       string    `json:"error"`
-	Result      JobResult `json:"result"`
-	IsSudo      bool      `json:"is_sudo"`
-	IsScript    bool      `json:"is_script"`
-	Interpreter string    `json:"interpreter"`
+	Jid         string    `json:"jid" yaml:"jid"`
+	Status      string    `json:"status" yaml:"status"`
+	FinishedAt  time.Time `json:"finished_at" yaml:"finished_at"`
+	ClientID    string    `json:"client_id" yaml:"client_id"`
+	ClientName  string    `json:"client_name,omitempty" yaml:"client_name"`
+	Command     string    `json:"command" yaml:"command"`
+	Cwd         string    `json:"cwd" yaml:"cwd"`
+	Pid         int       `json:"pid" yaml:"pid"`
+	StartedAt   time.Time `json:"started_at" yaml:"started_at"`
+	CreatedBy   string    `json:"created_by" yaml:"created_by"`
+	MultiJobID  string    `json:"multi_job_id" yaml:"multi_job_id"`
+	TimeoutSec  int       `json:"timeout_sec" yaml:"timeout_sec"`
+	Error       string    `json:"error" yaml:"error"`
+	Result      JobResult `json:"result" yaml:"result"`
+	IsSudo      bool      `json:"is_sudo" yaml:"is_sudo"`
+	IsScript    bool      `json:"is_script" yaml:"is_script"`
+	Interpreter string    `json:"interpreter" yaml:"interpreter"`
 }
 
 type WsScriptCommand struct {

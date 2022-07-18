@@ -9,41 +9,41 @@ failed: 0
 jobs:
   - jid: 1365e03d-dd37-43fb-ad84-2291cee0b413
     status: successful
-    finishedat: 2022-07-14T07:35:44.584508169Z
-    clientid: 76376f704ab0429eb6cb141e6f34ed75
-    clientname: Kathy-Daniels
+    finished_at: 2022-07-14T07:35:44.584508169Z
+    client_id: 76376f704ab0429eb6cb141e6f34ed75
+    client_name: Kathy-Daniels
     command: pwd
     cwd: ""
     pid: 129132
-    startedat: 2022-07-14T07:35:44.54752511Z
-    createdby: rs
-    multijobid: 7b288ebd-7121-40cb-9e67-da2dff52c144
-    timeoutsec: 30
+    started_at: 2022-07-14T07:35:44.54752511Z
+    created_by: rs
+    multi_job_id: 7b288ebd-7121-40cb-9e67-da2dff52c144
+    timeout_sec: 30
     error: ""
     result:
       stdout: |
         /
       stderr: ""
-    issudo: false
-    isscript: false
+    is_sudo: false
+    is_script: false
     interpreter: ""
   - jid: 8c1680df-8d62-4f83-b841-2985a9003ea6
     status: successful
-    finishedat: 2022-07-14T07:35:44.656098384Z
-    clientid: 8444b1c8cad84877931e6277ab3c6bb1
-    clientname: Kathy-Phillips
+    finished_at: 2022-07-14T07:35:44.656098384Z
+    client_id: 8444b1c8cad84877931e6277ab3c6bb1
+    client_name: Kathy-Phillips
     command: pwd
     cwd: ""
     pid: 1448180
-    startedat: 2022-07-14T07:35:44.636481758Z
-    createdby: rs
-    multijobid: 7b288ebd-7121-40cb-9e67-da2dff52c144
-    timeoutsec: 30
+    started_at: 2022-07-14T07:35:44.636481758Z
+    created_by: rs
+    multi_job_id: 7b288ebd-7121-40cb-9e67-da2dff52c144
+    timeout_sec: 30
     error: ""
     result:
       stdout: |
         /
       stderr: ""
-    issudo: false
-    isscript: false
+    is_sudo: false
+    is_script: false
     interpreter: ""
