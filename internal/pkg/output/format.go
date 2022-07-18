@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -29,6 +29,7 @@ func RenderByFormat(format string, w io.Writer, source interface{}, renderCallba
 		return RenderJSON(w, source, true)
 	case FormatYAML:
 		yamlEncoder := yaml.NewEncoder(w)
+		yamlEncoder.SetIndent(2)
 		return yamlEncoder.Encode(source)
 	}
 

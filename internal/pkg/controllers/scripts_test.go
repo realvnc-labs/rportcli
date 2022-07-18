@@ -171,7 +171,7 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 			sc, rw, jr, err := buildScriptController(jobToGive)
 			require.NoError(t, err)
 
-			err = sc.Start(context.Background(), paramsContainer)
+			err = sc.Start(context.Background(), paramsContainer, nil, nil)
 			if tc.errorToExpect != "" {
 				require.Contains(t, err.Error(), tc.errorToExpect)
 				return

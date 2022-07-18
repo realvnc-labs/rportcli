@@ -13,6 +13,7 @@ const maxPromptIterations = 100
 
 type PromptReader interface {
 	ReadString() (string, error)
+	ReadConfirmation(prompt string) (confirmed bool, err error)
 	ReadPassword() (string, error)
 	Output(text string)
 }

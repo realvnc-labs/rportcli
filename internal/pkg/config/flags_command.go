@@ -13,6 +13,8 @@ func GetCommandParamReqs() (paramReqs []ParameterRequirement) {
 	return []ParameterRequirement{
 		GetNoPromptParamReq(),
 		GetReadYAMLParamReq(),
+		GetWriteExecutionLogParamReq(),
+		GetReadExecutionLogParamReq(),
 		GetClientIDsParamReq(commandClientIDsDescription),
 		{
 			Field:       ClientNameFlag,

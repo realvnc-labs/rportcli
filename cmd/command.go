@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"bufio"
+	"os"
+
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/controllers"
@@ -34,7 +37,13 @@ var executeCmd = &cobra.Command{
 		ctx, cancel, sigs := makeRunContext()
 		defer cancel()
 
-		params, err := loadParams(cmd, sigs, getCommandRequirements())
+		promptReader := &utils.PromptReader{
+			Sc:              bufio.NewScanner(os.Stdin),
+			SigChan:         sigs,
+			PasswordScanner: utils.ReadPassword,
+		}
+
+		params, err := loadParams(cmd, getCommandRequirements(), promptReader)
 		if err != nil {
 			return err
 		}
@@ -50,7 +59,7 @@ var executeCmd = &cobra.Command{
 			ExecutionHelper: newExecutionHelper(params, wsClient, rportAPI),
 		}
 
-		err = cmdExecutor.Start(ctx, params)
+		err = cmdExecutor.Start(ctx, params, promptReader, nil)
 
 		return err
 	},

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 
@@ -16,6 +15,22 @@ func ReadClientNames(params *options.ParameterBag) (names string) {
 		names = params.ReadString(ClientNameFlag, "")
 	}
 	return names
+}
+
+func ExecLogRequested(params *options.ParameterBag) (requested bool, logFilename string) {
+	logFilename = params.ReadString(WriteExecLog, "")
+	return logFilename != "", logFilename
+}
+
+func SourceExecLog(params *options.ParameterBag) (requested bool, logFilename string) {
+	logFilename = params.ReadString(ReadExecLog, "")
+	return logFilename != "", logFilename
+}
+
+func ReadNoPrompt(params *options.ParameterBag) (noPrompt bool) {
+	// currently just reuse the NoPrompt flag
+	noPrompt = params.ReadBool(NoPrompt, false)
+	return noPrompt
 }
 
 func ReadAPIUser(params *options.ParameterBag) (user string) {
@@ -85,7 +100,10 @@ func HasYAMLParams(flagParams map[string]interface{}) (yFileList []string, hasYA
 }
 
 var (
-	ErrMultipleTargetingOptions = errors.New("multiple targeting options. Please only specify one of --cids, --gids, --name or --names")
+	ErrMultipleTargetingOptions = fmt.Errorf("multiple client targeting options. "+
+		"Please only specify one of --%s, --%s, --%s, or --%s",
+		ClientIDs, GroupIDs, ClientNameFlag, ClientNamesFlag,
+	)
 )
 
 func CheckTargetingParams(params *options.ParameterBag) (err error) {

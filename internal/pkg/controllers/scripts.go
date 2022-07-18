@@ -21,7 +21,10 @@ type ScriptsController struct {
 	*ExecutionHelper
 }
 
-func (cc *ScriptsController) Start(ctx context.Context, params *options.ParameterBag) (err error) {
+func (cc *ScriptsController) Start(ctx context.Context,
+	params *options.ParameterBag,
+	promptReader config.PromptReader,
+	hostInfo *config.HostInfo) (err error) {
 	var scriptContent []byte
 	var interpreter string
 
@@ -44,7 +47,7 @@ func (cc *ScriptsController) Start(ctx context.Context, params *options.Paramete
 
 	scriptContentBase64 := base64.StdEncoding.EncodeToString(scriptContent)
 
-	return cc.execute(ctx, params, scriptContentBase64, interpreter)
+	return cc.execute(ctx, params, scriptContentBase64, interpreter, promptReader, hostInfo)
 }
 
 func (cc *ScriptsController) ReadScriptContent(scriptsFilePath string) (scriptContent []byte, err error) {

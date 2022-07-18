@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 	io2 "github.com/breathbath/go_utils/v2/pkg/io"
@@ -48,17 +49,53 @@ type ExecutionHelper struct {
 	JobRenderer JobRenderer
 	ReadWriter  ReadWriter
 	Rport       *api.Rport
+
+	ExecutedAt       time.Time
+	ExecutionResults []*models.Job
 }
 
-func (eh *ExecutionHelper) execute(ctx context.Context, params *options.ParameterBag, scriptPayload, interpreter string) error {
+func (eh *ExecutionHelper) execute(ctx context.Context,
+	params *options.ParameterBag,
+	scriptPayload, interpreter string,
+	promptReader config.PromptReader,
+	hostInfo *config.HostInfo) (err error) {
 	if eh.ReadWriter != nil {
 		defer io2.CloseResourceSecure("read writer", eh.ReadWriter)
 	}
 
-	clientIDs, err := eh.getClientIDs(ctx, params)
-	if err != nil {
-		return err
+	var el *ExecutionLog
+	clientIDs := ""
+
+	execLogRequested, logFilename := config.ExecLogRequested(params)
+	if execLogRequested {
+		el = NewExecLog(params, logFilename, promptReader, hostInfo)
+		if el.ExistingLog() {
+			// user response saved in the exec log
+			_, err = el.ConfirmOverwrite()
+			if err != nil {
+				return err
+			}
+		}
 	}
+
+	hasSourceExecLog, sourceLogFilename := config.SourceExecLog(params)
+	if hasSourceExecLog {
+		// get failed clientIDs from previous exec log
+		sl := NewExecLog(params, sourceLogFilename, promptReader, nil)
+		clientIDs, err = sl.GetAndConfirmFailedClientIDs()
+		if err != nil {
+			return err
+		}
+	} else {
+		clientIDs, err = eh.getClientIDsFromParams(ctx, params)
+		if err != nil {
+			return err
+		}
+	}
+
+	// initialize ready for new run
+	eh.ExecutionResults = make([]*models.Job, 0)
+	eh.ExecutedAt = time.Now()
 
 	wsCmd := eh.buildExecInput(params, clientIDs, scriptPayload, interpreter)
 	err = eh.sendCommand(wsCmd)
@@ -67,8 +104,20 @@ func (eh *ExecutionHelper) execute(ctx context.Context, params *options.Paramete
 	}
 
 	err = eh.startReading(ctx)
+	if err != nil {
+		return err
+	}
 
-	return err
+	if execLogRequested {
+		if el.ShouldWriteLog() {
+			err = el.WriteExecLog(eh.ExecutedAt, eh.ExecutionResults)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (eh *ExecutionHelper) buildExecInput(
@@ -116,7 +165,7 @@ func (eh *ExecutionHelper) sendCommand(wsCmd *models.WsScriptCommand) error {
 	return nil
 }
 
-func (eh *ExecutionHelper) getClientIDs(ctx context.Context, params *options.ParameterBag) (clientIDs string, err error) {
+func (eh *ExecutionHelper) getClientIDsFromParams(ctx context.Context, params *options.ParameterBag) (clientIDs string, err error) {
 	ids := params.ReadString(config.ClientIDs, "")
 	if ids != "" {
 		return ids, nil
@@ -213,6 +262,8 @@ func (eh *ExecutionHelper) processRawMessage(msg []byte) error {
 	}
 
 	logrus.Debugf("received message: '%s'", string(msg))
+
+	eh.ExecutionResults = append(eh.ExecutionResults, &job)
 
 	err = eh.JobRenderer.RenderJob(&job)
 	return err

@@ -32,3 +32,7 @@ func (prm *PromptReaderMock) ReadPassword() (string, error) {
 func (prm *PromptReaderMock) Output(text string) {
 	prm.Inputs = append(prm.Inputs, text)
 }
+
+func (prm *PromptReaderMock) ReadConfirmation(prompt string) (confirmed bool, err error) {
+	return false, nil
+}

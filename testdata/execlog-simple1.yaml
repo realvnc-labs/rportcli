@@ -1,0 +1,49 @@
+executed_at: 2022-07-14T14:35:44.214351+07:00
+executed_by: robins
+executed_on: elio.local
+api_user: rs
+api_url: https://node1.rport.io:3000
+api_auth: bearer+jwt
+num_clients: 2
+failed: 0
+jobs:
+  - jid: 1365e03d-dd37-43fb-ad84-2291cee0b413
+    status: successful
+    finished_at: 2022-07-14T07:35:44.584508169Z
+    client_id: 76376f704ab0429eb6cb141e6f34ed75
+    client_name: Kathy-Daniels
+    command: pwd
+    cwd: ""
+    pid: 129132
+    started_at: 2022-07-14T07:35:44.54752511Z
+    created_by: rs
+    multi_job_id: 7b288ebd-7121-40cb-9e67-da2dff52c144
+    timeout_sec: 30
+    error: ""
+    result:
+      stdout: |
+        /
+      stderr: ""
+    is_sudo: false
+    is_script: false
+    interpreter: ""
+  - jid: 8c1680df-8d62-4f83-b841-2985a9003ea6
+    status: successful
+    finished_at: 2022-07-14T07:35:44.656098384Z
+    client_id: 8444b1c8cad84877931e6277ab3c6bb1
+    client_name: Kathy-Phillips
+    command: pwd
+    cwd: ""
+    pid: 1448180
+    started_at: 2022-07-14T07:35:44.636481758Z
+    created_by: rs
+    multi_job_id: 7b288ebd-7121-40cb-9e67-da2dff52c144
+    timeout_sec: 30
+    error: ""
+    result:
+      stdout: |
+        /
+      stderr: ""
+    is_sudo: false
+    is_script: false
+    interpreter: ""

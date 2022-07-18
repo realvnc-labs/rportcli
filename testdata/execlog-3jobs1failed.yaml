@@ -1,0 +1,68 @@
+executed_at: 2022-07-14T15:22:57.39771+07:00
+executed_by: test_user
+executed_on: test_machine
+api_user: Test API User
+api_url: http://test-server.com
+api_auth: basic+apitoken
+num_clients: 3
+failed: 1
+jobs:
+  - jid: 47b25b3d-3009-4584-822a-11949ad3baea
+    status: failed
+    finished_at: 2022-07-14T08:22:57.666146596Z
+    client_id: 03000200-0400-0500-0006-000700080009
+    client_name: ITXC
+    command: pwd
+    cwd: ""
+    pid: 0
+    started_at: 2022-07-14T08:22:57.62850498Z
+    created_by: rs
+    multi_job_id: 8644eeca-0efa-474e-bb2c-6d39e238508b
+    timeout_sec: 30
+    error: "client error: command is not allowed: pwd"
+    result:
+      stdout: ""
+      stderr: ""
+    is_sudo: false
+    is_script: false
+    interpreter: ""
+  - jid: db897215-1ca7-47c4-9e77-a1b246d61ed4
+    status: successful
+    finished_at: 2022-07-14T08:22:57.757368753Z
+    client_id: 76376f704ab0429eb6cb141e6f34ed75
+    client_name: Kathy-Daniels
+    command: pwd
+    cwd: ""
+    pid: 129523
+    started_at: 2022-07-14T08:22:57.747423131Z
+    created_by: rs
+    multi_job_id: 8644eeca-0efa-474e-bb2c-6d39e238508b
+    timeout_sec: 30
+    error: ""
+    result:
+      stdout: |
+        /
+      stderr: ""
+    is_sudo: false
+    is_script: false
+    interpreter: ""
+  - jid: 626be5fd-c969-4c35-94c8-03bb45cbd66a
+    status: successful
+    finished_at: 2022-07-14T08:22:57.839904402Z
+    client_id: 8444b1c8cad84877931e6277ab3c6bb1
+    client_name: Kathy-Phillips
+    command: pwd
+    cwd: ""
+    pid: 1449819
+    started_at: 2022-07-14T08:22:57.809790814Z
+    created_by: rs
+    multi_job_id: 8644eeca-0efa-474e-bb2c-6d39e238508b
+    timeout_sec: 30
+    error: ""
+    result:
+      stdout: |
+        /
+      stderr: ""
+    is_sudo: false
+    is_script: false
+    interpreter: ""

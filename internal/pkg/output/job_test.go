@@ -88,22 +88,22 @@ Client Name: some cl name
 			Format: FormatYAML,
 			ExpectedOutput: `jid: "123"
 status: success
-finishedat: 2021-01-01T00:00:01Z
-clientid: cl123
-clientname: some cl name
+finished_at: 2021-01-01T00:00:01Z
+client_id: cl123
+client_name: some cl name
 command: ls
 cwd: here
 pid: 123
-startedat: 2021-01-01T00:00:01Z
-createdby: me
-multijobid: multi1234
-timeoutsec: 10
+started_at: 2021-01-01T00:00:01Z
+created_by: me
+multi_job_id: multi1234
+timeout_sec: 10
 error: "no"
 result:
   stdout: some std
   stderr: ""
-issudo: true
-isscript: true
+is_sudo: true
+is_script: true
 interpreter: cmd
 `,
 		},

@@ -19,6 +19,8 @@ const (
 	IsSudo           = "is_sudo"
 	Interpreter      = "interpreter"
 	IsFullOutput     = "full-command-response"
+	WriteExecLog     = "write-execlog"
+	ReadExecLog      = "read-execlog"
 
 	ClientID           = "client"
 	TunnelID           = "tunnel"
@@ -42,10 +44,9 @@ const (
 
 func GetNoPromptParamReq() (paramReq ParameterRequirement) {
 	return ParameterRequirement{
-		Field: NoPrompt,
-		Help:  "Flag to disable prompting when missing values",
-		// TODO: is it just authentication parameters?
-		Description: "Never prompt when missing parameters",
+		Field:       NoPrompt,
+		Help:        "Flag to disable prompting when missing values or confirmations (will answer all y/n questions with y)",
+		Description: "No prompting when missing values or confirmations (will answer all y/n questions with y)",
 		ShortName:   "q",
 		Type:        BoolRequirementType,
 		Default:     false,
@@ -74,5 +75,28 @@ func GetClientIDsParamReq(desc string) (paramReq ParameterRequirement) {
 				providedParams.ReadString(ClientSearchFlag, "") == ""
 		},
 		IsRequired: true,
+	}
+}
+
+func GetWriteExecutionLogParamReq() (paramReq ParameterRequirement) {
+	return ParameterRequirement{
+		Field:       WriteExecLog,
+		Help:        "keep a log of the current execution",
+		Description: "write a log of the execution output",
+		ShortName:   "",
+		Type:        StringRequirementType,
+		Default:     "",
+	}
+}
+
+func GetReadExecutionLogParamReq() (paramReq ParameterRequirement) {
+	return ParameterRequirement{
+		Field: ReadExecLog,
+		Help:  "use client ids with failed runs from specified execution log",
+		Description: "read execution log from which to extract failed client ids, " +
+			"which will be used to target clients for the next run",
+		ShortName: "",
+		Type:      StringRequirementType,
+		Default:   "",
 	}
 }

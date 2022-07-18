@@ -24,6 +24,8 @@ type YAMLExecuteParams struct {
 	Interpreter         string   `yaml:"interpreter,omitempty"`
 	AbortOnError        bool     `yaml:"abort,omitempty"`
 	Cwd                 string   `yaml:"cwd,omitempty"`
+	WriteExecLog        string   `yaml:"write-execlog,omitempty"`
+	ReadExecLog         string   `yaml:"read-execlog,omitempty"`
 }
 
 const (
