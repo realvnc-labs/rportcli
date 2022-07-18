@@ -19,8 +19,8 @@ const (
 	IsSudo           = "is_sudo"
 	Interpreter      = "interpreter"
 	IsFullOutput     = "full-command-response"
-	WriteExecLog     = "writeexeclog"
-	ReadExecLog      = "readexeclog"
+	WriteExecLog     = "write-execlog"
+	ReadExecLog      = "read-execlog"
 
 	ClientID           = "client"
 	TunnelID           = "tunnel"
