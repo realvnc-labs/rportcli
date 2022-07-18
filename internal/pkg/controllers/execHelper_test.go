@@ -270,7 +270,7 @@ func TestShouldErrWhenClientIDsNotConfirmed(t *testing.T) {
 		config.Command:      "cmd",
 		config.Interpreter:  "bash",
 		config.WriteExecLog: logFilename,
-		config.ReadExecLog:  "../../../testdata/execlog-3jobs1failed.yaml",
+		config.ReadExecLog:  sourceLogFilename,
 		config.APIUser:      "Test API User",
 		config.APIURL:       "http://test-server.com",
 		config.APIToken:     "12345678",
@@ -284,6 +284,37 @@ func TestShouldErrWhenClientIDsNotConfirmed(t *testing.T) {
 
 	err := ic.Start(context.Background(), params, prm, hostInfo)
 	assert.ErrorIs(t, err, ErrClientIDsNotConfirmed)
+}
+
+func TestShouldErrWhenNoClientIDs(t *testing.T) {
+	sourceLogFilename := "../../../testdata/execlog-simple1.yaml"
+	eh := makeExecutionHelperWithJobsFromFile(t, sourceLogFilename)
+
+	ic := &CommandsController{
+		ExecutionHelper: eh,
+	}
+
+	logFilename := "./simple-execlog.yaml"
+
+	params := config.FromValues(map[string]string{
+		config.ClientIDs:    "1235",
+		config.Command:      "cmd",
+		config.Interpreter:  "bash",
+		config.WriteExecLog: logFilename,
+		config.ReadExecLog:  sourceLogFilename,
+		config.APIUser:      "Test API User",
+		config.APIURL:       "http://test-server.com",
+		config.APIToken:     "12345678",
+	})
+
+	hostInfo := makeBasicTestHostInfo(t)
+
+	prm := &execPromptReaderMock{
+		ConfirmationAnswer: false,
+	}
+
+	err := ic.Start(context.Background(), params, prm, hostInfo)
+	assert.ErrorIs(t, err, ErrNoClientIDsToUse)
 }
 
 func TestShouldSaveExecLogForFailedClientIDs(t *testing.T) {

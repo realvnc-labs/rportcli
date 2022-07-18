@@ -25,6 +25,7 @@ const (
 var (
 	ErrOverwriteNotConfirmed = errors.New("write execution log requested but overwrite not confirmed")
 	ErrClientIDsNotConfirmed = errors.New("client IDs from previous execution log not confirmed")
+	ErrNoClientIDsToUse      = errors.New("nothing to do. Execution log file does not contain any failed client IDs")
 )
 
 type ExecutionLog struct {
@@ -61,7 +62,7 @@ func NewExecLog(params *options.ParameterBag,
 		promptReader: promptReader,
 		hostInfo:     hostInfo,
 
-		// assume overwrite unles modified to be otherwise
+		// assume overwrite unless modified to be otherwise
 		overwriteConfirmed: true,
 
 		logInfo: &ExecutionLogInfo{},
@@ -157,7 +158,7 @@ func (el *ExecutionLog) MakeExecutionInfoHeader(executedAt time.Time) (err error
 		executedAt = el.hostInfo.FetchedAt
 	}
 
-	el.logInfo.APIUser = config.ReadAPIUser(el.params)
+	el.logInfo.APIUser = el.getAPIUser()
 	el.logInfo.APIURL = config.ReadAPIURL(el.params)
 	el.logInfo.APIAuth = el.getAuthInfo(el.params)
 	el.logInfo.ExecutedAt = executedAt
@@ -168,6 +169,11 @@ func (el *ExecutionLog) MakeExecutionInfoHeader(executedAt time.Time) (err error
 	el.logInfo.Failed = el.getNumClientsWithFailedJobs()
 
 	return nil
+}
+
+func (el *ExecutionLog) getAPIUser() (name string) {
+	name = config.ReadAPIUser(el.params)
+	return name
 }
 
 func (el *ExecutionLog) getNumClients() (numClients int) {
@@ -194,14 +200,18 @@ func (el *ExecutionLog) GetAndConfirmFailedClientIDs() (clientIDs string, err er
 		return "", err
 	}
 
-	ids := make([]string, 0)
-	fmt.Println(WillBeExecutedWithClientIDsMsg)
+	ids := make(map[string]string, 0)
 	for _, job := range el.logInfo.Jobs {
 		if job.Status == statusFailed {
-			fmt.Printf("%s: %s\n", job.ClientID, job.ClientName)
-			ids = append(ids, job.ClientID)
+			ids[job.ClientID] = job.ClientName
 		}
 	}
+
+	if len(ids) == 0 {
+		return "", ErrNoClientIDsToUse
+	}
+
+	displayClientIDs(ids)
 
 	if el.promptReader != nil && !config.ReadNoPrompt(el.params) {
 		proceed, err := el.promptReader.ReadConfirmation(proceedWithClientIDsMsg)
@@ -213,6 +223,25 @@ func (el *ExecutionLog) GetAndConfirmFailedClientIDs() (clientIDs string, err er
 		}
 	}
 
-	clientIDs = strings.Join(ids, ",")
+	clientIDs = strings.Join(getKeysFromMap(ids), ",")
 	return clientIDs, nil
+}
+
+func getKeysFromMap(ids map[string]string) (keys []string) {
+	keys = make([]string, 0, len(ids))
+	for id := range ids {
+		keys = append(keys, id)
+	}
+	return keys
+}
+
+func displayClientIDs(ids map[string]string) {
+	fmt.Println(WillBeExecutedWithClientIDsMsg)
+	for id, name := range ids {
+		if name != "" {
+			fmt.Printf("%s: %s\n", id, name)
+		} else {
+			fmt.Printf("%s\n", id)
+		}
+	}
 }
