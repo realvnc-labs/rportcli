@@ -2,7 +2,6 @@ package config
 
 import (
 	"os"
-	"os/user"
 	"time"
 )
 
@@ -13,7 +12,8 @@ type HostInfo struct {
 }
 
 func GetHostInfo() (hostInfo *HostInfo, err error) {
-	userInfo, err := user.Current()
+	var name string
+	name, err = userCurrent()
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +23,7 @@ func GetHostInfo() (hostInfo *HostInfo, err error) {
 	}
 	hostInfo = &HostInfo{
 		FetchedAt: time.Now(),
-		Username:  userInfo.Name,
+		Username:  name,
 		Machine:   machine,
 	}
 	return hostInfo, nil
