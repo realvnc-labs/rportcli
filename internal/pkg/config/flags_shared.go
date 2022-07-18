@@ -44,10 +44,9 @@ const (
 
 func GetNoPromptParamReq() (paramReq ParameterRequirement) {
 	return ParameterRequirement{
-		Field: NoPrompt,
-		Help:  "Flag to disable prompting when missing values",
-		// TODO: is it just authentication parameters?
-		Description: "Never prompt when missing parameters",
+		Field:       NoPrompt,
+		Help:        "Flag to disable prompting when missing values or confirmations (will answer all y/n questions with y)",
+		Description: "No prompting when missing values or confirmations (will answer all y/n questions with y)",
 		ShortName:   "q",
 		Type:        BoolRequirementType,
 		Default:     false,
