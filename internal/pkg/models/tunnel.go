@@ -179,14 +179,5 @@ func (tc *TunnelCreated) KeyValues() []testing.KeyValueStr {
 		},
 	}
 
-	// Being defensive here. Clientname isn't returned but there is existing
-	// code that references it. Just in case there a dependant edge case and
-	// the client name is set, include it in the human-readable output.
-	if tc.ClientName != "" {
-		kvs = append(kvs, testing.KeyValueStr{
-			Key:   "CLIENT_NAME",
-			Value: tc.ClientName,
-		})
-	}
 	return kvs
 }
