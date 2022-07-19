@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"github.com/spf13/pflag"
 
 	"github.com/stretchr/testify/require"
@@ -405,6 +406,65 @@ func TestCheckRequiredParams(t *testing.T) {
 				assert.NotNil(t, err)
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tc.ErrText)
+			} else {
+				assert.NoError(t, err)
+			}
+			if err != nil {
+				return
+			}
+		})
+	}
+}
+
+func TestCheckSchemeWhenUsingHTTPProxy(t *testing.T) {
+	cases := []struct {
+		Name        string
+		Scheme      string
+		ShouldErr   bool
+		ExpectedErr error
+	}{
+		{
+			Name:        "With HTTP",
+			Scheme:      utils.HTTP,
+			ShouldErr:   false,
+			ExpectedErr: nil,
+		},
+		{
+			Name:        "With HTTPS",
+			Scheme:      utils.HTTPS,
+			ShouldErr:   false,
+			ExpectedErr: nil,
+		},
+		{
+			Name:        "With SSH (invalid)",
+			Scheme:      utils.SSH,
+			ShouldErr:   true,
+			ExpectedErr: ErrInvalidSchemeForHTTPProxy,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Name, func(t *testing.T) {
+			cmd := &cobra.Command{}
+			reqs := GetCreateTunnelParamReqs(false)
+			DefineCommandInputs(cmd, reqs)
+
+			fl := cmd.Flags()
+			fp := &FlagValuesProvider{
+				flags: fl,
+			}
+
+			err := SetCLIFlagString(t, fl, ClientID, "123456")
+			require.NoError(t, err)
+			err = SetCLIFlagString(t, fl, UseHTTPProxy, "true")
+			require.NoError(t, err)
+			err = SetCLIFlagString(t, fl, Scheme, tc.Scheme)
+			require.NoError(t, err)
+
+			_, err = CollectParamsFromCommandAndPromptAndEnv(fp, reqs, nil)
+			if tc.ShouldErr {
+				assert.NotNil(t, err)
+				assert.ErrorIs(t, err, tc.ExpectedErr)
 			} else {
 				assert.NoError(t, err)
 			}

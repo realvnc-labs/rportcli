@@ -27,22 +27,8 @@ Any parameter passed are append to the ssh command. i.e. -b "-l root"`
 func GetCreateTunnelParamReqs(isRDPUserRequired bool) []ParameterRequirement {
 	return []ParameterRequirement{
 		GetNoPromptParamReq(),
-		{
-			Field:       ClientID,
-			Description: "[conditionally required] client id, if not provided, client name should be given",
-			Validate:    RequiredValidate,
-			ShortName:   "c",
-			IsRequired:  true,
-			IsEnabled: func(providedParams *options.ParameterBag) bool {
-				return providedParams.ReadString(ClientNameFlag, "") == ""
-			},
-			Help: "Enter a client ID",
-		},
-		{
-			Field:       ClientNameFlag,
-			Description: `client name, if no client id is provided`,
-			ShortName:   "n",
-		},
+		GetClientIDForTunnelParamReq(),
+		GetClientNameForTunnelParamReq(),
 		{
 			Field:       Local,
 			Description: CreateTunnelLocalDescr,
@@ -124,6 +110,12 @@ Optionally pass the rdp-width and rdp-height params for RDP window size`,
 			ShortName:   "m",
 			Type:        IntRequirementType,
 		},
+		{
+			Field:       UseHTTPProxy,
+			Description: "Use http or https proxy (note: -s or --scheme must be either http or https)",
+			Type:        BoolRequirementType,
+			Default:     false,
+		},
 	}
 }
 
@@ -175,5 +167,27 @@ func GetDeleteTunnelParamReqs() []ParameterRequirement {
 			Validate:    RequiredValidate,
 			Help:        "Enter a tunnel id",
 		},
+	}
+}
+
+func GetClientIDForTunnelParamReq() (paramReq ParameterRequirement) {
+	return ParameterRequirement{
+		Field:       ClientID,
+		Description: "[conditionally required] client id, if not provided, client name should be given",
+		Validate:    RequiredValidate,
+		ShortName:   "c",
+		IsRequired:  true,
+		IsEnabled: func(providedParams *options.ParameterBag) bool {
+			return providedParams.ReadString(ClientNameFlag, "") == ""
+		},
+		Help: "Enter a client ID",
+	}
+}
+
+func GetClientNameForTunnelParamReq() (paramReq ParameterRequirement) {
+	return ParameterRequirement{
+		Field:       ClientNameFlag,
+		Description: `client name, if no client id is provided`,
+		ShortName:   "n",
 	}
 }

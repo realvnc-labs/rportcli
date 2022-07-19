@@ -1,12 +1,22 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/breathbath/go_utils/v2/pkg/env"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 	"github.com/sirupsen/logrus"
+)
+
+var (
+	ErrMultipleTargetingOptions = fmt.Errorf("multiple client targeting options. "+
+		"Please only specify one of --%s, --%s, --%s, or --%s",
+		ClientIDs, GroupIDs, ClientNameFlag, ClientNamesFlag,
+	)
+	ErrInvalidSchemeForHTTPProxy = errors.New("--http-proxy can only be used with the http or https schemes")
 )
 
 func ReadClientNames(params *options.ParameterBag) (names string) {
@@ -67,6 +77,10 @@ func HasAPIToken() (hasAPIToken bool) {
 	return apiToken != ""
 }
 
+func HasHTTPProxy(params *options.ParameterBag) (hasHTTPProxy bool) {
+	return params.ReadBool(UseHTTPProxy, false)
+}
+
 func CheckIfMissingAPIURL(params *options.ParameterBag) (err error) {
 	APIURL := ReadAPIURL(params)
 	if APIURL == "" {
@@ -98,13 +112,6 @@ func HasYAMLParams(flagParams map[string]interface{}) (yFileList []string, hasYA
 
 	return nil, false
 }
-
-var (
-	ErrMultipleTargetingOptions = fmt.Errorf("multiple client targeting options. "+
-		"Please only specify one of --%s, --%s, --%s, or --%s",
-		ClientIDs, GroupIDs, ClientNameFlag, ClientNamesFlag,
-	)
-)
 
 func CheckTargetingParams(params *options.ParameterBag) (err error) {
 	paramList := []string{ClientIDs, GroupIDs, ClientNameFlag, ClientNamesFlag}
@@ -143,4 +150,12 @@ func CheckRequiredParams(params *options.ParameterBag, reqs []ParameterRequireme
 		}
 	}
 	return nil
+}
+
+func checkCorrectSchemeForHTTPProxy(params *options.ParameterBag) (isCorrect bool) {
+	scheme := params.ReadString(Scheme, "")
+	if scheme == utils.HTTP || scheme == utils.HTTPS {
+		return true
+	}
+	return false
 }

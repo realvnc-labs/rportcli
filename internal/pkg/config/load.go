@@ -173,6 +173,13 @@ func CollectParamsFromCommandAndPromptAndEnv(
 		return nil, err
 	}
 
+	if HasHTTPProxy(paramsSoFar) {
+		isCorrect := checkCorrectSchemeForHTTPProxy(paramsSoFar)
+		if !isCorrect {
+			return nil, ErrInvalidSchemeForHTTPProxy
+		}
+	}
+
 	// if the no-prompt cli flag is set, then do not prompt for missing values
 	noPrompt := paramsSoFar.ReadBool(NoPrompt, false)
 	if noPrompt || promptReader == nil {

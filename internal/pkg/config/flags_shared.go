@@ -38,6 +38,7 @@ const (
 	RDPUser            = "rdp-user"
 	DefaultACL         = "<<YOU CURRENT PUBLIC IP>>"
 	ForceDeletion      = "force"
+	UseHTTPProxy       = "http-proxy"
 
 	DefaultCmdTimeoutSeconds = 30
 )

@@ -483,6 +483,184 @@ func TestTunnelCreateWithSSH(t *testing.T) {
 	assert.True(t, isTunnelDeleted)
 }
 
+func TestTunnelCreateWithHTTP(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		jsonEnc := json.NewEncoder(rw)
+		if r.Method == http.MethodPut {
+			assert.Equal(t, "/api/v1/clients/1314/tunnels?acl=3.4.5.10&check_port=&idle-timeout-minutes=5&local=0.0.0.0%3A20793&remote=80&scheme=http", r.URL.String())
+			e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
+				ID:              "10",
+				Lhost:           "0.0.0.0",
+				ClientID:        "1314",
+				Lport:           "20793",
+				Scheme:          utils.HTTP,
+				IdleTimeoutMins: 5,
+			}})
+			assert.NoError(t, e)
+			return
+		}
+
+		rw.WriteHeader(http.StatusMethodNotAllowed)
+	}))
+	defer srv.Close()
+
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) { return "364872364", "3463284", nil },
+	}
+
+	buf := bytes.Buffer{}
+
+	cl := api.New(srv.URL, apiAuth)
+
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
+		IPProvider: IPProviderMock{
+			IP: "3.4.5.10",
+		},
+	}
+
+	params := config.FromValues(map[string]string{
+		config.ClientID:           "1314",
+		config.Local:              "0.0.0.0:20793",
+		config.Scheme:             utils.HTTP,
+		config.ServerURL:          "http://rport-url.com",
+		config.IdleTimeoutMinutes: "5",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.NoError(t, err)
+
+	expectedOutput := fmt.Sprintf(
+		`{"id":"10","client_id":"1314","client_name":"","lhost":"0.0.0.0","lport":"20793","rhost":"","rport":"","lport_random":false,"scheme":"http","acl":"","usage":"http://rport-url.com:20793","idle_timeout_minutes":5,"rport_server":"%s"}`,
+		srv.URL,
+	)
+
+	assert.Equal(
+		t,
+		expectedOutput,
+		buf.String(),
+	)
+}
+
+func TestTunnelCreateWithHTTPS(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		jsonEnc := json.NewEncoder(rw)
+		if r.Method == http.MethodPut {
+			assert.Equal(t, "/api/v1/clients/1314/tunnels?acl=3.4.5.10&check_port=&idle-timeout-minutes=5&local=0.0.0.0%3A20793&remote=443&scheme=https", r.URL.String())
+			e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
+				ID:              "10",
+				Lhost:           "0.0.0.0",
+				ClientID:        "1314",
+				Lport:           "20793",
+				Scheme:          utils.HTTPS,
+				IdleTimeoutMins: 5,
+			}})
+			assert.NoError(t, e)
+			return
+		}
+
+		rw.WriteHeader(http.StatusMethodNotAllowed)
+	}))
+	defer srv.Close()
+
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) { return "364872364", "3463284", nil },
+	}
+
+	buf := bytes.Buffer{}
+
+	cl := api.New(srv.URL, apiAuth)
+
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
+		IPProvider: IPProviderMock{
+			IP: "3.4.5.10",
+		},
+	}
+
+	params := config.FromValues(map[string]string{
+		config.ClientID:           "1314",
+		config.Local:              "0.0.0.0:20793",
+		config.Scheme:             utils.HTTPS,
+		config.ServerURL:          "http://rport-url.com",
+		config.IdleTimeoutMinutes: "5",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.NoError(t, err)
+
+	expectedOutput := fmt.Sprintf(
+		`{"id":"10","client_id":"1314","client_name":"","lhost":"0.0.0.0","lport":"20793","rhost":"","rport":"","lport_random":false,"scheme":"https","acl":"","usage":"https://rport-url.com:20793","idle_timeout_minutes":5,"rport_server":"%s"}`,
+		srv.URL,
+	)
+
+	assert.Equal(
+		t,
+		expectedOutput,
+		buf.String(),
+	)
+}
+
+func TestTunnelCreateWithHTTPProxy(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		jsonEnc := json.NewEncoder(rw)
+		if r.Method == http.MethodPut {
+			assert.Equal(t, "/api/v1/clients/1314/tunnels?acl=3.4.5.10&check_port=&http_proxy=true&idle-timeout-minutes=5&local=0.0.0.0%3A20793&remote=80&scheme=http", r.URL.String())
+			e := jsonEnc.Encode(api.TunnelCreatedResponse{Data: &models.TunnelCreated{
+				ID:              "10",
+				Lhost:           "0.0.0.0",
+				ClientID:        "1314",
+				Lport:           "20793",
+				Scheme:          utils.HTTP,
+				IdleTimeoutMins: 5,
+			}})
+			assert.NoError(t, e)
+			return
+		}
+
+		rw.WriteHeader(http.StatusMethodNotAllowed)
+	}))
+	defer srv.Close()
+
+	apiAuth := &utils.StorageBasicAuth{
+		AuthProvider: func() (login, pass string, err error) { return "364872364", "3463284", nil },
+	}
+
+	buf := bytes.Buffer{}
+
+	cl := api.New(srv.URL, apiAuth)
+
+	tController := TunnelController{
+		Rport:          cl,
+		TunnelRenderer: &TunnelRendererMock{Writer: &buf},
+		IPProvider: IPProviderMock{
+			IP: "3.4.5.10",
+		},
+	}
+
+	params := config.FromValues(map[string]string{
+		config.ClientID:           "1314",
+		config.Local:              "0.0.0.0:20793",
+		config.Scheme:             utils.HTTP,
+		config.ServerURL:          "http://rport-url.com",
+		config.IdleTimeoutMinutes: "5",
+		config.UseHTTPProxy:       "true",
+	})
+	err := tController.Create(context.Background(), params)
+	assert.NoError(t, err)
+
+	expectedOutput := fmt.Sprintf(
+		`{"id":"10","client_id":"1314","client_name":"","lhost":"0.0.0.0","lport":"20793","rhost":"","rport":"","lport_random":false,"scheme":"http","acl":"","usage":"https://rport-url.com:20793","idle_timeout_minutes":5,"rport_server":"%s"}`,
+		srv.URL,
+	)
+
+	assert.Equal(
+		t,
+		expectedOutput,
+		buf.String(),
+	)
+}
+
 func TestTunnelCreateWithSSHFailure(t *testing.T) {
 	isTunnelDeleted := false
 	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {

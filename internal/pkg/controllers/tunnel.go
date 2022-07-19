@@ -158,6 +158,7 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	checkPort := params.ReadString(config.CheckPort, "")
 	skipIdleTimeout := params.ReadBool(config.SkipIdleTimeout, false)
 	idleTimeoutMinutes := 0
+	useHTTPProxy := params.ReadBool(config.UseHTTPProxy, false)
 	if !skipIdleTimeout {
 		idleTimeoutMinutes = params.ReadInt(config.IdleTimeoutMinutes, 0)
 	}
@@ -171,6 +172,7 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 		checkPort,
 		idleTimeoutMinutes,
 		skipIdleTimeout,
+		useHTTPProxy,
 	)
 	if err != nil {
 		return err
@@ -317,6 +319,8 @@ func (tc *TunnelController) startSSHFlow(
 
 func (tc *TunnelController) generateUsage(tunnelCreated *models.TunnelCreated, params *options.ParameterBag) string {
 	shouldLaunchRDP := params.ReadBool(config.LaunchRDP, false)
+	useHTTPProxy := params.ReadBool(config.UseHTTPProxy, false)
+	scheme := params.ReadString(config.Scheme, "")
 
 	if !shouldLaunchRDP {
 		port, host, err := tc.extractPortAndHost(tunnelCreated, params)
@@ -329,10 +333,20 @@ func (tc *TunnelController) generateUsage(tunnelCreated *models.TunnelCreated, p
 			return ""
 		}
 
+		if useHTTPProxy {
+			scheme = utils.HTTPS
+		}
+
+		if scheme == utils.HTTP || scheme == utils.HTTPS {
+			if port != "" {
+				return fmt.Sprintf("%s://%s:%s", scheme, host, port)
+			}
+			return fmt.Sprintf("%s://%s", scheme, host)
+		}
+
 		if port != "" {
 			return fmt.Sprintf("ssh -p %s %s -l ${USER}", port, host)
 		}
-
 		return fmt.Sprintf("ssh %s -l ${USER}", host)
 	}
 
