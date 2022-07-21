@@ -112,7 +112,7 @@ Optionally pass the rdp-width and rdp-height params for RDP window size`,
 		},
 		{
 			Field:       UseHTTPProxy,
-			Description: "Use http or https proxy (note: -s or --scheme must be either http or https)",
+			Description: "Use https proxy (note: -s or --scheme must be either http or https)",
 			Type:        BoolRequirementType,
 			Default:     false,
 		},
