@@ -12,23 +12,18 @@ builds:
       - darwin
       - windows
     goarch:
-      - 386
       - amd64
       - arm
       - arm64
     goarm:
       - 6
       - 7
-    gomips:
-      - hardfloat
-      - softfloat
     ignore:
-      - goos: darwin
-        goarch: 386
-      # TODO: remove when https://github.com/go-ole/go-ole/issues/202 will be fixed
       - goos: windows
         goarch: arm
       - goos: windows
+        goarch: arm64
+      - goos: darwin
         goarch: arm64
 archives:
   - id: rportcli
