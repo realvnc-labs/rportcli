@@ -16,11 +16,6 @@ builds:
       - amd64
       - arm
       - arm64
-      - mips
-      - mipsle
-      - mips64
-      - mips64le
-      - s390x
     goarm:
       - 6
       - 7
@@ -33,6 +28,8 @@ builds:
       # TODO: remove when https://github.com/go-ole/go-ole/issues/202 will be fixed
       - goos: windows
         goarch: arm
+      - goos: windows
+        goarch: arm64
 archives:
   - id: rportcli
     builds:
