@@ -30,6 +30,7 @@ func (rp *Rport) CreateTunnel(
 	clientID, local, remote, scheme, acl, checkPort string,
 	idleTimeoutMinutes int,
 	skipIdleTimeout bool,
+	useHTTPProxy bool,
 ) (tunResp *TunnelCreatedResponse, err error) {
 	var req *http.Request
 	u := strings.Replace(CreateTunnelURL, "{client_id}", clientID, 1)
@@ -49,6 +50,10 @@ func (rp *Rport) CreateTunnel(
 	q.Add("scheme", scheme)
 	q.Add("acl", acl)
 	q.Add("check_port", checkPort)
+
+	if useHTTPProxy {
+		q.Add("http_proxy", "true")
+	}
 
 	if idleTimeoutMinutes > 0 {
 		q.Add("idle-timeout-minutes", strconv.Itoa(idleTimeoutMinutes))

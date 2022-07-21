@@ -120,7 +120,6 @@ func TestRenderTunnel(t *testing.T) {
 KEY                VALUE                           
 ID:                id22                            
 CLIENT_ID:                                         
-CLIENT_NAME:                                       
 LOCAL_HOST:        lhost                           
 LOCAL_PORT:        123                             
 REMOTE_HOST:       rhost                           
@@ -135,7 +134,7 @@ USAGE:             ssh -p 123 123.22.22.33 -l root
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"id":"id22","client_id":"","client_name":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0","usage":"ssh -p 123 123.22.22.33 -l root","idle_timeout_minutes":7}
+			ExpectedOutput: `{"id":"id22","client_id":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0","usage":"ssh -p 123 123.22.22.33 -l root","idle_timeout_minutes":7}
 `,
 			ColCountToGive: 10,
 		},
@@ -144,7 +143,6 @@ USAGE:             ssh -p 123 123.22.22.33 -l root
 			ExpectedOutput: `{
   "id": "id22",
   "client_id": "",
-  "client_name": "",
   "lhost": "lhost",
   "lport": "123",
   "rhost": "rhost",
@@ -162,7 +160,6 @@ USAGE:             ssh -p 123 123.22.22.33 -l root
 			Format: FormatYAML,
 			ExpectedOutput: `id: id22
 client_id: ""
-client_name: ""
 local_host: lhost
 local_port: "123"
 remote_host: rhost

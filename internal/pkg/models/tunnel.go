@@ -118,7 +118,7 @@ func (t *Tunnel) KeyValues() []testing.KeyValueStr {
 type TunnelCreated struct {
 	ID              string `json:"id"`
 	ClientID        string `json:"client_id" yaml:"client_id"`
-	ClientName      string `json:"client_name" yaml:"client_name"`
+	ClientName      string `json:"client_name,omitempty" yaml:"client_name,omitempty"`
 	Lhost           string `json:"lhost" yaml:"local_host"`
 	Lport           string `json:"lport" yaml:"local_port"`
 	Rhost           string `json:"rhost" yaml:"remote_host"`
@@ -140,10 +140,6 @@ func (tc *TunnelCreated) KeyValues() []testing.KeyValueStr {
 		{
 			Key:   "CLIENT_ID",
 			Value: tc.ClientID,
-		},
-		{
-			Key:   "CLIENT_NAME",
-			Value: tc.ClientName,
 		},
 		{
 			Key:   "LOCAL_HOST",
