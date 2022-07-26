@@ -27,15 +27,18 @@ func (cc *ScriptsController) Start(ctx context.Context,
 	hostInfo *config.HostInfo) (err error) {
 	var scriptContent []byte
 	var interpreter string
-
+	interpreter = params.ReadString(config.Interpreter, "")
 	scriptsFilePath := params.ReadString(config.Script, "")
+	if interpreter == "" && scriptsFilePath != "" {
+		// If interpreter is not set, try to guess from the file extension
+		interpreter = cc.resolveInterpreterByFileName(scriptsFilePath, params.ReadString(config.Interpreter, ""))
+	}
+
 	if scriptsFilePath != "" {
 		scriptContent, err = cc.ReadScriptContent(scriptsFilePath)
 		if err != nil {
 			return err
 		}
-
-		interpreter = cc.resolveInterpreterByFileName(scriptsFilePath, params.ReadString(config.Interpreter, ""))
 	} else {
 		embeddedScriptContent := params.ReadString(config.EmbeddedScript, "")
 		if embeddedScriptContent != "" {
