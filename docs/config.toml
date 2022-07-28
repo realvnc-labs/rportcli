@@ -1,4 +1,4 @@
-baseURL = 'http://example.org/'
+baseURL = 'https://cli.rport.io/'
 languageCode = 'en-us'
 title = 'RPort CLI - work faster from the command line'
 theme = "hugo-geekdoc"

@@ -53,6 +53,14 @@ $Env:PATH="$Env:PATH;C:\Program Files\rportcli\bin"
 & rportcli --version
 ```
 
+## Install as a go binary
+
+If you have go installed, try the following
+
+```shell
+go get github.com/cloudradar-monitoring/rportcli
+```
+
 ## Update
 
 To update rportcli to the latest version, perform the above steps to overwrite your existing version
