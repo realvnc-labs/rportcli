@@ -4,6 +4,7 @@ draft: false
 weight: 0
 slug: installation
 ---
+{{< toc >}}
 
 RPort cli is a single static binary available for almost any operating system.
 Basically, the installation is just downloading a file.
