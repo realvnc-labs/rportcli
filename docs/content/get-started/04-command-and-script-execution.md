@@ -217,8 +217,8 @@ jobs:
     interpreter: ""
 ```
 
-If the command and script execution has failed on some clients, you can use the log file to execute the command or 
-script again but only on those clients, where it has failed previously. 
+If the command and script execution has failed on some clients, you can use the log file to execute the command or
+script again but only on those clients, where it has failed previously.
 Using `--read-execlog <FILE-NAME>` will use all client ids from the file where `status=failed`. Example:
 
 ```shell
@@ -245,4 +245,3 @@ done
 {{< hint type=tip title="Exit code" >}}
 `rportcli` will only exit with exit code `0` if the command or script has succeeded on all targeted clients.
 {{< /hint >}}
-

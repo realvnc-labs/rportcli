@@ -36,7 +36,7 @@ If the current user has no home folder, RportCli will look for a config file nex
 You can override config path by providing an environment variable CONFIG_PATH, e.g.
 `CONFIG_PATH=/tmp/config.json rportcli init`.
 
-With the environment variable `SESSION_VALIDITY_SECONDS` you can set initial lifetime of an interactive command session 
+With the environment variable `SESSION_VALIDITY_SECONDS` you can set initial lifetime of an interactive command session
 in seconds. Max value is 90 days.
 
 ## by API token
