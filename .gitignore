@@ -2,3 +2,5 @@
 /.vscode
 /vendor
 /bin
+docs/public
+docs/.hugo_build.lock
