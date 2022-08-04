@@ -1,8 +1,10 @@
 //go:build linux
 // +build linux
 
-package rdp
+package exec
+
+const OpenCmd = "xdg-open"
 
 func CommandProvider(filePath string) (cmd string, args []string) {
-	return "remmina", []string{filePath, "&"}
+	return OpenCmd, []string{filePath}
 }

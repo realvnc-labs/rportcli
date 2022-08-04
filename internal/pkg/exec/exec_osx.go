@@ -1,8 +1,10 @@
 //go:build darwin
 // +build darwin
 
-package rdp
+package exec
+
+const OpenCmd = "open"
 
 func CommandProvider(filePath string) (cmd string, args []string) {
-	return "open", []string{filePath}
+	return OpenCmd, []string{filePath}
 }

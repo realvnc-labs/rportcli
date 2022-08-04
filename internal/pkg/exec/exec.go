@@ -1,4 +1,4 @@
-package rdp
+package exec
 
 import (
 	"io"
@@ -14,7 +14,7 @@ type Executor struct {
 	StdErr          io.Writer
 }
 
-func (re *Executor) StartRdp(filePath string) error {
+func (re *Executor) StartDefaultApp(filePath string) error {
 	rdpCmd, args := re.CommandProvider(filePath)
 	c := exec.Command(rdpCmd, args...)
 

@@ -134,7 +134,7 @@ USAGE:             ssh -p 123 123.22.22.33 -l root
 		},
 		{
 			Format: FormatJSON,
-			ExpectedOutput: `{"id":"id22","client_id":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0","usage":"ssh -p 123 123.22.22.33 -l root","idle_timeout_minutes":7}
+			ExpectedOutput: `{"id":"id22","client_id":"","client_name":"","lhost":"lhost","lport":"123","rhost":"rhost","rport":"124","lport_random":false,"scheme":"ssh","acl":"0.0.0.0","usage":"ssh -p 123 123.22.22.33 -l root","idle_timeout_minutes":7}
 `,
 			ColCountToGive: 10,
 		},
@@ -143,6 +143,7 @@ USAGE:             ssh -p 123 123.22.22.33 -l root
 			ExpectedOutput: `{
   "id": "id22",
   "client_id": "",
+  "client_name": "",
   "lhost": "lhost",
   "lport": "123",
   "rhost": "rhost",
@@ -160,6 +161,7 @@ USAGE:             ssh -p 123 123.22.22.33 -l root
 			Format: FormatYAML,
 			ExpectedOutput: `id: id22
 client_id: ""
+client_name: ""
 local_host: lhost
 local_port: "123"
 remote_host: rhost
@@ -187,24 +189,26 @@ idle_timeout_minutes: 7
 	}
 
 	for _, testCase := range testCases {
-		buf := &bytes.Buffer{}
-		colCountToGive := testCase.ColCountToGive
-		tr := &TunnelRenderer{
-			ColCountCalculator: func() int {
-				return colCountToGive
-			},
-			Writer: buf,
-			Format: testCase.Format,
-		}
+		t.Run(testCase.Format, func(t *testing.T) {
+			buf := &bytes.Buffer{}
+			colCountToGive := testCase.ColCountToGive
+			tr := &TunnelRenderer{
+				ColCountCalculator: func() int {
+					return colCountToGive
+				},
+				Writer: buf,
+				Format: testCase.Format,
+			}
 
-		err := tr.RenderTunnel(tunnel)
-		assert.NoError(t, err)
-		if err != nil {
-			return
-		}
+			err := tr.RenderTunnel(tunnel)
+			assert.NoError(t, err)
+			if err != nil {
+				return
+			}
 
-		actualResult := buf.String()
+			actualResult := buf.String()
 
-		assert.Equal(t, testCase.ExpectedOutput, actualResult)
+			assert.Equal(t, testCase.ExpectedOutput, actualResult)
+		})
 	}
 }

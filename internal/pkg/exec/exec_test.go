@@ -1,4 +1,4 @@
-package rdp
+package exec
 
 import (
 	"bytes"
@@ -18,7 +18,7 @@ func TestExecutor(t *testing.T) {
 		StdOut: stdOut,
 	}
 
-	err := e.StartRdp(filePath)
+	err := e.StartDefaultApp(filePath)
 	assert.NoError(t, err)
 	assert.Equal(t, "123\n", stdOut.String())
 }
