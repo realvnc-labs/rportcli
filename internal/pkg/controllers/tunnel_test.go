@@ -253,7 +253,6 @@ func TestTunnelCreateWithClientID(t *testing.T) {
 	expectedOutput := `{
 		"id": "123",
 		"client_id": "334",
-		"client_name": "",
 		"lhost": "lohost1",
 		"lport": "3300",
 		"rhost": "rhost2",
@@ -319,7 +318,6 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 	expectedOutput := `{
 		"id": "777",
 		"client_id": "1313",
-		"client_name": "",
 		"lhost": "lohost44",
 		"lport": "",
 		"rhost": "",
