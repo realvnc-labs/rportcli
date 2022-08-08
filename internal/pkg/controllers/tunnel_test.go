@@ -12,8 +12,6 @@ import (
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
 	"github.com/stretchr/testify/require"
 
-	"github.com/stretchr/testify/mock"
-
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
@@ -77,27 +75,6 @@ type IPProviderMock struct {
 
 func (ipm IPProviderMock) GetIP(ctx context.Context) (string, error) {
 	return ipm.IP, nil
-}
-
-type RDPWriterMock struct {
-	FileInput      models.FileInput
-	filePathToGive string
-	errorToGive    error
-}
-
-func (rwm *RDPWriterMock) WriteRDPFile(fi models.FileInput) (filePath string, err error) {
-	rwm.FileInput = fi
-	return rwm.filePathToGive, rwm.errorToGive
-}
-
-type RDPExecutorMock struct {
-	mock.Mock
-}
-
-func (rem *RDPExecutorMock) StartDefaultApp(filePath string) error {
-	args := rem.Called(filePath)
-
-	return args.Error(0)
 }
 
 func TestTunnelsController(t *testing.T) {

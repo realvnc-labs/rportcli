@@ -1,27 +1,18 @@
 package exec
 
 import (
-	"io"
+	"os"
 	"os/exec"
 
 	"github.com/sirupsen/logrus"
 )
 
-type Executor struct {
-	CommandProvider func(filePath string) (cmd string, args []string)
-	StdOut          io.Writer
-	Stdin           io.Reader
-	StdErr          io.Writer
-}
+func StartDefaultApp(filePath string) error {
+	c := exec.Command(OpenCmd, filePath)
 
-func (re *Executor) StartDefaultApp(filePath string) error {
-	rdpCmd, args := re.CommandProvider(filePath)
-	c := exec.Command(rdpCmd, args...)
-
-	c.Stdout = re.StdOut
-	c.Stdin = re.Stdin
-	c.Stderr = re.StdErr
-
+	c.Stdout = os.Stdout
+	c.Stdin = os.Stdin
+	c.Stderr = os.Stderr
 	err := c.Run()
 	logrus.Debugf("will run %s", c.String())
 	if err != nil {

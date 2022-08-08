@@ -1,24 +1,21 @@
 package exec
 
 import (
-	"bytes"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/recorder"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestExecutor(t *testing.T) {
-	stdOut := &bytes.Buffer{}
-	const filePath = "file123"
-	e := &Executor{
-		CommandProvider: func(fp string) (cmd string, args []string) {
-			assert.Equal(t, filePath, fp)
-			return "echo", []string{"123"}
-		},
-		StdOut: stdOut,
-	}
+	r := recorder.NewCmdRecorder()
+	err := StartDefaultApp("info.txt")
+	require.NoError(t, err)
+	cmdRecords := r.GetRecords()
 
-	err := e.StartDefaultApp(filePath)
-	assert.NoError(t, err)
-	assert.Equal(t, "123\n", stdOut.String())
+	assert.Len(t, cmdRecords, 1)
+	assert.Equal(t, OpenCmd+" info.txt", cmdRecords[0])
 }

@@ -2,20 +2,11 @@ package launcher
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/exec"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/rdp"
 )
-
-type RDPFileWriter interface {
-	WriteRDPFile(fi models.FileInput) (filePath string, err error)
-}
-
-type RDPExecutor interface {
-	StartDefaultApp(filePath string) error
-}
 
 func LaunchRDPTunnel(tunnelCreated *models.TunnelCreated, user string, height, width int) error {
 	clientName := tunnelCreated.ClientName
@@ -35,9 +26,5 @@ func LaunchRDPTunnel(tunnelCreated *models.TunnelCreated, user string, height, w
 		return err
 	}
 
-	rdpExecutor := &exec.Executor{
-		CommandProvider: exec.CommandProvider,
-		StdErr:          os.Stderr,
-	}
-	return rdpExecutor.StartDefaultApp(filePath)
+	return exec.StartDefaultApp(filePath)
 }

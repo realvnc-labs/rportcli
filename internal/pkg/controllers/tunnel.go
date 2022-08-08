@@ -33,14 +33,6 @@ type IPProvider interface {
 	GetIP(ctx context.Context) (string, error)
 }
 
-type RDPFileWriter interface {
-	WriteRDPFile(fi models.FileInput) (filePath string, err error)
-}
-
-type RDPExecutor interface {
-	StartDefaultApp(filePath string) error
-}
-
 type TunnelController struct {
 	Rport          *api.Rport
 	TunnelRenderer TunnelRenderer
@@ -166,12 +158,18 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 		}
 	}
 
+	// deconstruct the values of '-r, --remote' using either <IP address>:<PORT> e.g. 127.0.0.1:22
+	// or just <PORT> e.g. 22.
 	remotePortAndHostStr := params.ReadString(config.Remote, "")
 	remotePortInt, _ := utils.ExtractPortAndHost(remotePortAndHostStr)
 	if TunnelLauncher.Scheme != "" && remotePortAndHostStr == "" {
+		// if '-r, --remote' is not given, try to get the port from the scheme
 		remotePortInt = utils.GetPortByScheme(TunnelLauncher.Scheme)
 	}
 	if remotePortAndHostStr == "" && remotePortInt > 0 {
+		// If we have just a port convert back to string.
+		// For the RPort server API a port without a host is sufficient
+		// to create a tunnel to this port on localhost
 		remotePortAndHostStr = strconv.Itoa(remotePortInt)
 	}
 
@@ -204,7 +202,7 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	tunnelCreated.RportServer = tc.Rport.BaseURL
 	tunnelCreated.ClientID = clientID
 	tunnelCreated.ClientName = clientName
-	tc.getRportServerName(&tunnelCreated)
+	tc.getRportServerName(tunnelCreated)
 	tunnelCreated.Usage = utils.GetUsageByScheme(tunnelCreated.Scheme, tunnelCreated.RportServer, tunnelCreated.Lport)
 
 	err = tc.TunnelRenderer.RenderTunnel(tunnelCreated)
@@ -223,12 +221,12 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 }
 
 // getRportServerName extracts just the server name from the Rport API URL
-func (tc *TunnelController) getRportServerName(tunnelCreated **models.TunnelCreated) {
+func (tc *TunnelController) getRportServerName(tunnelCreated *models.TunnelCreated) {
 	var rportURL *url.URL
-	rportURL, err := url.Parse((*tunnelCreated).RportServer)
+	rportURL, err := url.Parse(tunnelCreated.RportServer)
 	if err != nil {
 		return
 	}
-	(*tunnelCreated).RportServer = rportURL.Hostname()
+	tunnelCreated.RportServer = rportURL.Hostname()
 	// @todo: Get the tunnel host from the API. Tunnel host can differ from API host
 }
