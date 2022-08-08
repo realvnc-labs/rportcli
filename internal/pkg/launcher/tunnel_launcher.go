@@ -87,16 +87,14 @@ func (tl *TunnelLauncher) Execute(tunnelCreated *models.TunnelCreated) (deleteAf
 		// Launch the remote desktop app
 		deleteAfter = false
 		launch = LaunchRDPTunnel(tunnelCreated, tl.RDPUser, tl.RDPHeight, tl.RDPWidth)
-		return
 	case tl.LaunchURIHandler:
 		// Launch the default app by scheme
 		deleteAfter = false
 		launch = LaunchURITunnel(tunnelCreated, tl.Scheme)
-		return
 	default:
 		// Do nothing after the tunnel is created
 		deleteAfter = false
 		launch = nil
 	}
-	return
+	return deleteAfter, launch
 }
