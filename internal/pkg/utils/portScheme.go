@@ -2,8 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/exec"
 )
@@ -90,25 +88,6 @@ func IsSupportedHandlerScheme(scheme string) (ok bool, supported []string) {
 	}
 
 	return false, r
-}
-
-func ExtractPortAndHost(input string) (port int, host string) {
-	var portStr string
-	var err error
-	if strings.Contains(input, ":") {
-		hostPortParts := strings.Split(input, ":")
-		host = hostPortParts[0]
-		portStr = hostPortParts[1]
-	} else {
-		portStr = input
-	}
-
-	port, err = strconv.Atoi(portStr)
-	if err != nil {
-		port = 0
-	}
-
-	return
 }
 
 func GetUsageByScheme(scheme, host, port string) string {
