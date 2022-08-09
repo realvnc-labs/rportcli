@@ -161,16 +161,12 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	// deconstruct the values of '-r, --remote' using either <IP address>:<PORT> e.g. 127.0.0.1:22
 	// or just <PORT> e.g. 22.
 	remotePortAndHostStr := params.ReadString(config.Remote, "")
-	remotePortInt, _ := utils.ExtractPortAndHost(remotePortAndHostStr)
 	if TunnelLauncher.Scheme != "" && remotePortAndHostStr == "" {
 		// if '-r, --remote' is not given, try to get the port from the scheme
-		remotePortInt = utils.GetPortByScheme(TunnelLauncher.Scheme)
-	}
-	if remotePortAndHostStr == "" && remotePortInt > 0 {
 		// If we have just a port convert back to string.
 		// For the RPort server API a port without a host is sufficient
 		// to create a tunnel to this port on localhost
-		remotePortAndHostStr = strconv.Itoa(remotePortInt)
+		remotePortAndHostStr = strconv.Itoa(utils.GetPortByScheme(TunnelLauncher.Scheme))
 	}
 
 	local := params.ReadString(config.Local, "")
@@ -201,7 +197,9 @@ func (tc *TunnelController) Create(ctx context.Context, params *options.Paramete
 	// Enrich with local data
 	tunnelCreated.RportServer = tc.Rport.BaseURL
 	tunnelCreated.ClientID = clientID
-	tunnelCreated.ClientName = clientName
+	if clientName != "" {
+		tunnelCreated.ClientName = clientName
+	}
 	tc.getRportServerName(tunnelCreated)
 	tunnelCreated.Usage = utils.GetUsageByScheme(tunnelCreated.Scheme, tunnelCreated.RportServer, tunnelCreated.Lport)
 
