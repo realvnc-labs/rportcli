@@ -27,10 +27,6 @@ func GetCommandParamReqs() (paramReqs []ParameterRequirement) {
 			ShortName:   "n",
 		},
 		{
-			Field:       ClientSearchFlag,
-			Description: "Search clients on all fields, supports wildcards (*).",
-		},
-		{
 			Field:       Command,
 			Help:        "Enter command",
 			Description: "[required] Command which should be executed on the clients",
@@ -96,6 +92,11 @@ func GetCommandParamReqs() (paramReqs []ParameterRequirement) {
 			ShortName:   "w",
 			Type:        StringRequirementType,
 			Default:     "",
+		},
+		{
+			Field:       ClientCombinedSearchFlag,
+			Help:        "search by key value",
+			Description: "search by key value",
 		},
 	}
 }

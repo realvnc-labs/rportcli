@@ -49,14 +49,18 @@ type TunnelController struct {
 }
 
 func (tc *TunnelController) Tunnels(ctx context.Context, params *options.ParameterBag) error {
+	filter, err := api.NewFilters(
+		"id", params.ReadString(config.ClientID, ""),
+		"name", params.ReadString(config.ClientNameFlag, ""),
+		"*", params.ReadString(config.ClientSearchFlag, ""),
+	)
+	if err != nil {
+		return err
+	}
 	clResp, err := tc.Rport.Clients(
 		ctx,
 		api.NewPaginationFromParams(params),
-		api.NewFilters(
-			"id", params.ReadString(config.ClientID, ""),
-			"name", params.ReadString(config.ClientNameFlag, ""),
-			"*", params.ReadString(config.ClientSearchFlag, ""),
-		),
+		filter,
 	)
 	if err != nil {
 		return err
@@ -117,7 +121,11 @@ func (tc *TunnelController) getClientIDAndClientName(
 		return
 	}
 
-	clients, err := tc.Rport.Clients(ctx, api.NewPaginationWithLimit(2), api.NewFilters("name", clientName))
+	filter, err := api.NewFilters("name", clientName)
+	if err != nil {
+		return "", "", err
+	}
+	clients, err := tc.Rport.Clients(ctx, api.NewPaginationWithLimit(2), filter)
 	if err != nil {
 		return
 	}

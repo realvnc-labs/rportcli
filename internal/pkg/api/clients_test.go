@@ -99,7 +99,9 @@ func TestClientsList(t *testing.T) {
 		},
 	})
 
-	clientsResp, err := cl.Clients(context.Background(), NewPaginationWithLimit(ClientsLimitMax), NewFilters("name", "abc"))
+	filter, err := NewFilters("name", "abc")
+	require.NoError(t, err)
+	clientsResp, err := cl.Clients(context.Background(), NewPaginationWithLimit(ClientsLimitMax), filter)
 	require.NoError(t, err)
 
 	assert.Equal(t, clientsStub, clientsResp.Data)

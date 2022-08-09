@@ -30,8 +30,10 @@ func makeRunContext() (ctx context.Context, cancel context.CancelFunc, sigs chan
 
 func loadParams(cmd *cobra.Command,
 	reqs []config.ParameterRequirement,
-	promptReader config.PromptReader) (params *options.ParameterBag, err error) {
-	params, err = config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, reqs, promptReader)
+	promptReader config.PromptReader,
+	injected map[string]string,
+) (params *options.ParameterBag, err error) {
+	params, err = config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, reqs, promptReader, injected)
 	return params, err
 }
 

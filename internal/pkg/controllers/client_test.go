@@ -9,6 +9,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
@@ -81,7 +83,7 @@ func TestClientsController(t *testing.T) {
 		ClientRenderer: &ClientRendererMock{Writer: &buf},
 	}
 
-	err := clController.Clients(context.Background(), options.New(nil))
+	err := clController.Clients(context.Background(), options.New(nil), []string{})
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -147,6 +149,26 @@ func TestClientFoundByNameController(t *testing.T) {
 		`{"id":"123","name":"Client 123","os":"Windows XP","os_arch":"386","os_family":"Windows","os_kernel":"windows","hostname":"localhost","connection_state":"connected","disconnected_at":"","client_auth_id":"","ipv4":null,"ipv6":null,"tags":["one"],"version":"","address":"12.2.2.3:80","tunnels":[{"id":"1","client_id":"","client_name":"","lhost":"","lport":"","rhost":"","rport":"","lport_random":false,"scheme":"","acl":"","idle_timeout_minutes":22}],"os_full_name":"","os_version":"","os_virtualization_system":"","os_virtualization_role":"","cpu_family":"","cpu_model":"","cpu_model_name":"","cpu_vendor":"","num_cpus":0,"mem_total":0,"timezone":"","allowed_user_groups":null,"updates_status":null}`,
 		buf.String(),
 	)
+}
+
+func TestClientSearch(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		assert.Contains(t, r.URL.String(), "filter%5Bname%5D=ok&filter%5Bos_kernel%5D=linux")
+		_, err := rw.Write([]byte("{}"))
+		require.NoError(t, err)
+	}))
+	defer srv.Close()
+
+	cl := api.New(srv.URL, nil)
+	buf := bytes.Buffer{}
+
+	clController := ClientController{
+		Rport:          cl,
+		ClientRenderer: &ClientRendererMock{Writer: &buf},
+	}
+
+	err := clController.Clients(context.Background(), &options.ParameterBag{}, []string{"name=ok", "os_kernel=linux"})
+	require.NoError(t, err)
 }
 
 func TestInvalidInputForClients(t *testing.T) {

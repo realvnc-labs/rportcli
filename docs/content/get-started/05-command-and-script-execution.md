@@ -1,7 +1,7 @@
 ---
 title: Command and Script execution
 slug: command-and-script-execution
-weight: 3
+weight: 5
 ---
 {{< toc >}}
 
@@ -83,6 +83,28 @@ Norman-Jordan
 By client group IDs, `-g, --gids string`
 : Specify one or many group IDs separated by a comma.
 
+By search criteria, `--search key=value`
+: Use the same search methods from the [inventory](get-started/inventory). For example:
+: `--search name=al* --search os_kernel=linux`
+
+```shell
+$ rportcli script execute --search name=a* --search os_kernel=linux -c "uname -a"
+Abby-Peters
+    Linux Abby-Peters 5.10.0-11-amd64 #1 SMP Debian 5.10.92-1 (2022-01-18) x86_64 GNU/Linux
+Ava-Berry
+    Linux Ava-Berry 5.15.0-37-generic #39-Ubuntu SMP Wed Jun 1 19:16:45 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+Alvin-Reid
+    Linux Alvin-Reid 5.15.0-37-generic #39-Ubuntu SMP Wed Jun 1 19:16:45 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+Ava-Fowler
+    Linux Ava-Fowler 5.15.0-37-generic #39-Ubuntu SMP Wed Jun 1 19:16:45 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+Ava-Carroll
+    Linux Ava-Carroll 5.15.0-37-generic #39-Ubuntu SMP Wed Jun 1 19:16:45 UTC 2022 x86_64 GNU/Linux
+Andrea-Jimenez
+    Linux Andrea-Jimenez 5.10.0-11-amd64 #1 SMP Debian 5.10.92-1 (2022-01-18) x86_64 GNU/Linux
+Avery-Smith
+    Linux Avery-Smith 5.15.0-37-generic #39-Ubuntu SMP Wed Jun 1 19:16:45 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+```
+
 ## Read from Yaml
 
 Instead of specifying all options for the command or script execution on the command line,
@@ -125,15 +147,42 @@ In the yaml file you can use the following fields.
 
 `cids`
 : type=list, List of client ids the command or script will be executed on
-: mutual exclusive with `gids` and `names`
+: mutual exclusive with `gids`, `names`, `combined-search` and `search`
 
 `gids`
 : type=list, List of group ids the command or script will be executed on
-: mutual exclusive with `cids` and `names`
+: mutual exclusive with `cids`, `names`, `combined-search` and `search`
 
 `names`
 : type=list, List of client names the command or script will be executed on
-: mutual exclusive with `cids` and `gids`
+: mutual exclusive with `cids`, `gids`, `combined-search` and `search`
+: Name values accept wildcards `*`.
+
+```yaml
+names:
+  - elmo
+  - julia
+exec: hostname
+```
+
+`combined-search`
+: type=string, A url-like search term with key values pairs separated by an ampersand
+: Values accept wildcards `*`.
+: Example: `name=elmo&os_kernel=linux`
+: mutual exclusive with `cids`, `gids`, `names` and `search`
+
+`search`
+: type=array, key value pairs to specify a search
+: Values accept wildcards `*`.
+: Will be converted to `combined-search` internally.
+: mutual exclusive with `cids`, `gids`, `names` and `combined-search`
+
+```yaml
+search:
+  name: el*
+  os_kernel: linux
+exec: hostname
+```
 
 `conc`
 : type=boolean, default=false, Run concurrent an all clients

@@ -78,7 +78,7 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 		PasswordScanner: utils.ReadPassword,
 	}
 
-	params, err := config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, getInitRequirements(), promptReader)
+	params, err := config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, getInitRequirements(), promptReader, nil)
 	if err != nil {
 		return err
 	}

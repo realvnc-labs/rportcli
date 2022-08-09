@@ -729,8 +729,9 @@ func TestTunnelCreateWithRDP(t *testing.T) {
 				IdleTimeoutMins: 5,
 			}})
 			assert.NoError(t, e)
+		} else {
+			rw.WriteHeader(http.StatusMethodNotAllowed)
 		}
-		rw.WriteHeader(http.StatusMethodNotAllowed)
 	}))
 	defer srv.Close()
 

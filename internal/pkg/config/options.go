@@ -29,10 +29,12 @@ var RequiredValidate = func(fieldName string, val interface{}) error {
 
 // ParameterRequirement contains information about a parameter requirement
 type ParameterRequirement struct {
-	Field       string
-	ShortName   string
-	Help        string
-	Validate    Validate
+	Field     string
+	ShortName string
+	Help      string
+	Validate  Validate
+	// IsEnabled Bool returned by a custom function to signal a required parameter has been replaced by another one.
+	// e.g. client ids can be replaced by group ids or a search for clients
 	IsEnabled   func(providedParams *options.ParameterBag) bool
 	Default     interface{}
 	Description string

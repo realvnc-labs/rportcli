@@ -60,7 +60,7 @@ var clientsListCmd = &cobra.Command{
 		ctx, cancel := buildContext(context.Background())
 		defer cancel()
 
-		return clientsController.Clients(ctx, params)
+		return clientsController.Clients(ctx, params, searchFlags)
 	},
 }
 
@@ -108,8 +108,4 @@ func addClientsPaginationFlags(cmd *cobra.Command) {
 	// TODO: why isn't this getting picked up
 	cmd.Flags().IntP(api.PaginationLimit, "", api.ClientsLimitDefault, "Number of clients to fetch")
 	cmd.Flags().IntP(api.PaginationOffset, "", 0, "Offset for clients fetch")
-}
-
-func addClientsSearchFlag(cmd *cobra.Command) {
-	cmd.Flags().StringP("search", "", "", "Search clients on all fields, supports wildcards (*).")
 }

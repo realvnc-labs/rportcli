@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"os"
+	"strings"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
@@ -18,6 +19,7 @@ func init() {
 	config.DefineCommandInputs(executeCmd, getCommandRequirements())
 	commandCmd.AddCommand(executeCmd)
 	rootCmd.AddCommand(commandCmd)
+	addClientsSearchFlag(executeCmd) // enable repeated '--search key=value' flag
 
 	// see help.go
 	commandCmd.SetUsageTemplate(usageTemplate + serverAuthenticationRefer)
@@ -43,7 +45,11 @@ var executeCmd = &cobra.Command{
 			PasswordScanner: utils.ReadPassword,
 		}
 
-		params, err := loadParams(cmd, getCommandRequirements(), promptReader)
+		var injected map[string]string = nil
+		if len(searchFlags) > 0 {
+			injected = map[string]string{"combined-search": strings.Join(searchFlags, "&")}
+		}
+		params, err := loadParams(cmd, getCommandRequirements(), promptReader, injected)
 		if err != nil {
 			return err
 		}

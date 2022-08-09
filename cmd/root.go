@@ -98,3 +98,13 @@ func buildRport(params *options.ParameterBag) *api.Rport {
 
 	return rportAPI
 }
+
+// We need to catch and pass the values of --search separately because options.ParameterBag does not support
+// repeated flags.
+var searchFlags []string
+
+func addClientsSearchFlag(cmd *cobra.Command) {
+	help := "Search clients by key=value, supports wildcards (*)." +
+		"e.g. os_family=deb*, use multiple times to combine searches with a logical AND."
+	cmd.Flags().StringArrayVar(&searchFlags, "search", []string{}, help)
+}

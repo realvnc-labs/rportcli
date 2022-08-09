@@ -1,6 +1,8 @@
 package config
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -9,23 +11,24 @@ import (
 )
 
 type YAMLExecuteParams struct {
-	Cids                []string `yaml:"cids,omitempty"`
-	Name                []string `yaml:"name,omitempty"`
-	Names               []string `yaml:"names,omitempty"`
-	Search              string   `yaml:"search,omitempty"`
-	Command             string   `yaml:"command,omitempty"`
-	EmbeddedScript      string   `yaml:"exec,omitempty"`
-	Script              string   `yaml:"script,omitempty"`
-	Timeout             string   `yaml:"timeout,omitempty"`
-	Gids                []string `yaml:"gids,omitempty"`
-	Conc                bool     `yaml:"conc,omitempty"`
-	FullCommandResponse bool     `yaml:"full-command-response,omitempty"`
-	IsSudo              bool     `yaml:"is_sudo,omitempty"`
-	Interpreter         string   `yaml:"interpreter,omitempty"`
-	AbortOnError        bool     `yaml:"abort,omitempty"`
-	Cwd                 string   `yaml:"cwd,omitempty"`
-	WriteExecLog        string   `yaml:"write-execlog,omitempty"`
-	ReadExecLog         string   `yaml:"read-execlog,omitempty"`
+	Cids                []string          `yaml:"cids,omitempty"`
+	Name                []string          `yaml:"name,omitempty"`
+	Names               []string          `yaml:"names,omitempty"`
+	Search              map[string]string `yaml:"search,omitempty"`
+	CombinedSearch      string            `yaml:"combined-search,omitempty"`
+	Command             string            `yaml:"command,omitempty"`
+	EmbeddedScript      string            `yaml:"exec,omitempty"`
+	Script              string            `yaml:"script,omitempty"`
+	Timeout             string            `yaml:"timeout,omitempty"`
+	Gids                []string          `yaml:"gids,omitempty"`
+	Conc                bool              `yaml:"conc,omitempty"`
+	FullCommandResponse bool              `yaml:"full-command-response,omitempty"`
+	IsSudo              bool              `yaml:"is_sudo,omitempty"`
+	Interpreter         string            `yaml:"interpreter,omitempty"`
+	AbortOnError        bool              `yaml:"abort,omitempty"`
+	Cwd                 string            `yaml:"cwd,omitempty"`
+	WriteExecLog        string            `yaml:"write-execlog,omitempty"`
+	ReadExecLog         string            `yaml:"read-execlog,omitempty"`
 }
 
 const (
@@ -102,7 +105,27 @@ func ReadYAMLExecuteParams(fileList []string, flagsChecker UsedFlagsChecker) (yF
 		if err != nil {
 			return nil, err
 		}
+		executeParams, err = mapSearchParams(executeParams)
+		if err != nil {
+			return nil, err
+		}
 		yFileParams = GetExecuteParams(executeParams, yFileParams, flagsChecker)
 	}
 	return yFileParams, nil
+}
+
+func mapSearchParams(executeParams *YAMLExecuteParams) (*YAMLExecuteParams, error) {
+	if len((executeParams).Search) > 0 {
+		if (executeParams).CombinedSearch != "" {
+			return executeParams, errors.New("don't use 'search' and 'combined-search' together")
+		}
+		// Convert the multiple search key value pairs into a combined search
+		var combined []string
+		for key, value := range (executeParams).Search {
+			combined = append(combined, fmt.Sprintf("%s=%s", strings.Trim(key, " "), strings.Trim(value, " ")))
+		}
+		(executeParams).CombinedSearch = strings.Join(combined, "&")
+		return executeParams, nil
+	}
+	return executeParams, nil
 }
