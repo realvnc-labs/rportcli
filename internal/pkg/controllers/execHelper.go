@@ -92,6 +92,10 @@ func (eh *ExecutionHelper) execute(ctx context.Context,
 			return err
 		}
 	}
+	if clientIDs == "" {
+		logrus.Fatalf("no clients match your targeting criterea")
+		return nil
+	}
 
 	// initialize ready for new run
 	eh.ExecutionResults = make([]*models.Job, 0)
