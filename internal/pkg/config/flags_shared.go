@@ -32,6 +32,7 @@ const (
 	IdleTimeoutMinutes = "idle-timeout-minutes"
 	SkipIdleTimeout    = "skip-idle-timeout"
 	LaunchSSH          = "launch-ssh"
+	LaunchURIHandler   = "launch-uri"
 	LaunchRDP          = "launch-rdp"
 	RDPWidth           = "rdp-width"
 	RDPHeight          = "rdp-height"

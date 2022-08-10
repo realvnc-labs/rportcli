@@ -68,6 +68,13 @@ func GetCreateTunnelParamReqs(isRDPUserRequired bool) []ParameterRequirement {
 			Type:        StringRequirementType,
 		},
 		{
+			Field:       LaunchURIHandler,
+			Description: "Launch the default URI handler of the OS after tunnel is created.",
+			ShortName:   "e",
+			Type:        BoolRequirementType,
+			Default:     false,
+		},
+		{
 			Field: LaunchRDP,
 			Description: `Start the default RDP client after the tunnel is established, e.g. -d 1
 Optionally pass the rdp-width and rdp-height params for RDP window size`,
@@ -78,14 +85,12 @@ Optionally pass the rdp-width and rdp-height params for RDP window size`,
 		{
 			Field:       RDPWidth,
 			Description: `RDP window width`,
-			ShortName:   "w",
 			Type:        IntRequirementType,
 			Default:     1024,
 		},
 		{
 			Field:       RDPHeight,
 			Description: `RDP window height`,
-			ShortName:   "i",
 			Type:        IntRequirementType,
 			Default:     768,
 		},
