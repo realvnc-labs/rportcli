@@ -189,7 +189,7 @@ func TestCollectParams(t *testing.T) {
 	err := SetCLIFlagString(t, fl, "token", "tokVal")
 	require.NoError(t, err)
 
-	params, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, prm)
+	params, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, prm, nil)
 	assert.NoError(t, err)
 	if err != nil {
 		return
@@ -333,7 +333,7 @@ func TestErrOnMultipleTargetingOptions(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			_, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, prm)
+			_, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, prm, nil)
 			if tc.ShouldErr {
 				assert.ErrorIs(t, err, ErrMultipleTargetingOptions)
 			} else {
@@ -401,7 +401,7 @@ func TestCheckRequiredParams(t *testing.T) {
 				}
 			}
 
-			_, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, prm)
+			_, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, prm, nil)
 			if tc.ShouldErr {
 				assert.NotNil(t, err)
 				assert.Error(t, err)
@@ -461,7 +461,7 @@ func TestCheckSchemeWhenUsingHTTPProxy(t *testing.T) {
 			err = SetCLIFlagString(t, fl, Scheme, tc.Scheme)
 			require.NoError(t, err)
 
-			_, err = CollectParamsFromCommandAndPromptAndEnv(fp, reqs, nil)
+			_, err = CollectParamsFromCommandAndPromptAndEnv(fp, reqs, nil, nil)
 			if tc.ShouldErr {
 				assert.NotNil(t, err)
 				assert.ErrorIs(t, err, tc.ExpectedErr)
@@ -491,7 +491,7 @@ func TestCheckMultipleYAMLFiles(t *testing.T) {
 	err = SetCLIFlagString(t, fl, ReadYAML, "../../../testdata/test3-ok.yaml")
 	require.NoError(t, err)
 
-	vp, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, nil)
+	vp, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, nil, nil)
 	assert.NoError(t, err)
 
 	params := options.New(vp)
@@ -520,7 +520,7 @@ func TestShouldPreferCLIToYAML(t *testing.T) {
 	err = SetCLIFlagString(t, fl, ClientIDs, "anotherserver")
 	require.NoError(t, err)
 
-	vp, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, nil)
+	vp, err := CollectParamsFromCommandAndPromptAndEnv(fp, reqs, nil, nil)
 	assert.NoError(t, err)
 
 	params := options.New(vp)

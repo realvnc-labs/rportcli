@@ -1,7 +1,6 @@
 ---
 title: "Installation"
-draft: false
-weight: 0
+weight: 1
 slug: installation
 ---
 {{< toc >}}

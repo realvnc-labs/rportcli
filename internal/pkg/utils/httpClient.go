@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"time"
 
 	"github.com/breathbath/go_utils/v2/pkg/env"
@@ -43,7 +44,11 @@ func (c *BaseClient) buildClient() *http.Client {
 func (c *BaseClient) Call(req *http.Request, target interface{}, errTarget error) (resp *http.Response, err error) {
 	cl := c.buildClient()
 	dump, _ := httputil.DumpRequest(req, true)
-	logrus.Debugf("raw request: %s", string(dump))
+	if urlString, err := url.QueryUnescape(string(dump)); err == nil {
+		logrus.Debugf("API request (url decoded): %s", urlString)
+	} else {
+		logrus.Debugf("API request (raw): %s", string(dump))
+	}
 
 	if c.auth != nil {
 		err = c.auth.AuthRequest(req)
@@ -86,7 +91,7 @@ func (c *BaseClient) Call(req *http.Request, target interface{}, errTarget error
 		return resp, fmt.Errorf("can't parse data from command execution: %v", err)
 	}
 
-	logrus.Debugf("Got response: '%s', status code: '%d'", string(respBody), resp.StatusCode)
+	logrus.Debugf("Got response:\n'%s'\nstatus code: '%d'", PrettifyJSON(respBody), resp.StatusCode)
 
 	err = json.Unmarshal(respBody, target)
 	if err != nil {

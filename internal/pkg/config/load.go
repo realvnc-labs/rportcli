@@ -42,6 +42,7 @@ var (
 		"via \"rport_cli init\"")
 )
 
+// LoadParamsFromFileAndEnv Seems to load from file, env and flags!??
 func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBag, err error) {
 	var valuesProvider *options.ValuesProviderComposite
 
@@ -62,7 +63,6 @@ func LoadParamsFromFileAndEnv(flags *pflag.FlagSet) (params *options.ParameterBa
 			valuesProvider = options.NewValuesProviderComposite(envValuesProvider, flagValuesProvider, fileValuesProvider)
 		}
 	}
-
 	paramsToReturn := options.New(valuesProvider)
 
 	if err := CheckIfMissingAPIURL(paramsToReturn); err != nil {
@@ -98,12 +98,12 @@ func LoadParamsFromFileAndEnvAndFlagsAndPrompt(
 	c *cobra.Command,
 	reqs []ParameterRequirement,
 	promptReader PromptReader,
+	injected map[string]string,
 ) (params *options.ParameterBag, err error) {
 	flagsProvider := &FlagValuesProvider{
 		flags: c.Flags(),
 	}
-
-	valuesProviderFromCommandAndPrompt, err := CollectParamsFromCommandAndPromptAndEnv(flagsProvider, reqs, promptReader)
+	valuesProviderFromCommandAndPrompt, err := CollectParamsFromCommandAndPromptAndEnv(flagsProvider, reqs, promptReader, injected)
 	if err != nil {
 		return nil, err
 	}
@@ -137,6 +137,7 @@ func CollectParamsFromCommandAndPromptAndEnv(
 	flagsProvider *FlagValuesProvider,
 	reqs []ParameterRequirement,
 	promptReader PromptReader,
+	injected map[string]string,
 ) (vp options.ValuesProvider, err error) {
 	// potentially revist the use of the env values provider. for now, the control of working
 	// with the maps directly for merging etc seems best.
@@ -145,6 +146,10 @@ func CollectParamsFromCommandAndPromptAndEnv(
 	flagParams, err := readFlags(reqs, flagsProvider)
 	if err != nil {
 		return nil, err
+	}
+
+	for k, v := range injected {
+		flagParams[k] = v
 	}
 
 	rawParams := flagParams

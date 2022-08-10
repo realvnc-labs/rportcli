@@ -3,9 +3,10 @@ package config
 import options "github.com/breathbath/go_utils/v2/pkg/config"
 
 const (
-	ClientNameFlag   = "name"
-	ClientNamesFlag  = "names"
-	ClientSearchFlag = "search"
+	ClientNameFlag           = "name"
+	ClientNamesFlag          = "names"
+	ClientSearchFlag         = "search"
+	ClientCombinedSearchFlag = "combined-search"
 
 	ClientIDs        = "cids"
 	Command          = "command"
@@ -74,7 +75,9 @@ func GetClientIDsParamReq(desc string) (paramReq ParameterRequirement) {
 		IsEnabled: func(providedParams *options.ParameterBag) bool {
 			return providedParams.ReadString(ClientNameFlag, "") == "" &&
 				providedParams.ReadString(ClientNamesFlag, "") == "" &&
-				providedParams.ReadString(ClientSearchFlag, "") == ""
+				providedParams.ReadString(ClientSearchFlag, "") == "" &&
+				providedParams.ReadString(ClientCombinedSearchFlag, "") == "" &&
+				providedParams.ReadString(GroupIDs, "") == ""
 		},
 		IsRequired: true,
 	}

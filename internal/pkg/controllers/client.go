@@ -5,10 +5,8 @@ import (
 	"fmt"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
-
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/api"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
 )
 
 type ClientRenderer interface {
@@ -21,11 +19,15 @@ type ClientController struct {
 	ClientRenderer ClientRenderer
 }
 
-func (cc *ClientController) Clients(ctx context.Context, params *options.ParameterBag) error {
+func (cc *ClientController) Clients(ctx context.Context, params *options.ParameterBag, searchFlags []string) error {
+	filter, err := api.NewFilterFromKVStrings(searchFlags)
+	if err != nil {
+		return err
+	}
 	clResp, err := cc.Rport.Clients(
 		ctx,
 		api.NewPaginationFromParams(params),
-		api.NewFilters("*", params.ReadString(config.ClientSearchFlag, "")),
+		filter,
 	)
 	if err != nil {
 		return err

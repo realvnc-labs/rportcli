@@ -1,7 +1,6 @@
 ---
 title: "Authorization"
-draft: false
-weight: 1
+weight: 2
 slug: authorization
 ---
 {{< toc >}}

@@ -29,10 +29,6 @@ func GetScriptParamReqs() (paramReqs []ParameterRequirement) {
 			ShortName:   "n",
 		},
 		{
-			Field:       ClientSearchFlag,
-			Description: "Search clients on all fields, supports wildcards (*).",
-		},
-		{
 			Field:       Script,
 			Help:        "Enter script path",
 			Validate:    RequiredValidate,

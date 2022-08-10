@@ -92,6 +92,10 @@ func (eh *ExecutionHelper) execute(ctx context.Context,
 			return err
 		}
 	}
+	if clientIDs == "" {
+		logrus.Fatalf("no clients match your targeting criterea")
+		return nil
+	}
 
 	// initialize ready for new run
 	eh.ExecutionResults = make([]*models.Job, 0)
@@ -170,32 +174,39 @@ func (eh *ExecutionHelper) getClientIDsFromParams(ctx context.Context, params *o
 	if ids != "" {
 		return ids, nil
 	}
-	names := config.ReadClientNames(params)
-	search := params.ReadString(config.ClientSearchFlag, "")
-	if ids == "" && names == "" && search == "" {
+	var combinedSearchString string
+	if names := config.ReadClientNames(params); names != "" {
+		combinedSearchString = "name=" + names
+	} else if search := params.ReadString(config.ClientCombinedSearchFlag, ""); search != "" {
+		combinedSearchString = search
+	} else {
 		return "", errors.New("no client ids, names or search provided")
 	}
 
+	filter, err := api.NewFilterFromCombinedSearchString(combinedSearchString)
+	if err != nil {
+		return "", err
+	}
 	clients, err := eh.Rport.Clients(
 		ctx,
 		api.NewPaginationWithLimit(api.ClientsLimitMax),
-		api.NewFilters(
-			"name", names,
-			"*", search,
-		),
+		filter,
 	)
 	if err != nil {
 		return "", err
 	}
 
+	debugList := ""
 	for _, cl := range clients.Data {
 		if cl.DisconnectedAt != "" {
 			continue
 		}
 		clientIDs += cl.ID + ","
+		debugList += cl.Name + " " + cl.ID + "\n"
 	}
 
 	clientIDs = strings.Trim(clientIDs, ",")
+	logrus.Debugf("received client list for execution:\n%s", debugList)
 
 	return clientIDs, nil
 }

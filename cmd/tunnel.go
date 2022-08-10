@@ -152,5 +152,5 @@ func readParams(cmd *cobra.Command, reqs []config.ParameterRequirement) (*option
 		PasswordScanner: utils.ReadPassword,
 	}
 
-	return config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, reqs, promptReader)
+	return config.LoadParamsFromFileAndEnvAndFlagsAndPrompt(cmd, reqs, promptReader, nil)
 }

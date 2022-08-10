@@ -13,8 +13,8 @@ import (
 
 var (
 	ErrMultipleTargetingOptions = fmt.Errorf("multiple client targeting options. "+
-		"Please only specify one of --%s, --%s, --%s, or --%s",
-		ClientIDs, GroupIDs, ClientNameFlag, ClientNamesFlag,
+		"Please only specify one of --%s, --%s, --%s, --%s, %s, or list of --%s",
+		ClientIDs, GroupIDs, ClientNameFlag, ClientNamesFlag, ClientCombinedSearchFlag, ClientSearchFlag,
 	)
 	ErrInvalidSchemeForHTTPProxy = errors.New("--http-proxy can only be used with the http or https schemes")
 )
@@ -114,7 +114,7 @@ func HasYAMLParams(flagParams map[string]interface{}) (yFileList []string, hasYA
 }
 
 func CheckTargetingParams(params *options.ParameterBag) (err error) {
-	paramList := []string{ClientIDs, GroupIDs, ClientNameFlag, ClientNamesFlag}
+	paramList := []string{ClientIDs, GroupIDs, ClientNameFlag, ClientNamesFlag, ClientCombinedSearchFlag}
 
 	count := 0
 	for _, param := range paramList {
@@ -133,20 +133,22 @@ func CheckTargetingParams(params *options.ParameterBag) (err error) {
 func CheckRequiredParams(params *options.ParameterBag, reqs []ParameterRequirement) (err error) {
 	for _, req := range reqs {
 		// TODO: this needs refactoring to DRY out
-		if req.IsRequired {
-			if req.IsEnabled == nil {
-				val, found := params.Read(req.Field, nil)
-				if !found || val == "" {
-					return fmt.Errorf("required option (--%s or equivalent) is missing. "+
-						"It must be specified either via the command line or included in a yaml params file", req.Field)
-				}
-			} else {
-				val, found := params.Read(req.Field, nil)
-				if req.IsEnabled(params) && (!found || val == "") {
-					return fmt.Errorf("required option (--%s or equivalent) is missing. "+
-						"It must be specified either via the command line or included in a yaml params file", req.Field)
-				}
+		if !req.IsRequired {
+			continue
+		}
+		errorHint := "Specify either via the command line or include in a yaml file"
+		val, found := params.Read(req.Field, nil)
+
+		if req.IsEnabled != nil {
+			// Process all parameters with a custom IsEnabled() function that signals either the parameter is
+			// literally present or an equivalent replacement is used.
+			if req.IsEnabled(params) && (!found || val == "") {
+				return fmt.Errorf("required option '--%s' or equivalent is missing. %s", req.Field, errorHint)
 			}
+		} else if !found || val == "" {
+			return fmt.Errorf("required option '--%s' is missing. %s", req.Field, errorHint)
+		} else {
+			return nil
 		}
 	}
 	return nil

@@ -40,14 +40,15 @@ type TunnelController struct {
 }
 
 func (tc *TunnelController) Tunnels(ctx context.Context, params *options.ParameterBag) error {
+	filter := api.NewFilters(
+		"id", params.ReadString(config.ClientID, ""),
+		"name", params.ReadString(config.ClientNameFlag, ""),
+		"*", params.ReadString(config.ClientSearchFlag, ""),
+	)
 	clResp, err := tc.Rport.Clients(
 		ctx,
 		api.NewPaginationFromParams(params),
-		api.NewFilters(
-			"id", params.ReadString(config.ClientID, ""),
-			"name", params.ReadString(config.ClientNameFlag, ""),
-			"*", params.ReadString(config.ClientSearchFlag, ""),
-		),
+		filter,
 	)
 	if err != nil {
 		return err
@@ -107,14 +108,14 @@ func (tc *TunnelController) getClientIDAndClientName(
 	if clientID != "" {
 		return
 	}
-
-	clients, err := tc.Rport.Clients(ctx, api.NewPaginationWithLimit(25), api.NewFilters("name", clientName))
+	maxClientsForSelection := 25
+	clients, err := tc.Rport.Clients(ctx, api.NewPaginationWithLimit(maxClientsForSelection), api.NewFilters("name", clientName))
 	if err != nil {
-		return
+		return "", "", err
 	}
 	var client *models.Client
 	numClients := len(clients.Data)
-	maxClientsForSelection := 15
+
 	switch {
 	case numClients == 1:
 		client = clients.Data[0]
@@ -135,6 +136,7 @@ func (tc *TunnelController) getClientIDAndClientName(
 			strings.Join(names, "\n"),
 		)
 	}
+
 	return client.ID, client.Name, nil
 }
 
