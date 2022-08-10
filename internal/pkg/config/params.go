@@ -138,16 +138,16 @@ func CheckRequiredParams(params *options.ParameterBag, reqs []ParameterRequireme
 		}
 		errorHint := "Specify either via the command line or include in a yaml file"
 		val, found := params.Read(req.Field, nil)
-		switch {
-		case req.IsEnabled != nil:
+
+		if req.IsEnabled != nil {
 			// Process all parameters with a custom IsEnabled() function that signals either the parameter is
 			// literally present or an equivalent replacement is used.
 			if req.IsEnabled(params) && (!found || val == "") {
 				return fmt.Errorf("required option '--%s' or equivalent is missing. %s", req.Field, errorHint)
 			}
-		case !found || val == "":
+		} else if !found || val == "" {
 			return fmt.Errorf("required option '--%s' is missing. %s", req.Field, errorHint)
-		default:
+		} else {
 			return nil
 		}
 	}
