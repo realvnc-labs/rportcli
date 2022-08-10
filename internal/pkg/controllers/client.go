@@ -51,11 +51,7 @@ func (cc *ClientController) Client(ctx context.Context, params *options.Paramete
 		return cc.ClientRenderer.RenderClient(client, renderDetails)
 	}
 
-	filter, err := api.NewFilters("name", name)
-	if err != nil {
-		return err
-	}
-	clients, err := cc.Rport.Clients(ctx, api.NewPaginationWithLimit(2), filter)
+	clients, err := cc.Rport.Clients(ctx, api.NewPaginationWithLimit(2), api.NewFilters("name", name))
 	if err != nil {
 		return err
 	}

@@ -10,12 +10,11 @@ import (
 )
 
 func TestFilters(t *testing.T) {
-	filters, err := NewFilters(
+	filters := NewFilters(
 		"name", "johny",
 		"id", "",
 		"*", "*abc*",
 	)
-	require.NoError(t, err)
 
 	q := url.Values{}
 	filters.Apply(q)

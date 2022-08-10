@@ -12,12 +12,12 @@ import (
 type Filters map[string]string
 
 // NewFilters constructs filters from key value pairs. Keys with empty values are ignored.
-func NewFilters(keyValues ...string) (Filters, error) {
+func NewFilters(keyValues ...string) Filters {
 	f := make(map[string]string)
 	for i := 0; 2*i+1 < len(keyValues); i++ {
 		f[keyValues[2*i]] = keyValues[2*i+1]
 	}
-	return f, nil
+	return f
 }
 
 // NewFilterFromCombinedSearchString takes a list of key value filters separated by ampersand,

@@ -276,9 +276,6 @@ func TestTunnelCreateWithPortDiscovery(t *testing.T) {
 		IPProvider: IPProviderMock{
 			IP: "3.4.5.9",
 		},
-		SSHFunc: func(sshParams []string) error {
-			return nil
-		},
 	}
 
 	params := map[string]string{
