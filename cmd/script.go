@@ -45,7 +45,7 @@ var executeScript = &cobra.Command{
 			PasswordScanner: utils.ReadPassword,
 		}
 
-		var injected map[string]string = nil
+		var injected map[string]string
 		if len(searchFlags) > 0 {
 			injected = map[string]string{"combined-search": strings.Join(searchFlags, "&")}
 		}
