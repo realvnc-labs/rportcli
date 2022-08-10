@@ -20,7 +20,7 @@ rm rportcli.tar.gz
 {{< hint type=note title="Apple M1" >}}
 Currently, no binaries are available for the Darwin arm64 architecture aka the M1 CPU.
 We are working on the set-up an apple-compliant build process and the required code signing.
-Meanwhile, you must [build the binary from the sources](https://github.com/cloudradar-monitoring/rportcli#install-as-a-go-binary).
+Meanwhile, you must install as a go binary. See below.
 {{< /hint >}}
 
 ## On Linux
@@ -58,8 +58,10 @@ $Env:PATH="$Env:PATH;C:\Program Files\rportcli\bin"
 If you have go installed, try the following
 
 ```shell
-go get github.com/cloudradar-monitoring/rportcli
+go install github.com/cloudradar-monitoring/rportcli@latest
 ```
+
+This will compile and install `rportcli`. Usually you will find it at `~/go/bin/rportcli`.
 
 ## Update
 

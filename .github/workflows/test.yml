@@ -2,7 +2,7 @@ name: Test
 on: [push]
 jobs:
   sca:
-    name: Sca
+    name: Golangci Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -12,7 +12,7 @@ jobs:
           version: v1.45
           args: -c .golangci.yml
   test:
-    name: Test
+    name: Go Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
