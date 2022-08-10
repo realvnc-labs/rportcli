@@ -102,7 +102,7 @@ func getInitRequirements() []config.ParameterRequirement {
 		config.GetNoPromptParamReq(),
 		{
 			Field:       config.APIURL,
-			Help:        "Enter Server Url",
+			Help:        "Enter URL of RPort Server API (with out path), e.g. https://rport.example.com",
 			Validate:    config.RequiredValidate,
 			Description: "Server address of rport to connect to",
 			ShortName:   "s",

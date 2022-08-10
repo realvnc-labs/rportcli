@@ -7,8 +7,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/cloudradar-monitoring/rportcli/internal/pkg/rdp"
-
 	options "github.com/breathbath/go_utils/v2/pkg/config"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
@@ -71,12 +69,6 @@ var tunnelListCmd = &cobra.Command{
 			Rport:          rportAPI,
 			TunnelRenderer: tr,
 			IPProvider:     rportAPI,
-			SSHFunc:        utils.RunSSH,
-			RDPWriter:      &rdp.FileWriter{},
-			RDPExecutor: &rdp.Executor{
-				CommandProvider: rdp.CommandProvider,
-				StdErr:          os.Stderr,
-			},
 		}
 
 		ctx, cancel := buildContext(context.Background())
@@ -96,7 +88,10 @@ var tunnelDeleteCmd = &cobra.Command{
 			return err
 		}
 
-		tunnelController := createTunnelController(params)
+		tunnelController, err := createTunnelController(params)
+		if err != nil {
+			return err
+		}
 
 		ctx, cancel := buildContext(context.Background())
 		defer cancel()
@@ -115,7 +110,10 @@ var tunnelCreateCmd = &cobra.Command{
 			return err
 		}
 
-		tunnelController := createTunnelController(params)
+		tunnelController, err := createTunnelController(params)
+		if err != nil {
+			return err
+		}
 
 		ctx, cancel := buildContext(context.Background())
 		defer cancel()
@@ -128,7 +126,7 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 	return config.GetCreateTunnelParamReqs(IsRDPUserRequired)
 }
 
-func createTunnelController(params *options.ParameterBag) *controllers.TunnelController {
+func createTunnelController(params *options.ParameterBag) (*controllers.TunnelController, error) {
 	rportAPI := buildRport(params)
 
 	tr := &output.TunnelRenderer{
@@ -137,19 +135,11 @@ func createTunnelController(params *options.ParameterBag) *controllers.TunnelCon
 		Format:             getOutputFormat(),
 	}
 
-	rdpExecutor := &rdp.Executor{
-		CommandProvider: rdp.CommandProvider,
-		StdErr:          os.Stderr,
-	}
-
 	return &controllers.TunnelController{
 		Rport:          rportAPI,
 		TunnelRenderer: tr,
 		IPProvider:     rportAPI,
-		SSHFunc:        utils.RunSSH,
-		RDPWriter:      &rdp.FileWriter{},
-		RDPExecutor:    rdpExecutor,
-	}
+	}, nil
 }
 
 func readParams(cmd *cobra.Command, reqs []config.ParameterRequirement) (*options.ParameterBag, error) {
