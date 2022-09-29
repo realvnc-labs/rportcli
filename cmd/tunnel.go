@@ -126,7 +126,8 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 	return config.GetCreateTunnelParamReqs(IsRDPUserRequired)
 }
 
-func createTunnelController(params *options.ParameterBag) (*controllers.TunnelController, error) {
+// use nolint to quiet the lint error about error always returning nil
+func createTunnelController(params *options.ParameterBag) (*controllers.TunnelController, error) { //nolint:unparam
 	rportAPI := buildRport(params)
 
 	tr := &output.TunnelRenderer{
