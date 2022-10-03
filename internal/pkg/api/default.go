@@ -6,9 +6,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"strconv"
+	"strings"
+	"syscall"
+	"time"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/oauth"
 
 	"github.com/breathbath/go_utils/v2/pkg/url"
 )
@@ -40,12 +46,116 @@ func (rp *Rport) GetToken(ctx context.Context, tokenLifetime int) (li LoginRespo
 	}
 
 	q := req.URL.Query()
+	// TODO: should we have this for OAuth?
 	q.Add("token-lifetime", strconv.Itoa(tokenLifetime))
 	req.URL.RawQuery = q.Encode()
 
 	_, err = rp.CallBaseClient(req, &li)
 
 	return
+}
+
+const loginMsg = "To sign in, use a web browser to open the page %s and enter the code %s to authenticate.\n"
+
+func (rp *Rport) GetTokenViaOAuth(ctx context.Context, tokenLifetime int) (token string, err error) {
+	providerInfo, _, err := getAuthProviderInfo(ctx, rp.BaseURL)
+	if err != nil {
+		return "", err
+	}
+
+	authSettings, _, err := getAuthSettings(ctx, rp.BaseURL, providerInfo)
+	if err != nil {
+		return "", err
+	}
+
+	abortOnCtrlC()
+
+	loginInfo := authSettings.LoginInfo
+	authInfo := loginInfo.DeviceAuthInfo
+
+	fmt.Println("Provider:      ", authSettings.AuthProvider)
+	fmt.Println("Authorize URL: ", authInfo.VerificationURI)
+	fmt.Println("User Code:     ", authInfo.UserCode)
+
+	if authInfo.Message != "" {
+		fmt.Println(authInfo.Message)
+	} else {
+		fmt.Printf(loginMsg, authInfo.VerificationURI, authInfo.UserCode)
+	}
+
+	token, err = pollLogin(ctx, rp.BaseURL, loginInfo, oauth.MaxOAuthRetries)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func getAuthProviderInfo(ctx context.Context, baseURL string) (providerInfo *oauth.AuthProviderInfo, statusCode int, err error) {
+	providerInfo, statusCode, err = oauth.GetAuthProviderInfo(ctx, baseURL)
+	if statusCode != http.StatusOK || err != nil {
+		if err != nil {
+			return nil, statusCode, fmt.Errorf("unable to get auth provider info: %d, %w", statusCode, err)
+		}
+		return nil, statusCode, fmt.Errorf("unable to get auth provider info: %d", statusCode)
+	}
+	return providerInfo, statusCode, nil
+}
+
+func getAuthSettings(
+	ctx context.Context,
+	baseURL string,
+	providerInfo *oauth.AuthProviderInfo) (authSettings *oauth.DeviceAuthSettings, statusCode int, err error) {
+	authSettings, statusCode, err = oauth.GetDeviceAuthSettings(ctx, baseURL, providerInfo)
+
+	if statusCode != http.StatusOK || err != nil {
+		if err != nil {
+			return nil, statusCode, fmt.Errorf("unable to get auth login info: %d, %w", statusCode, err)
+		}
+		return nil, statusCode, fmt.Errorf("unable to get auth login info: %d", statusCode)
+	}
+
+	return authSettings, statusCode, nil
+}
+
+func pollLogin(ctx context.Context, baseURL string, loginInfo oauth.DeviceLoginInfo, retries int) (toke string, err error) {
+	interval := loginInfo.DeviceAuthInfo.Interval
+
+	for attempt := 0; attempt < retries; attempt++ {
+		loginResponse, statusCode, err := oauth.GetDeviceLogin(ctx, baseURL, loginInfo.LoginURI, loginInfo.DeviceAuthInfo.DeviceCode)
+		if err != nil {
+			return "", fmt.Errorf("unable to login: %d, %w", statusCode, err)
+		}
+
+		// if all ok and no errors then we should have a token
+		if statusCode == http.StatusOK && loginResponse.ErrorCode == "" {
+			return loginResponse.Token, nil
+		}
+
+		if loginResponse.ErrorCode != "" {
+			if strings.Contains(loginResponse.ErrorCode, "slow") {
+				// back off if asked to slow down
+				interval *= 2
+			} else if !strings.Contains(loginResponse.ErrorCode, "pending") {
+				// if not pending and not slow down, then we have an error, otherwise fall through to sleep and retry
+				return "", fmt.Errorf("unable to login:\n%s\n%s\n%s", loginResponse.ErrorCode, loginResponse.ErrorMessage, loginResponse.ErrorURI)
+			}
+		}
+
+		time.Sleep(time.Duration(interval * int(time.Second)))
+	}
+
+	return "", fmt.Errorf("max login attempts (%d) exceeded", retries)
+}
+
+func abortOnCtrlC() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		// no need to be graceful
+		os.Exit(1)
+	}()
 }
 
 type TwoFaLogin struct {
