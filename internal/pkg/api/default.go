@@ -82,11 +82,13 @@ func (rp *Rport) GetTokenViaOAuth(ctx context.Context, tokenLifetime int) (token
 	} else {
 		fmt.Printf(loginMsg, authInfo.VerificationURI, authInfo.UserCode)
 	}
+	fmt.Print("\nWaiting for OAuth provider response ... ")
 
 	token, err = pollLogin(ctx, rp.BaseURL, loginInfo, oauth.MaxOAuthRetries)
 	if err != nil {
 		return "", err
 	}
+	fmt.Println("OK")
 
 	return token, nil
 }
