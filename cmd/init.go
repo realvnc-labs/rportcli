@@ -43,10 +43,13 @@ var initCmd = &cobra.Command{
 
 		return manageInit(ctx, cmd)
 	},
+	//nolint: lll,nolintlint
 	Long: `
 The init command allows the user to authenticate with an rport server and cache the authentication token in a config.json file. The user will not need to re-authenticate until the token expires, at which point the init command must be run again. 
 
-If 2fa is enabled then init will take the user through the 2fa flow and save the final token. The user will not need to complete 2fa until the token expires.`,
+If 2fa is enabled then init will take the user through the 2fa flow and save the final token. The user will not need to complete 2fa until the token expires.
+
+If the --oauth flag is set and OAuth is enabled on the RPort Server (via RPort Plus), then init will take the user through the OAuth flow. As with the other methods, an RPort authentication token will be returned and cached in the config.json file. The user will not need to re-authenticate until the token expires.`,
 }
 
 func manageLogout(ctx context.Context, cmd *cobra.Command) error {
@@ -69,7 +72,8 @@ func manageInit(ctx context.Context, cmd *cobra.Command) error {
 	// when the RPORT_API_TOKEN env var is set, we shouldn't allow use of the init command
 	hasAPIToken := config.HasAPIToken()
 	if hasAPIToken {
-		return errors.New("cannot init config when the RPORT_API_TOKEN is set. If you do not wish to use the API token, please unset RPORT_API_TOKEN and use RPORT_API_USER and RPORT_API_PASSWORD instead")
+		return errors.New("cannot init config when the RPORT_API_TOKEN is set. If you do not wish to use the API token, " +
+			"please unset RPORT_API_TOKEN and use RPORT_API_USER and RPORT_API_PASSWORD instead")
 	}
 
 	promptReader := &utils.PromptReader{
@@ -123,6 +127,14 @@ func getInitRequirements() []config.ParameterRequirement {
 			Description: "Password to the rport server",
 			ShortName:   "p",
 			IsSecure:    true,
+		},
+		{
+			Field:       config.UseOAuthProvider,
+			Help:        "Use the RPort OAuth Provider (if available)",
+			Validate:    nil,
+			Description: "Use the RPort OAuth Provider (if available)",
+			ShortName:   "",
+			Type:        config.BoolRequirementType,
 		},
 	}
 }
