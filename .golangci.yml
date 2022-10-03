@@ -59,7 +59,6 @@ linters:
   # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
   disable-all: true
   enable:
-    - deadcode
     - depguard
     - dogsled
     - dupl
@@ -82,16 +81,13 @@ linters:
     - nakedret
     - noctx
     - nolintlint
-    - rowserrcheck
     - exportloopref
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
     - unparam
     - unused
-    - varcheck
     - whitespace
     - lll
 issues:
@@ -99,7 +95,7 @@ issues:
   exclude-rules:
     - linters:
         - gocritic
-      text: "unnecessaryDefer:"
+      text: "unnecessaryDefer:|paramTypeCombine:"
     - linters:
         - gosec
       text: "G402:|G501:|G505:|G401:"
@@ -142,6 +138,9 @@ issues:
     - path: internal/pkg/config/flags_tunnel.go
       linters:
         - funlen
+    - path: cmd/tunnel.go
+      linters:
+        - unparam
 
 run:
   skip-dirs: []
