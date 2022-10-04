@@ -124,8 +124,10 @@ func GetDeviceLogin(ctx context.Context, baseURL string, loginURI string, device
 	}
 
 	params := url.Values{
-		"device_code":    {deviceCode},
-		"token-lifetime": {strconv.Itoa(tokenLifetime)},
+		"device_code": {deviceCode},
+	}
+	if tokenLifetime != 0 {
+		params.Add("token-lifetime", strconv.Itoa(tokenLifetime))
 	}
 	loginReq.URL.RawQuery = params.Encode()
 
