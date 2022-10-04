@@ -163,6 +163,7 @@ func TestShouldLogin(t *testing.T) {
 			s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				assert.Equal(t, "/oauth/login/device", r.URL.EscapedPath())
 				assert.Equal(t, r.URL.Query().Get("device_code"), "123456")
+				assert.Equal(t, r.URL.Query().Get("token-lifetime"), "900")
 				writeExpectedResponse(t, w, tc.statusCode, tc.loginResponse)
 			}))
 			defer s.Close()
@@ -170,7 +171,7 @@ func TestShouldLogin(t *testing.T) {
 			ctx := context.Background()
 			cl := api.New(s.URL, nil)
 
-			loginResponse, statusCode, err := oauth.GetDeviceLogin(ctx, cl.BaseURL, "/oauth/login/device", "123456")
+			loginResponse, statusCode, err := oauth.GetDeviceLogin(ctx, cl.BaseURL, "/oauth/login/device", "123456", 900)
 
 			if statusCode == http.StatusOK {
 				require.NoError(t, err)

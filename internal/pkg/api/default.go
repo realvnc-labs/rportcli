@@ -46,7 +46,6 @@ func (rp *Rport) GetToken(ctx context.Context, tokenLifetime int) (li LoginRespo
 	}
 
 	q := req.URL.Query()
-	// TODO: should we have this for OAuth?
 	q.Add("token-lifetime", strconv.Itoa(tokenLifetime))
 	req.URL.RawQuery = q.Encode()
 
@@ -84,7 +83,7 @@ func (rp *Rport) GetTokenViaOAuth(ctx context.Context, tokenLifetime int) (token
 	}
 	fmt.Print("\nWaiting for OAuth provider response ... ")
 
-	token, err = pollLogin(ctx, rp.BaseURL, loginInfo, oauth.MaxOAuthRetries)
+	token, err = pollLogin(ctx, rp.BaseURL, loginInfo, oauth.MaxOAuthRetries, tokenLifetime)
 	if err != nil {
 		return "", err
 	}
@@ -120,11 +119,17 @@ func getAuthSettings(
 	return authSettings, statusCode, nil
 }
 
-func pollLogin(ctx context.Context, baseURL string, loginInfo oauth.DeviceLoginInfo, retries int) (toke string, err error) {
+func pollLogin(ctx context.Context, baseURL string, loginInfo oauth.DeviceLoginInfo, retries int, tokenLifetime int) (
+	token string, err error) {
 	interval := loginInfo.DeviceAuthInfo.Interval
 
 	for attempt := 0; attempt < retries; attempt++ {
-		loginResponse, statusCode, err := oauth.GetDeviceLogin(ctx, baseURL, loginInfo.LoginURI, loginInfo.DeviceAuthInfo.DeviceCode)
+		loginResponse, statusCode, err := oauth.GetDeviceLogin(
+			ctx,
+			baseURL,
+			loginInfo.LoginURI,
+			loginInfo.DeviceAuthInfo.DeviceCode,
+			tokenLifetime)
 		if err != nil {
 			return "", fmt.Errorf("unable to login: %d, %w", statusCode, err)
 		}
@@ -140,7 +145,10 @@ func pollLogin(ctx context.Context, baseURL string, loginInfo oauth.DeviceLoginI
 				interval *= 2
 			} else if !strings.Contains(loginResponse.ErrorCode, "pending") {
 				// if not pending and not slow down, then we have an error, otherwise fall through to sleep and retry
-				return "", fmt.Errorf("unable to login:\n%s\n%s\n%s", loginResponse.ErrorCode, loginResponse.ErrorMessage, loginResponse.ErrorURI)
+				return "", fmt.Errorf("NOT OK\nunable to login: %s\n%s\n%s",
+					loginResponse.ErrorCode,
+					loginResponse.ErrorMessage,
+					loginResponse.ErrorURI)
 			}
 		}
 

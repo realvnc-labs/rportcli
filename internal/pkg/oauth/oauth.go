@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 const (
@@ -115,7 +116,7 @@ func GetDeviceAuthSettings(
 
 // GetDeviceLogin will atempt to authorize with the rportd server. The login attempt may
 // fail if the user hasn't completed authorization. The login can be retried.
-func GetDeviceLogin(ctx context.Context, baseURL string, loginURI string, deviceCode string) (
+func GetDeviceLogin(ctx context.Context, baseURL string, loginURI string, deviceCode string, tokenLifetime int) (
 	loginResponse *DeviceLoginDetails, statusCode int, err error) {
 	loginReq, err := http.NewRequestWithContext(ctx, http.MethodGet, baseURL+loginURI, nil)
 	if err != nil {
@@ -123,7 +124,8 @@ func GetDeviceLogin(ctx context.Context, baseURL string, loginURI string, device
 	}
 
 	params := url.Values{
-		"device_code": {deviceCode},
+		"device_code":    {deviceCode},
+		"token-lifetime": {strconv.Itoa(tokenLifetime)},
 	}
 	loginReq.URL.RawQuery = params.Encode()
 

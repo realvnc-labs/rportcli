@@ -151,8 +151,10 @@ func handleLoginFail(t *testing.T, w http.ResponseWriter, attempts int, failErro
 	if attempts == 0 {
 		loginResponse := &oauth.DeviceLoginDetailsResponse{
 			Data: oauth.DeviceLoginDetails{
-				Token:     "",
-				ErrorCode: failError,
+				Token:        "",
+				ErrorCode:    failError,
+				ErrorMessage: "this is the error message",
+				ErrorURI:     "https://more-err-info-here.com",
 			},
 		}
 		writeExpectedResponse(t, w, statusCode, loginResponse)
