@@ -128,7 +128,7 @@ issues:
         - lll
     - linters:
         - govet
-      text: "shadow: declaration of \"err\""
+      text: 'shadow: declaration of "err"'
     - path: cmd/command.go
       linters:
         - dupl
@@ -143,6 +143,7 @@ issues:
         - unparam
 
 run:
+  deadline: 2m
   skip-dirs: []
 
 # golangci.com configuration
