@@ -11,7 +11,8 @@ import (
 
 const (
 	GetAuthProviderInfoURL = "/api/v1/auth/provider"
-	MaxOAuthRetries        = 20
+	MaxOAuthRetries        = 50
+	MinIntervalTime        = 10
 )
 
 // AuthProviderInfo is used to tell the client where to get info for authorizing

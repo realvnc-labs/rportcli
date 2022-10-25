@@ -121,7 +121,13 @@ func getAuthSettings(
 
 func pollLogin(ctx context.Context, baseURL string, loginInfo oauth.DeviceLoginInfo, retries int, tokenLifetime int) (
 	token string, err error) {
-	interval := loginInfo.DeviceAuthInfo.Interval
+	// allow an extra second so not racing with the provider
+	interval := loginInfo.DeviceAuthInfo.Interval + 1
+	// don't poll faster than the MinIntervalTime and if the interval time is longer
+	// than the min then just leave the interval and use that.
+	if interval < oauth.MinIntervalTime {
+		interval = oauth.MinIntervalTime
+	}
 
 	for attempt := 0; attempt < retries; attempt++ {
 		loginResponse, statusCode, err := oauth.GetDeviceLogin(
@@ -152,7 +158,7 @@ func pollLogin(ctx context.Context, baseURL string, loginInfo oauth.DeviceLoginI
 			}
 		}
 
-		time.Sleep(time.Duration(interval * int(time.Second)))
+		time.Sleep(time.Duration(interval) * time.Second)
 	}
 
 	return "", fmt.Errorf("max login attempts (%d) exceeded", retries)
