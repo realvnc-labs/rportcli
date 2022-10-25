@@ -1,8 +1,8 @@
-
 [![License](https://img.shields.io/github/license/cloudradar-monitoring/rportcli?style=for-the-badge)](https://github.com/cloudradar-monitoring/rportcli/blob/main/LICENSE)
+
 # Rport CLI (v1)
 
-Rport CLI is a tool to help you managing your remote machines connected 
+Rport CLI is a tool to help you managing your remote machines connected
 to the [rport API](https://github.com/cloudradar-monitoring/rport) directly from your terminal.
 
 The rport command line interface `rportcli` is a great addition to the rport server. Executing some tasks on the
@@ -13,7 +13,7 @@ you cannot do on the user interface.
 
 Integrates well with:
 
-![Powershell](https://img.shields.io/badge/Powershell-2CA5E0?style=for-the-badge&logo=powershell&logoColor=white) 
+![Powershell](https://img.shields.io/badge/Powershell-2CA5E0?style=for-the-badge&logo=powershell&logoColor=white)
 ![GnuBash](https://img.shields.io/badge/GNU%20Bash-4EAA25?style=for-the-badge&logo=GNU%20Bash&logoColor=white)
 ![Git](https://img.shields.io/badge/GIT-E44C30?style=for-the-badge&logo=git&logoColor=white)
 

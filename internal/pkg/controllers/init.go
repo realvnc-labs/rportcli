@@ -38,6 +38,8 @@ type InitController struct {
 }
 
 func (ic *InitController) InitConfig(ctx context.Context, params *options.ParameterBag) error {
+	useOAuth := params.ReadBool(config.UseOAuthProvider, false)
+
 	login := config.ReadAPIUser(params)
 	serverURL := config.ReadAPIURL(params)
 
@@ -50,13 +52,23 @@ func (ic *InitController) InitConfig(ctx context.Context, params *options.Parame
 	tokenValidity := env.ReadEnvInt(config.SessionValiditySecondsEnvVar, api.DefaultTokenValiditySeconds)
 
 	cl := api.New(serverURL, apiAuth)
-	loginResp, err := cl.GetToken(ctx, tokenValidity)
-	if err != nil {
-		return fmt.Errorf("config verification failed: %v", err)
-	}
 
-	if loginResp.Data.Token == "" {
-		return fmt.Errorf("no auth token received from rport")
+	var loginResp api.LoginResponse
+	var err error
+	if !useOAuth {
+		loginResp, err = cl.GetToken(ctx, tokenValidity)
+		if err != nil {
+			return fmt.Errorf("config verification failed: %v", err)
+		}
+		if loginResp.Data.Token == "" {
+			return fmt.Errorf("no auth token received from rport")
+		}
+	} else {
+		token, err := cl.GetTokenViaOAuth(ctx, tokenValidity)
+		if err != nil {
+			return fmt.Errorf("unable to get token via OAuth: %v", err)
+		}
+		loginResp.Data.Token = token
 	}
 
 	noPrompt := params.ReadBool(config.NoPrompt, false)

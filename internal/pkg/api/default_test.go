@@ -6,10 +6,12 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cloudradar-monitoring/rportcli/internal/pkg/oauth"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/utils"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/models"
@@ -40,12 +42,150 @@ func TestLogin(t *testing.T) {
 	})
 
 	loginInfo, err := cl.GetToken(context.Background(), 10)
-	assert.NoError(t, err)
-	if err != nil {
+	require.NoError(t, err)
+
+	assert.Equal(t, "token123", loginInfo.Data.Token)
+}
+
+func TestLoginViaOAuth(t *testing.T) {
+	// note: the test name is used to determine test scenario
+	cases := []struct {
+		name string
+	}{
+		{
+			name: "happy_path",
+		},
+		{
+			name: "pending_retry",
+		},
+		{
+			name: "slow_retry",
+		},
+		{
+			name: "device_code_fail",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			authServices := createStubAuthServicesHandler(t, tc.name)
+			defer authServices.Close()
+
+			cl := New(authServices.URL, nil)
+
+			token, err := cl.GetTokenViaOAuth(context.Background(), 10)
+			if !strings.Contains(tc.name, "fail") {
+				assert.NoError(t, err)
+				assert.Equal(t, "1234", token)
+			} else {
+				assert.Error(t, err)
+			}
+		})
+	}
+}
+
+func createStubAuthServicesHandler(t *testing.T, mode string) (authServices *httptest.Server) {
+	attempts := 0
+	authServices = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		inboundURL := r.URL.String()
+
+		if strings.Contains(inboundURL, "auth/provider") {
+			writeProviderInfoResponse(t, w)
+		} else if strings.Contains(inboundURL, "settings/device") {
+			writeDeviceSettingsResponse(t, w)
+		} else if strings.Contains(inboundURL, "device/login") {
+			if mode == "happy_path" {
+				writeHappyLoginResponse(t, w)
+			} else if mode == "pending_retry" {
+				attempts = handleLoginFail(t, w, attempts, "pending", http.StatusOK)
+			} else if mode == "slow_retry" {
+				attempts = handleLoginFail(t, w, attempts, "slow_down", http.StatusOK)
+			} else if mode == "device_code_fail" {
+				// no retry so don't use attempts
+				_ = handleLoginFail(t, w, 0, "bad_device_code", http.StatusBadRequest)
+			}
+		}
+	}))
+	return authServices
+}
+
+func writeProviderInfoResponse(t *testing.T, w http.ResponseWriter) {
+	expectedProviderInfoResponse := oauth.AuthProviderInfoResponse{
+		Data: oauth.AuthProviderInfo{
+			AuthProvider:      "google",
+			SettingsURI:       "/ext/oauth/settings",
+			DeviceSettingsURI: "/ext/oauth/settings/device",
+		},
+	}
+	writeExpectedResponse(t, w, http.StatusOK, expectedProviderInfoResponse)
+}
+
+func writeDeviceSettingsResponse(t *testing.T, w http.ResponseWriter) {
+	expectedLoginInfoResponse := oauth.DeviceAuthSettingsResponse{
+		Data: oauth.DeviceAuthSettings{
+			LoginInfo: oauth.DeviceLoginInfo{
+				LoginURI: "/api/v1/ext/oauth/device/login",
+				DeviceAuthInfo: &oauth.DeviceAuthInfo{
+					UserCode:        "1234",
+					DeviceCode:      "1234",
+					VerificationURI: "1234",
+					ExpiresIn:       333,
+					Interval:        1,
+					Message:         "1234",
+				},
+			},
+		},
+	}
+	writeExpectedResponse(t, w, http.StatusOK, expectedLoginInfoResponse)
+}
+
+func writeHappyLoginResponse(t *testing.T, w http.ResponseWriter) {
+	loginResponse := &oauth.DeviceLoginDetailsResponse{
+		Data: oauth.DeviceLoginDetails{
+			Token: "1234",
+		},
+	}
+	writeExpectedResponse(t, w, http.StatusOK, loginResponse)
+}
+
+func handleLoginFail(t *testing.T, w http.ResponseWriter, attempts int, failError string, statusCode int) int {
+	if attempts == 0 {
+		loginResponse := &oauth.DeviceLoginDetailsResponse{
+			Data: oauth.DeviceLoginDetails{
+				Token:        "",
+				ErrorCode:    failError,
+				ErrorMessage: "this is the error message",
+				ErrorURI:     "https://more-err-info-here.com",
+			},
+		}
+		writeExpectedResponse(t, w, statusCode, loginResponse)
+		attempts++
+	} else {
+		loginResponse := &oauth.DeviceLoginDetailsResponse{
+			Data: oauth.DeviceLoginDetails{
+				Token: "1234",
+			},
+		}
+		writeExpectedResponse(t, w, http.StatusOK, loginResponse)
+	}
+	return attempts
+}
+
+func writeExpectedResponse(t *testing.T, w http.ResponseWriter, expectedStatusCode int, expectedResponse interface{}) {
+	t.Helper()
+
+	if expectedResponse == nil {
+		w.WriteHeader(expectedStatusCode)
 		return
 	}
 
-	assert.Equal(t, "token123", loginInfo.Data.Token)
+	jsonBytes, err := json.Marshal(expectedResponse)
+	require.NoError(t, err)
+
+	w.WriteHeader(expectedStatusCode)
+	n, err := w.Write(jsonBytes)
+
+	require.NotZero(t, n)
+	require.NoError(t, err)
 }
 
 func TestMe(t *testing.T) {

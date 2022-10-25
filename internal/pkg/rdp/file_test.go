@@ -1,7 +1,6 @@
 package rdp
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -33,7 +32,7 @@ func TestWriteRdpFile(t *testing.T) {
 		}
 	}()
 
-	fileContents, err := ioutil.ReadFile(filePath)
+	fileContents, err := os.ReadFile(filePath)
 	assert.NoError(t, err)
 	if err != nil {
 		return

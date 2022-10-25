@@ -30,7 +30,7 @@ var environmentVariables = `
 
 Environment Variables:
 
-The reportcli support use of the following environment variables. 
+The rportcli support use of the following environment variables.
 
 CONFIG_PATH               specify config.json file location
 CONN_TIMEOUT_SEC          set connection timeout
@@ -38,12 +38,13 @@ SESSION_VALIDITY_SECONDS  initial lifetime of interactive command session
 
 The following environment variables are used during authentication. See Server Authentication below for more info on use.
 
-RPORT_API_URL       the URL of the rportd server 
+RPORT_API_URL       the URL of the rportd server
 RPORT_API_USER      the user name for the authentication
 RPORT_API_PASSWORD  the password to be used (do not set if using an API token)'
 RPORT_API_TOKEN     your API token (will not work when RPORT_API_PASSWORD is set)
 `
 
+//nolint:lll,nolintlint
 var serverAuthentication = `
 
 Server Authentication:
@@ -54,7 +55,7 @@ The rportcli requires authentication with the rportd server. The CLI supports th
 
 2) Alternatively, RPORT_API_USER and RPORT_API_PASSWORD can be used (will not work with 2fa unless using the init command)'. If 2fa is enabled then the authentication will fail and either method 1) or 3) must be used.
 
-3) Using the init command to set an authentication token in the config.json file. If 2fa is enabled then the user's authentication token will be saved in a config.json (see readme for more information) file. If 2fa is enabled then the user will be taken through the 2fa flow and the final authentication token will be saved in config.json.
+3) Using the init command to set an authentication token in the config.json file. If 2fa is enabled then the user's authentication token will be saved in a config.json. If 2fa is enabled then the user will be taken through the 2fa flow and the final authentication token will be saved in config.json. If the --oauth flag is used (and RPort Plus is enabled) then the other authentication methods will be ignored and the rportcli will use an OAuth flow to obtain an authentication token. The user must follow the OAuth instructions displayed by rportcli. For detailed information on the init command, see https://cli.rport.io/.
 
 `
 

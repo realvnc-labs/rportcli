@@ -34,6 +34,7 @@ const (
 	APIToken         = "api_token"
 	NoPrompt         = "no-prompt"
 	ReadYAML         = "read-yaml"
+	UseOAuthProvider = "oauth"
 )
 
 var (
@@ -183,6 +184,11 @@ func CollectParamsFromCommandAndPromptAndEnv(
 		if !isCorrect {
 			return nil, ErrInvalidSchemeForHTTPProxy
 		}
+	}
+
+	useOAuth := paramsSoFar.ReadBool(UseOAuthProvider, false)
+	if useOAuth {
+		return vp, nil
 	}
 
 	// if the no-prompt cli flag is set, then do not prompt for missing values

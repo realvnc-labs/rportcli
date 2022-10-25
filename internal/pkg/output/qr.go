@@ -2,11 +2,11 @@ package output
 
 import (
 	"io"
-	"io/ioutil"
+	"os"
 )
 
 func GetQrImageFsWriter(namePattern string) (io.Writer, io.Closer, string, error) {
-	tempFile, err := ioutil.TempFile("", namePattern)
+	tempFile, err := os.CreateTemp("", namePattern)
 	if err != nil {
 		return nil, nil, "", err
 	}

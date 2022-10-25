@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -64,7 +63,7 @@ func SetCLIFlagString(t *testing.T, fl *pflag.FlagSet, flagName, flagVal string)
 }
 
 func WriteTestConfigFile(t *testing.T, filePath string, rawJSON []byte) {
-	err := ioutil.WriteFile(filePath, rawJSON, 0600)
+	err := os.WriteFile(filePath, rawJSON, 0600)
 	assert.NoError(t, err)
 }
 
