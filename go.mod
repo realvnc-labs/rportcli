@@ -3,6 +3,7 @@ module github.com/cloudradar-monitoring/rportcli
 go 1.18
 
 require (
+	bou.ke/monkey v1.0.2
 	github.com/breathbath/go_utils/v2 v2.0.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
@@ -22,7 +23,6 @@ require (
 )
 
 require (
-	bou.ke/monkey v1.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect

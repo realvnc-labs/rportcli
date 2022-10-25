@@ -32,7 +32,7 @@ linters-settings:
   gomnd:
     settings:
       mnd:
-        checks: case,condition,return
+        checks: [case, condition, return]
   govet:
     check-shadowing: true
     settings:
@@ -138,20 +138,10 @@ issues:
     - path: internal/pkg/config/flags_tunnel.go
       linters:
         - funlen
-    - path: cmd/tunnel.go
-      linters:
-        - unparam
 
 run:
   deadline: 2m
   skip-dirs: []
-
-# golangci.com configuration
-# https://github.com/golangci/golangci/wiki/Configuration
-service:
-  golangci-lint-version: 1.27.x # use the fixed version to not introduce new linters unexpectedly
-  prepare:
-    - echo "here I can run custom commands, but no preparation needed for this repo"
 
 output:
   # colored-line-number|line-number|json|tab|checkstyle|code-climate, default is "colored-line-number"

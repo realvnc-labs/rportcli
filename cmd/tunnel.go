@@ -88,10 +88,7 @@ var tunnelDeleteCmd = &cobra.Command{
 			return err
 		}
 
-		tunnelController, err := createTunnelController(params)
-		if err != nil {
-			return err
-		}
+		tunnelController := createTunnelController(params)
 
 		ctx, cancel := buildContext(context.Background())
 		defer cancel()
@@ -110,10 +107,7 @@ var tunnelCreateCmd = &cobra.Command{
 			return err
 		}
 
-		tunnelController, err := createTunnelController(params)
-		if err != nil {
-			return err
-		}
+		tunnelController := createTunnelController(params)
 
 		ctx, cancel := buildContext(context.Background())
 		defer cancel()
@@ -126,8 +120,7 @@ func getCreateTunnelRequirements() []config.ParameterRequirement {
 	return config.GetCreateTunnelParamReqs(IsRDPUserRequired)
 }
 
-// use nolint to quiet the lint error about error always returning nil
-func createTunnelController(params *options.ParameterBag) (*controllers.TunnelController, error) { //nolint:unparam
+func createTunnelController(params *options.ParameterBag) *controllers.TunnelController {
 	rportAPI := buildRport(params)
 
 	tr := &output.TunnelRenderer{
@@ -140,7 +133,7 @@ func createTunnelController(params *options.ParameterBag) (*controllers.TunnelCo
 		Rport:          rportAPI,
 		TunnelRenderer: tr,
 		IPProvider:     rportAPI,
-	}, nil
+	}
 }
 
 func readParams(cmd *cobra.Command, reqs []config.ParameterRequirement) (*options.ParameterBag, error) {
