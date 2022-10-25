@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -67,7 +67,7 @@ func (cc *ScriptsController) ReadScriptContent(scriptsFilePath string) (scriptCo
 		return nil, fmt.Errorf("failed to read file %s: %w", scriptsFilePath, err)
 	}
 
-	scriptContent, err = ioutil.ReadAll(scriptFile)
+	scriptContent, err = io.ReadAll(scriptFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file %s: %w", scriptsFilePath, err)
 	}

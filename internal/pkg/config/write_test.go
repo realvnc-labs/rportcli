@@ -1,7 +1,7 @@
 package config
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 
 	options "github.com/breathbath/go_utils/v2/pkg/config"
@@ -30,7 +30,7 @@ func TestWriteConfig(t *testing.T) {
 	}
 
 	assert.FileExists(t, filePath)
-	fileContents, err := ioutil.ReadFile(filePath)
+	fileContents, err := os.ReadFile(filePath)
 	assert.NoError(t, err)
 
 	if err != nil {

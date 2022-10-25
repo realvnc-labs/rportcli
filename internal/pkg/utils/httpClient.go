@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -63,7 +62,7 @@ func (c *BaseClient) Call(req *http.Request, target interface{}, errTarget error
 	}
 	var respBodyBytes []byte
 	if resp.StatusCode > maxValidResponseCode {
-		respBodyBytes, err = ioutil.ReadAll(resp.Body)
+		respBodyBytes, err = io.ReadAll(resp.Body)
 		if err != nil {
 			logrus.Warnf("failed to read response body: %v", err)
 			e := c.convertResponseCodeToError(resp.StatusCode)
@@ -83,7 +82,7 @@ func (c *BaseClient) Call(req *http.Request, target interface{}, errTarget error
 		return resp, nil
 	}
 
-	respBody, err := ioutil.ReadAll(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
 	if err == io.EOF {
 		return resp, errors.New("no data received from command execution")
 	}

@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -139,7 +138,7 @@ func TestScriptExecutionByClientIDsSuccess(t *testing.T) {
 			scriptPath := ""
 			if tc.shouldCreateScript {
 				scriptPath = filepath.Join(tmpDir, tc.scriptPathToGive)
-				err := ioutil.WriteFile(scriptPath, []byte(scriptToExecute), 0600)
+				err := os.WriteFile(scriptPath, []byte(scriptToExecute), 0600)
 				require.NoError(t, err)
 				writtenFiles = append(writtenFiles, scriptPath)
 			} else {
