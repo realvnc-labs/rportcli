@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	options "github.com/breathbath/go_utils/v2/pkg/config"
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/output"
 
 	"github.com/cloudradar-monitoring/rportcli/internal/pkg/config"
@@ -45,7 +46,7 @@ var initCmd = &cobra.Command{
 	},
 	//nolint: lll,nolintlint
 	Long: `
-The init command allows the user to authenticate with an rport server and cache the authentication token in a config.json file. The user will not need to re-authenticate until the token expires, at which point the init command must be run again. 
+The init command allows the user to authenticate with an rport server and cache the authentication token in a config.json file. The user will not need to re-authenticate until the token expires, at which point the init command must be run again.
 
 If 2fa is enabled then init will take the user through the 2fa flow and save the final token. The user will not need to complete 2fa until the token expires.
 
@@ -119,6 +120,9 @@ func getInitRequirements() []config.ParameterRequirement {
 			Validate:    config.RequiredValidate,
 			Description: "Login to the rport server",
 			ShortName:   "l",
+			IsEnabled: func(providedParams *options.ParameterBag) bool {
+				return !providedParams.ReadBool(config.UseOAuthProvider, false)
+			},
 		},
 		{
 			Field:       config.APIPassword,
@@ -127,6 +131,9 @@ func getInitRequirements() []config.ParameterRequirement {
 			Description: "Password to the rport server",
 			ShortName:   "p",
 			IsSecure:    true,
+			IsEnabled: func(providedParams *options.ParameterBag) bool {
+				return !providedParams.ReadBool(config.UseOAuthProvider, false)
+			},
 		},
 		{
 			Field:       config.UseOAuthProvider,

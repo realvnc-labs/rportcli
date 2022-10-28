@@ -186,11 +186,6 @@ func CollectParamsFromCommandAndPromptAndEnv(
 		}
 	}
 
-	useOAuth := paramsSoFar.ReadBool(UseOAuthProvider, false)
-	if useOAuth {
-		return vp, nil
-	}
-
 	// if the no-prompt cli flag is set, then do not prompt for missing values
 	noPrompt := paramsSoFar.ReadBool(NoPrompt, false)
 	if noPrompt || promptReader == nil {
