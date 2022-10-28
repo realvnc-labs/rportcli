@@ -274,7 +274,9 @@ func (eh *ExecutionHelper) processRawMessage(msg []byte) error {
 
 	logrus.Debugf("received message: '%s'", string(msg))
 
-	eh.ExecutionResults = append(eh.ExecutionResults, &job)
+	if !job.FinishedAt.IsZero() {
+		eh.ExecutionResults = append(eh.ExecutionResults, &job)
+	}
 
 	err = eh.JobRenderer.RenderJob(&job)
 	return err

@@ -16,14 +16,21 @@ type JobRenderer struct {
 }
 
 func (jr *JobRenderer) RenderJob(j *models.Job) error {
-	return RenderByFormat(
-		jr.Format,
-		jr.Writer,
-		j,
-		func() error {
-			return jr.renderJobInHumanFormat(j)
-		},
-	)
+	partialHumanOutput := jr.Format == FormatHuman && !jr.IsFullOutput
+	partialResult := j.FinishedAt.IsZero()
+
+	// Only render partial output when partial human output is selected
+	if partialHumanOutput == partialResult {
+		return RenderByFormat(
+			jr.Format,
+			jr.Writer,
+			j,
+			func() error {
+				return jr.renderJobInHumanFormat(j)
+			},
+		)
+	}
+	return nil
 }
 
 func (jr *JobRenderer) genShiftedMultilineStr(input, shiftStr string) string {
