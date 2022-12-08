@@ -10,20 +10,42 @@ import (
 )
 
 type JobRenderer struct {
-	Writer       io.Writer
-	Format       string
-	IsFullOutput bool
+	Writer           io.Writer
+	Format           string
+	IsFullOutput     bool
+	gotPartialResult bool
 }
 
 func (jr *JobRenderer) RenderJob(j *models.Job) error {
-	return RenderByFormat(
-		jr.Format,
-		jr.Writer,
-		j,
-		func() error {
-			return jr.renderJobInHumanFormat(j)
-		},
-	)
+	if jr.shouldRender(j) {
+		return RenderByFormat(
+			jr.Format,
+			jr.Writer,
+			j,
+			func() error {
+				return jr.renderJobInHumanFormat(j)
+			},
+		)
+	}
+	return nil
+}
+
+func (jr *JobRenderer) shouldRender(j *models.Job) bool {
+	partialResult := j.FinishedAt.IsZero()
+	if partialResult {
+		jr.gotPartialResult = true
+	}
+
+	// Only render partial result when partial human output is selected
+	if jr.Format == FormatHuman && !jr.IsFullOutput {
+		if !partialResult && jr.gotPartialResult {
+			// Remove stdout and stderr from rendering when already rendered by partial results
+			j.Result.Stdout = ""
+			j.Result.Stderr = ""
+		}
+		return true
+	}
+	return !partialResult
 }
 
 func (jr *JobRenderer) genShiftedMultilineStr(input, shiftStr string) string {
